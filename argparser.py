@@ -37,6 +37,7 @@ class WASMText(object):
     wast_header_data = dict()
     wast_header_export = dict()
     wast_header_func = dict()
+    wast_func_bodies = dict()
 
     def __init__(self, file_path):
         self.wasmt_file = open(file_path, "r")
@@ -103,8 +104,51 @@ class WASMText(object):
                 self.wast_header_func[linenumber] = line
 
     def FuncParser(self):
+        parentheses_cnt = 0
+        func_cnt = 0
+        funcbody = str()
+        pos = 0
         for key in self.wast_header_func:
-            print(self.key)
+            self.wasmt_file.seek(0, 0)
+            parentheses_cnt = 0
+            i = 0
+            alive = False
+            for line in self.wasmt_file:
+                i += 1
+                if i == key or alive:
+                    func_cnt += 1
+                    funcbody += line
+
+                    pos = line.find('(', pos, len(line))
+                    while(pos != -1):
+                        parentheses_cnt += 1
+                        pos = line.find('(', pos + 1, len(line))
+                    pos = 0
+
+                    pos = line.find(')', pos, len(line))
+                    while(pos != -1):
+                        parentheses_cnt -= 1
+                        pos = line.find('(', pos + 1, len(line))
+                    pos = 0
+
+                    if parentheses_cnt == 0:
+                        self.wast_func_bodies[func_cnt] = funcbody
+                        func_cnt = 0
+                        parentheses_cnt = 0
+                        funcbody = ""
+                        alive = False
+                        break
+                    elif parentheses_cnt > 0:
+                        # we need to parse another line
+                        alive = True
+                        continue
+                    else:
+                        # parentheses_cnt < 0. the wasmt file is malformed.
+                        raise Exception('mismatching number of parentheses')
+
+    def FuncParserTest(self):
+        for k in self.wast_func_bodies:
+            print(self.wast_func_bodies[k])
 
     def PrintTypeDict(self):
         for element in self.wast_header_type:
@@ -159,6 +203,8 @@ class ParserV1(object):
         wasmtobj.PrintExportDict()
         wasmtobj.PrintFuncDict()
         wasmtobj.PrintElemDict()
+        wasmtobj.FuncParser()
+        wasmtobj.FuncParserTest()
 
 
 def main():
