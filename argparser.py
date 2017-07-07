@@ -144,7 +144,8 @@ class WASMText(object):
                         continue
                     else:
                         # parentheses_cnt < 0. the wasmt file is malformed.
-                        raise Exception('mismatching number of parentheses')
+                        raise Exception('malformed: mismatching number \
+                                        of parentheses')
 
     def FuncParserTest(self):
         for k in self.wast_func_bodies:
@@ -223,8 +224,34 @@ class FuncBodyParser(object):
         self.wast_obj_func = wast_obj_func
 
     def ParseBody(self):
-        for iter in self.wast_obj_func:
-            print('junk')
+        pos = 0
+        lastopenparen = 0
+        for funcbody in self.wast_obj_func:
+            for line in funcbody:
+                parentheses_cnt = 0
+                pos = line.find('(', pos, len(line))
+                lastopenparen = pos
+                while(pos != -1):
+                    parentheses_cnt += 1
+                    pos = line.find('(', pos + 1, len(line))
+                    lastopenparen
+                pos = 0
+
+                pos = line.find(')', pos, len(line))
+                while(pos != -1):
+                    parentheses_cnt -= 1
+                    pos = line.find('(', pos + 1, len(line))
+                pos = 0
+
+                if parentheses_cnt == 0:
+                    parentheses_cnt = 0
+                    break
+                elif parentheses_cnt > 0:
+                    # we need to parse another line
+                    continue
+                else:
+                    # parentheses_cnt < 0. the wasmt file is malformed
+                    print("goofball")
 
 
 class ParserV1(object):
