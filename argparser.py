@@ -184,8 +184,47 @@ class WASMText(object):
         for element in self.wast_header_func:
             print(Colors.HEADER + self.wast_header_func[element] + Colors.ENDC)
 
+    def getTypeHeader(self):
+        return self.wast_header_type
+
+    def getImportHeader(self):
+        return self.wast_header_import
+
+    def getTableHeader(self):
+        return self.wast_header_table
+
+    def getElemHeader(self):
+        return self.wast_header_elem
+
+    def getMemoryHeader(self):
+        return self.wast_header_memory
+
+    def getDataHeader(self):
+        return self.wast_header_data
+
+    def getExportHeader(self):
+        return self.wast_header_export
+
+    def getFuncHeader(self):
+        return self.wast_header_func
+
+    def getFuncBodies(self):
+        return self.wast_func_bodies
+
     def __del__(self):
         self.test_file.close()
+        self.wasmt_file.close()
+
+
+class FuncBodyParser(object):
+    wast_obj_func = dict()
+
+    def __init__(self, wast_obj_func):
+        self.wast_obj_func = wast_obj_func
+
+    def ParseBody(self):
+        for iter in self.wast_obj_func:
+            print('junk')
 
 
 class ParserV1(object):
@@ -205,6 +244,7 @@ class ParserV1(object):
         wasmtobj.PrintElemDict()
         wasmtobj.FuncParser()
         wasmtobj.FuncParserTest()
+        funcbodyparser = FuncBodyParser(wasmtobj.getFuncBodies())
 
 
 def main():
