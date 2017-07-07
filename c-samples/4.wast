@@ -1,0 +1,13 @@
+(module
+  (table 0 anyfunc)
+  (memory $0 1)
+  (data (i32.const 16) "foobar\00")
+  (data (i32.const 24) "\10\00\00\00")
+  (data (i32.const 32) "constfoobar\00")
+  (data (i32.const 44) " \00\00\00")
+  (export "memory" (memory $0))
+  (export "main" (func $main))
+  (func $main (param $0 i32) (param $1 i32) (result i32)
+    (i32.const 17)
+  )
+)
