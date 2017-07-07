@@ -1,0 +1,170 @@
+from __future__ import print_function
+import argparse
+import sys
+import re
+
+
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+class CLIArgParser(object):
+    def __init__(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--wasm", type=str,
+                            help="path to the wasm test file")
+        self.args = parser.parse_args()
+        if self.args.wasm is None:
+            raise Exception('empty wasm text file path')
+
+    def getWASMTPath(self):
+        return self.args.wasm
+
+
+class WASMText(object):
+    wast_header_type = dict()
+    wast_header_import = dict()
+    wast_header_table = dict()
+    wast_header_elem = dict()
+    wast_header_memory = dict()
+    wast_header_data = dict()
+    wast_header_export = dict()
+    wast_header_func = dict()
+
+    def __init__(self, file_path):
+        self.wasmt_file = open(file_path, "r")
+        self.file_path = file_path
+        self.test_file = open("./test.txt", "a")
+
+    def write(self, text):
+        self.wasmt_file.write(text)
+
+    def reopen_for_read(self):
+        self.wasmt_file.close()
+        self.wasmt_file.open(self.file_path, "r")
+
+    def reopen_for_write(self):
+        self.wasmt_file.close()
+        self.wasmt_file.open(self.file_path, "w")
+
+    def test_print(self):
+        for line in self.wasmt_file:
+            print(line, file=self.test_file)
+            sys.stdout.write(line)
+            sys.stdout.write('\n')
+
+    def RegExSearch(self):
+        # pattern1 = re.compile('^\(type\ \$[a-zA-Z0-9]+\$[v|i]+\ \(func$\)')
+        pattern1 = re.compile('[ \t]+\(type.+\)')
+        # pattern1 = re.compile('[a-zA-Z0-9]+')
+        pattern2 = re.compile('[ \t]+\(import.+\)')
+        pattern3 = re.compile('[ \t]+\(table.+\)')
+        pattern4 = re.compile('[ \t]+\(elem.+\)')
+        pattern5 = re.compile('[ \t]+\(memory.+\)')
+        pattern6 = re.compile('[ \t]+\(data.+\)')
+        pattern7 = re.compile('[ \t]+\(export.+\)')
+        pattern8 = re.compile('[ \t]+\(func.+\)')
+
+        linenumber = 0
+
+        for line in self.wasmt_file:
+            # print(line)
+            linenumber += 1
+            result = re.match(pattern1, line)
+            if result is not None:
+                self.wast_header_type[linenumber] = line
+            result = re.match(pattern2, line)
+            if result is not None:
+                self.wast_header_import[linenumber] = line
+            result = re.match(pattern3, line)
+            if result is not None:
+                self.wast_header_table[linenumber] = line
+            result = re.match(pattern4, line)
+            if result is not None:
+                self.wast_header_elem[linenumber] = line
+            result = re.match(pattern5, line)
+            if result is not None:
+                self.wast_header_memory[linenumber] = line
+            result = re.match(pattern6, line)
+            if result is not None:
+                self.wast_header_data[linenumber] = line
+            result = re.match(pattern7, line)
+            if result is not None:
+                self.wast_header_export[linenumber] = line
+            result = re.match(pattern8, line)
+            if result is not None:
+                self.wast_header_func[linenumber] = line
+
+    def FuncParser(self):
+        for key in self.wast_header_func:
+            print(self.key)
+
+    def PrintTypeDict(self):
+        for element in self.wast_header_type:
+            # print(self.wast_header_type[element])
+            print(Colors.OKGREEN + self.wast_header_type[element] + Colors.ENDC)
+
+    def PrintImportDict(self):
+        for element in self.wast_header_import:
+            print(Colors.FAIL + self.wast_header_import[element] + Colors.ENDC)
+
+    def PrintTableDict(self):
+        for element in self.wast_header_table:
+            print(Colors.HEADER + self.wast_header_table[element] + Colors.ENDC)
+
+    def PrintElemDict(self):
+        for element in self.wast_header_elem:
+            print(Colors.OKBLUE + self.wast_header_elem[element] + Colors.ENDC)
+
+    def PrintMemoryDict(self):
+        for element in self.wast_header_memory:
+            print(Colors.UNDERLINE + self.wast_header_memory[element] +
+                  Colors.ENDC)
+
+    def PrintDataDict(self):
+        for element in self.wast_header_data:
+            print(Colors.WARNING + self.wast_header_data[element] + Colors.ENDC)
+
+    def PrintExportDict(self):
+        for element in self.wast_header_export:
+            print(Colors.BOLD + self.wast_header_export[element] + Colors.ENDC)
+
+    def PrintFuncDict(self):
+        for element in self.wast_header_func:
+            print(Colors.HEADER + self.wast_header_func[element] + Colors.ENDC)
+
+    def __del__(self):
+        self.test_file.close()
+
+
+class ParserV1(object):
+    def run(self):
+        argparser = CLIArgParser()
+        wasmtobj = WASMText(argparser.getWASMTPath())
+        # wasmtobj.test_print()
+        wasmtobj.RegExSearch()
+        wasmtobj.PrintTypeDict()
+        wasmtobj.PrintImportDict()
+        wasmtobj.PrintTableDict()
+        wasmtobj.PrintElemDict()
+        wasmtobj.PrintMemoryDict()
+        wasmtobj.PrintDataDict()
+        wasmtobj.PrintExportDict()
+        wasmtobj.PrintFuncDict()
+        wasmtobj.PrintElemDict()
+
+
+def main():
+    parser = ParserV1()
+    parser.run()
+
+
+if __name__ == '__main__':
+    main()
