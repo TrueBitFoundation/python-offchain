@@ -3,6 +3,8 @@ import argparse
 import sys
 import re
 
+__DBG__ = False
+
 
 class Colors:
     HEADER = '\033[95m'
@@ -218,6 +220,7 @@ class WASMText(object):
 
 
 class FuncBodyParser(object):
+    stack = []
     wast_obj_func = dict()
 
     def __init__(self, wast_obj_func):
@@ -226,6 +229,7 @@ class FuncBodyParser(object):
     def ParseBody(self):
         pos = 0
         lastopenparen = 0
+
         for funcbody in self.wast_obj_func:
             for line in funcbody:
                 parentheses_cnt = 0
@@ -253,6 +257,30 @@ class FuncBodyParser(object):
                     # parentheses_cnt < 0. the wasmt file is malformed
                     print("goofball")
 
+    def ParseBodyV2(self):
+        sexpr_pattern = re.compile('\([^(]*?\)')
+
+        for funcbody in self.wast_obj_func:
+            print(Colors.OKBLUE + self.wast_obj_func[funcbody] + Colors.ENDC)
+
+            most_concat_sexpr = re.findall(sexpr_pattern,
+                                           self.wast_obj_func[funcbody])
+            print ('-----------------------------')
+
+            for elem in most_concat_sexpr:
+                print(elem)
+                print ('-----------------------------')
+                elem.split
+
+    def ParseBodyV3(self):
+        sexpr_greedy = re.compile('\s*(?:(?P<lparen>\(*)|(?P<rparent>\)*)|(?P<operandnum>[0-9]+)|(?P<regarg>$))')
+
+        for funcbody in self.wast_obj_func:
+            for stackval in re.finditer(sexpr_greedy, self.wast_obj_func[funcbody]):
+                # group, value = [(t, v) for t, v in stackval.groupdict().items() if v][0]
+                for items in stackval.groupdict().items():
+                    print(items)
+
 
 class ParserV1(object):
     def run(self):
@@ -260,18 +288,21 @@ class ParserV1(object):
         wasmtobj = WASMText(argparser.getWASMTPath())
         # wasmtobj.test_print()
         wasmtobj.RegExSearch()
-        wasmtobj.PrintTypeDict()
-        wasmtobj.PrintImportDict()
-        wasmtobj.PrintTableDict()
-        wasmtobj.PrintElemDict()
-        wasmtobj.PrintMemoryDict()
-        wasmtobj.PrintDataDict()
-        wasmtobj.PrintExportDict()
-        wasmtobj.PrintFuncDict()
-        wasmtobj.PrintElemDict()
+        if __DBG__:
+            wasmtobj.PrintTypeDict()
+            wasmtobj.PrintImportDict()
+            wasmtobj.PrintTableDict()
+            wasmtobj.PrintElemDict()
+            wasmtobj.PrintMemoryDict()
+            wasmtobj.PrintDataDict()
+            wasmtobj.PrintExportDict()
+            wasmtobj.PrintFuncDict()
+            wasmtobj.PrintElemDict()
         wasmtobj.FuncParser()
-        wasmtobj.FuncParserTest()
+        if __DBG__:
+            wasmtobj.FuncParserTest()
         funcbodyparser = FuncBodyParser(wasmtobj.getFuncBodies())
+        funcbodyparser.ParseBodyV3()
 
 
 def main():
