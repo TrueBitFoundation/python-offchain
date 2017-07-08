@@ -273,13 +273,15 @@ class FuncBodyParser(object):
                 elem.split
 
     def ParseBodyV3(self):
-        sexpr_greedy = re.compile('\s*(?:(?P<lparen>\(*)|(?P<rparent>\)*)|(?P<operandnum>[0-9]+)|(?P<regarg>$))')
+        sexpr_greedy = re.compile('\s*(?:(?P<lparen>\()|(?P<rparent>\))|(?P<operandnum>[0-9]+)|(?P<regarg>$))')
 
         for funcbody in self.wast_obj_func:
-            for stackval in re.finditer(sexpr_greedy, self.wast_obj_func[funcbody]):
-                # group, value = [(t, v) for t, v in stackval.groupdict().items() if v][0]
+            for stackval in re.finditer(sexpr_greedy,
+                                        self.wast_obj_func[funcbody]):
                 for items in stackval.groupdict().items():
-                    print(items)
+                    k, v = items
+                    if v is not None:
+                        print(items)
 
 
 class ParserV1(object):
