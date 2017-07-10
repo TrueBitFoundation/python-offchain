@@ -124,10 +124,10 @@ class WASM_Byte_Code:
                     {'f64.convert_u/i64', '0xba'},
                     {'f64.promote/f32', '0xbb'}]
 
-    reinterpretations = [{'i32.reinterpret/f32','0xbc'},
-                         {'i64.reinterpret/f64','0xbd'},
-                         {'f32.reinterpret/i32','0xbe'},
-                         {'f64.reinterpret/i64','0xbf'}]
+    reinterpretations = [{'i32.reinterpret/f32', '0xbc'},
+                         {'i64.reinterpret/f64', '0xbd'},
+                         {'f32.reinterpret/i32', '0xbe'},
+                         {'f64.reinterpret/i64', '0xbf'}]
 
 
 class CLIArgParser(object):
@@ -386,8 +386,9 @@ class FuncBodyParser(object):
 
     def ParseBodyV3(self):
         stack = []
-        one_line = []
-        sexpr_greedy = re.compile('\s*(?:(?P<lparen>\()|(?P<rparent>\))|(?P<operandnum>[i|ui][0-9]+$)|(?P<regarg>\$[0-9]+$)|(?P<keyword>[a-zA-Z0-9\._]+)|(?P<identifier>[\$][a-zA-Z0-9_\$]+))')
+        expr = []
+        full = []
+        sexpr_greedy = re.compile('\s*(?:(?P<lparen>\()|(?P<rparen>\))|(?P<operandnum>[i|ui][0-9]+$)|(?P<regarg>\$[0-9]+$)|(?P<keyword>[a-zA-Z0-9\._]+)|(?P<identifier>[\$][a-zA-Z0-9_\$]+))')
 
         for funcbody in self.wast_obj_func:
             for stackval in re.finditer(sexpr_greedy,
@@ -395,6 +396,22 @@ class FuncBodyParser(object):
                 for k, v in stackval.groupdict().items():
                     if v is not None:
                         print(k, v)
+
+                        if k == 'rparen':
+                            flag = True
+                            expr.append(v)
+                            while flag:
+                                temp = stack.pop()
+                                if temp is '(':
+                                    flag = False
+                                expr.append(temp)
+                            full.append(expr)
+                            expr = []
+                        else:
+                            stack.append(v)
+
+        for val in full:
+            print(val)
 
 
 class ParserV1(object):
