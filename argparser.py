@@ -17,7 +17,11 @@ class Colors:
     UNDERLINE = '\033[4m'
 
 
-class WASM_Byte_Code:
+class WASM_OP_Code:
+    type_ops = [{'i32', '0x7f'}, {'i64', '0x7e'}, {'f32', '0x7d'},
+                {'f64', '0x7c'}, {'anyfunc', '0x7b'}, {'func', '0x60'},
+                {'empty_block_type', '0x40'}]
+
     control_flow_ops = [{'unreachable', '0x00'}, {'nop', '0x01'},
                         {'block', '0x02'}, {'loop', '0x03'},
                         {'if', '0x04'}, {'else', '0x05'},
@@ -332,6 +336,7 @@ class WASMText(object):
         self.wasmt_file.close()
 
 
+# i know the name is off-putting but this is technically our lexer.
 class FuncBodyParser(object):
     wast_obj_func = dict()
 
@@ -412,6 +417,7 @@ class FuncBodyParser(object):
 
         for val in full:
             print(val)
+        return(full)
 
 
 class ParserV1(object):
