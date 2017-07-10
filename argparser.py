@@ -420,6 +420,25 @@ class FuncBodyParser(object):
         return(full)
 
 
+class WASM_CodeEmitter(object):
+    Obj_file = []
+    little_endian = True
+
+    def __init__(self, expr_stack):
+        self.expr_stack = expr_stack
+
+    def Obj_Header_32(self):
+        magic_number = '0061736d'
+        version = '01000000'
+
+        self.Obj_file.append(magic_number)
+        self.Obj_file.append(version)
+
+    def Dump_Obj_STDOUT(self):
+        for bytecode in self.Obj_file:
+            print(bytecode)
+
+
 class ParserV1(object):
     def run(self):
         argparser = CLIArgParser()
@@ -440,7 +459,10 @@ class ParserV1(object):
         if __DBG__:
             wasmtobj.FuncParserTest()
         funcbodyparser = FuncBodyParser(wasmtobj.getFuncBodies())
-        funcbodyparser.ParseBodyV3()
+        expr_stack = funcbodyparser.ParseBodyV3()
+        wasm_codeemitter = WASM_CodeEmitter(expr_stack)
+        wasm_codeemitter.Obj_Header_32()
+        wasm_codeemitter.Dump_Obj_STDOUT()
 
 
 def main():
