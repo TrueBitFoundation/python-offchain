@@ -503,7 +503,9 @@ class WASM_CodeEmitter(object):
 
         tmp_obj.insert(0, '8080')
         tmp_obj.insert(0, format(byte_cnt, 'x'))
-        tmp_obj.insert(0, WASM_OP_Code.section_code_dict['type'])
+        # tmp_obj.insert(0, WASM_OP_Code.section_code_dict['type'])
+        tmp_obj.insert(0, "01")
+        # tmp_obj.insert(0, '01')
         self.Obj_Header = tmp_obj
 
     def PrintTypeHeaderObj(self):
