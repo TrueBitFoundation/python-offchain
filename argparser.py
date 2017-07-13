@@ -18,150 +18,173 @@ class Colors:
 
 
 class WASM_OP_Code:
+    magic_number = 0x6d736100
+    version_number = 0x01
+    uint8 = 1
+    uint16 = 2
+    uint32 = 4
+    varuint1 = 1
+    varuint7 = 1
+    varuint32 = 4
+    varint1 = 1
+    varint7 = 1
+    varint32 = 4
+
     type_ops = [('i32', '7f'), ('i64', '7e'), ('f32', '7d'),
                 ('f64', '7c'), ('anyfunc', '7b'), ('func', '60'),
                 ('empty_block_type', '40')]
     type_ops_dict = dict(type_ops)
 
-    control_flow_ops = [{'unreachable', '00'}, {'nop', '01'},
-                        {'block', '02'}, {'loop', '03'},
-                        {'if', '04'}, {'else', '05'},
-                        {'end', '0b'}, {'br', '0c'},
-                        {'br_if', '0d'}, {'br_table', '0e'},
-                        {'return', '0f'}]
+    control_flow_ops = [('unreachable', '00'), ('nop', '01'),
+                        ('block', '02'), ('loop', '03'),
+                        ('if', '04'), ('else', '05'),
+                        ('end', '0b'), ('br', '0c'),
+                        ('br_if', '0d'), ('br_table', '0e'),
+                        ('return', '0f')]
     control_flow_ops_dict = dict(control_flow_ops)
 
-    call_ops = [{'call', '10'}, {'call_indirect', '11'}]
+    call_ops = [('call', '10'), ('call_indirect', '11')]
     call_ops_dict = dict(call_ops)
 
-    param_ops = [{'drop', '1a'}, {'select', '1b'}]
+    param_ops = [('drop', '1a'), ('select', '1b')]
     param_ops_dict = dict(param_ops)
 
-    var_access = [{'get_local', '20'}, {'set_local', '21'},
-                    {'tee_local', '22'}, {'get_global', '23'},
-                    {'set_global', '24'}]
+    var_access = [('get_local', '20'), ('set_local', '21'),
+                    ('tee_local', '22'), ('get_global', '23'),
+                    ('set_global', '24')]
     var_access_dict = dict(var_access)
 
-    mem_ops = [{'i32.load', '28'}, {'i64.load', '29'},
-                {'f32.load', '2a'}, {'f64.load', '2b'},
-                {'i32.load8_s', '2c'}, {'i32.load8_u', '2d'},
-                {'i32.load16_s', '2e'},  {'i32.load16_u', '2f'},
-                {'i64.load8_s', '30'}, {'i64.load8_u', '31'},
-                {'i64.load16_s', '32'}, {'i64.load16_u', '33'},
-                {'i64.load32_s', '34'}, {'i64.load32_u', '35'},
-                {'i32.store', '36'}, {'i64.store', '37'},
-                {'f32.store', '38'}, {'f64.store', '39'},
-                {'i32.store8', '3a'}, {'i32.store16', '3b'},
-                {'i64.store8', '3c'}, {'i64.store16', '3d'},
-                {'i64.store32', '3e'}, {'current_memory', '3f'},
-                {'grow_memory', '40'}]
+    mem_ops = [('i32.load', '28'), ('i64.load', '29'),
+                ('f32.load', '2a'), ('f64.load', '2b'),
+                ('i32.load8_s', '2c'), ('i32.load8_u', '2d'),
+                ('i32.load16_s', '2e'),  ('i32.load16_u', '2f'),
+                ('i64.load8_s', '30'), ('i64.load8_u', '31'),
+                ('i64.load16_s', '32'), ('i64.load16_u', '33'),
+                ('i64.load32_s', '34'), ('i64.load32_u', '35'),
+                ('i32.store', '36'), ('i64.store', '37'),
+                ('f32.store', '38'), ('f64.store', '39'),
+                ('i32.store8', '3a'), ('i32.store16', '3b'),
+                ('i64.store8', '3c'), ('i64.store16', '3d'),
+                ('i64.store32', '3e'), ('current_memory', '3f'),
+                ('grow_memory', '40')]
     mem_ops_dict = dict(mem_ops)
 
-    consts = [{'i32.const', '41'}, {'i64.const', '42'},
-              {'f32.const', '43'}, {'f64', '44'}]
+    consts = [('i32.const', '41'), ('i64.const', '42'),
+              ('f32.const', '43'), ('f64', '44')]
     consts_dict = dict(consts)
 
-    comp_ops = [{'i32.eqz', '45'}, {'i32.eq', '46'}, {'i32.ne', '47'},
-                {'i32.lt_s', '48'}, {'i32.lt_u', '49'},
-                {'i32.gt_s', '4a'}, {'i32.gt_u', '4b'},
-                {'i32.le_s', '4c'}, {'i32.le_u', '4d'},
-                {'i32.ge_s', '4e'}, {'i32.ge_u', '4f'},
-                {'i64.eqz', '50'}, {'i64.eq', '51'},
-                {'i64.ne', '52'}, {'i64.lt_s', '53'},
-                {'i64.lt_u', '54'}, {'i64.gt_s', '55'},
-                {'i64.gt_u', '56'}, {'i64.le_s', '57'},
-                {'i64.le_u', '58'}, {'i64.ge_s', '59'},
-                {'i64.ge_u', '5a'}, {'f32.eq', '5b'},
-                {'f32.ne', '5c'}, {'f32.lt', '5d'},
-                {'f32.gt', '5e'}, {'f32.le', '5f'},
-                {'f32.ge', '60'}, {'f64.eq', '61'},
-                {'f64.ne', '62'}, {'f64.lt', '63'},
-                {'f64.gt', '64'}, {'f64.le', '65'},
-                {'f64.ge', '66'}]
+    comp_ops = [('i32.eqz', '45'), ('i32.eq', '46'), ('i32.ne', '47'),
+                ('i32.lt_s', '48'), ('i32.lt_u', '49'),
+                ('i32.gt_s', '4a'), ('i32.gt_u', '4b'),
+                ('i32.le_s', '4c'), ('i32.le_u', '4d'),
+                ('i32.ge_s', '4e'), ('i32.ge_u', '4f'),
+                ('i64.eqz', '50'), ('i64.eq', '51'),
+                ('i64.ne', '52'), ('i64.lt_s', '53'),
+                ('i64.lt_u', '54'), ('i64.gt_s', '55'),
+                ('i64.gt_u', '56'), ('i64.le_s', '57'),
+                ('i64.le_u', '58'), ('i64.ge_s', '59'),
+                ('i64.ge_u', '5a'), ('f32.eq', '5b'),
+                ('f32.ne', '5c'), ('f32.lt', '5d'),
+                ('f32.gt', '5e'), ('f32.le', '5f'),
+                ('f32.ge', '60'), ('f64.eq', '61'),
+                ('f64.ne', '62'), ('f64.lt', '63'),
+                ('f64.gt', '64'), ('f64.le', '65'),
+                ('f64.ge', '66')]
     comp_ops_dict = dict(comp_ops)
 
-    num_ops = [{'i32.clz', '67'}, {'i32.ctz', '68'},
-               {'i32.popcnt', '69'}, {'i32.add', '6a'},
-               {'i32.sub', '6b'}, {'i32.mul', '6c'},
-               {'i32.div_s', '6d'}, {'i32.div_u', '6e'},
-               {'i32.rem_s', '6e'}, {'i32.rem_u', '70'},
-               {'i32.and', '71'}, {'i32.or', '72'},
-               {'i32.xor', '73'}, {'i32.shl', '74'},
-               {'i32.shr_s', '75'}, {'i32.shr_u', '76'},
-               {'i32.rotl', '77'}, {'i32.rotr', '78'},
-               {'i64.clz', '79'}, {'i64.ctz', '7a'},
-               {'i64.popcnt', '7b'}, {'i64.add', '7c'},
-               {'i64.sub', '7d'}, {'i64.mul', '7e'},
-               {'i64.div_s', '7f'}, {'i64.div_u', '80'},
-               {'i64.rem_s', '81'}, {'i64.rem_u', '82'},
-               {'i64.and', '83'}, {'i64.or', '84'},
-               {'i64.xor', '85'}, {'i64.shl', '86'},
-               {'i64.shr_s', '87'}, {'i64.shr_u', '88'},
-               {'i64.rotl', '89'}, {'i63.rotr', '8a'},
-               {'f32.abs', '8b'}, {'f32.neg', '8c'},
-               {'f32.ceil', '8d'},  {'f32.floor', '8e'},
-               {'f32.trunc', '8f'}, {'f32.nearest', '90'},
-               {'f32.sqrt', '91'}, {'f32.add', '92'},
-               {'f32.sub', '93'}, {'f32.mul', '94'},
-               {'f32.div', '95'}, {'f32.min', '96'},
-               {'f32.max', '97'}, {'f32.copysign', '98'},
-               {'f64.abs', '99'}, {'f64.neg', '9a'},
-               {'f64.ceil', '9b'}, {'f64.floor', '9c'},
-               {'f64.trunc', '9d'}, {'f64.nearest', '9e'},
-               {'f64.sqrt', '9f'}, {'f64.add', 'a0'},
-               {'f64.sub', 'a1'}, {'f64.mul', 'a2'},
-               {'f64.div', 'a3'}, {'f64.min', 'a4'},
-               {'f64.max', 'a5'}, {'f64.copysign', 'a6'}]
+    num_ops = [('i32.clz', '67'), ('i32.ctz', '68'),
+               ('i32.popcnt', '69'), ('i32.add', '6a'),
+               ('i32.sub', '6b'), ('i32.mul', '6c'),
+               ('i32.div_s', '6d'), ('i32.div_u', '6e'),
+               ('i32.rem_s', '6e'), ('i32.rem_u', '70'),
+               ('i32.and', '71'), ('i32.or', '72'),
+               ('i32.xor', '73'), ('i32.shl', '74'),
+               ('i32.shr_s', '75'), ('i32.shr_u', '76'),
+               ('i32.rotl', '77'), ('i32.rotr', '78'),
+               ('i64.clz', '79'), ('i64.ctz', '7a'),
+               ('i64.popcnt', '7b'), ('i64.add', '7c'),
+               ('i64.sub', '7d'), ('i64.mul', '7e'),
+               ('i64.div_s', '7f'), ('i64.div_u', '80'),
+               ('i64.rem_s', '81'), ('i64.rem_u', '82'),
+               ('i64.and', '83'), ('i64.or', '84'),
+               ('i64.xor', '85'), ('i64.shl', '86'),
+               ('i64.shr_s', '87'), ('i64.shr_u', '88'),
+               ('i64.rotl', '89'), ('i63.rotr', '8a'),
+               ('f32.abs', '8b'), ('f32.neg', '8c'),
+               ('f32.ceil', '8d'),  ('f32.floor', '8e'),
+               ('f32.trunc', '8f'), ('f32.nearest', '90'),
+               ('f32.sqrt', '91'), ('f32.add', '92'),
+               ('f32.sub', '93'), ('f32.mul', '94'),
+               ('f32.div', '95'), ('f32.min', '96'),
+               ('f32.max', '97'), ('f32.copysign', '98'),
+               ('f64.abs', '99'), ('f64.neg', '9a'),
+               ('f64.ceil', '9b'), ('f64.floor', '9c'),
+               ('f64.trunc', '9d'), ('f64.nearest', '9e'),
+               ('f64.sqrt', '9f'), ('f64.add', 'a0'),
+               ('f64.sub', 'a1'), ('f64.mul', 'a2'),
+               ('f64.div', 'a3'), ('f64.min', 'a4'),
+               ('f64.max', 'a5'), ('f64.copysign', 'a6')]
     num_ops_dict = dict(num_ops)
 
-    conversion = [{'i32.wrap/i64', 'a7'},
-                    {'i32.trunc_s/f32', 'a8'},
-                    {'i32.trunc_u/f32', 'a9'},
-                    {'i32.trunc_s/f64', 'aa'},
-                    {'i32.trunc_u/f64', 'ab'},
-                    {'i64.extend_s/i32', 'ac'},
-                    {'i64.extend_u/i32', 'ad'},
-                    {'i64.trunc_s/f32', 'ae'},
-                    {'i64.trunc_u/f32', 'af'},
-                    {'i64.trunc_s/f64', 'b0'},
-                    {'i64.trunc_u/f64', 'b1'},
-                    {'f32.convert_s/i32', 'b2'},
-                    {'f32.convert_u/i32', 'b3'},
-                    {'f32.convert_s/i64', 'b4'},
-                    {'f32.convert_u/i64', 'b5'},
-                    {'f32.demote/f64', 'b6'},
-                    {'f64.convert_s/i32', 'b7'},
-                    {'f64.convert_u/i32', 'b8'},
-                    {'f64.convert_s/i64', 'b9'},
-                    {'f64.convert_u/i64', 'ba'},
-                    {'f64.promote/f32', 'bb'}]
+    conversion = [('i32.wrap/i64', 'a7'),
+                    ('i32.trunc_s/f32', 'a8'),
+                    ('i32.trunc_u/f32', 'a9'),
+                    ('i32.trunc_s/f64', 'aa'),
+                    ('i32.trunc_u/f64', 'ab'),
+                    ('i64.extend_s/i32', 'ac'),
+                    ('i64.extend_u/i32', 'ad'),
+                    ('i64.trunc_s/f32', 'ae'),
+                    ('i64.trunc_u/f32', 'af'),
+                    ('i64.trunc_s/f64', 'b0'),
+                    ('i64.trunc_u/f64', 'b1'),
+                    ('f32.convert_s/i32', 'b2'),
+                    ('f32.convert_u/i32', 'b3'),
+                    ('f32.convert_s/i64', 'b4'),
+                    ('f32.convert_u/i64', 'b5'),
+                    ('f32.demote/f64', 'b6'),
+                    ('f64.convert_s/i32', 'b7'),
+                    ('f64.convert_u/i32', 'b8'),
+                    ('f64.convert_s/i64', 'b9'),
+                    ('f64.convert_u/i64', 'ba'),
+                    ('f64.promote/f32', 'bb')]
     conversion_dict = dict(conversion)
 
-    reinterpretations = [{'i32.reinterpret/f32', 'bc'},
-                         {'i64.reinterpret/f64', 'bd'},
-                         {'f32.reinterpret/i32', 'be'},
-                         {'f64.reinterpret/i64', 'bf'}]
+    reinterpretations = [('i32.reinterpret/f32', 'bc'),
+                         ('i64.reinterpret/f64', 'bd'),
+                         ('f32.reinterpret/i32', 'be'),
+                         ('f64.reinterpret/i64', 'bf')]
     reinterpretations_dict = dict(reinterpretations)
 
-    section_code = [{'type', '01'}, {'import', '02'},
-                    {'function', '03'}, {'table', '04'},
-                    {'memory', '05'}, {'global', '06'},
-                    {'export', '07'}, {'start', '08'},
-                    {'element', '09'}, {'code', '0a'},
-                    {'data', '0b'}]
+    section_code = [('type', '01'), ('import', '02'),
+                    ('function', '03'), ('table', '04'),
+                    ('memory', '05'), ('global', '06'),
+                    ('export', '07'), ('start', '08'),
+                    ('element', '09'), ('code', '0a'),
+                    ('data', '0b'), ('custom', '00')]
     section_code_dict = dict(section_code)
+
+
+class ParsedStruct:
+    version_number = int()
 
 
 class CLIArgParser(object):
     def __init__(self):
         parser = argparse.ArgumentParser()
+        parser.add_argument("--wast", type=str,
+                            help="path to the wasm text file")
         parser.add_argument("--wasm", type=str,
-                            help="path to the wasm test file")
+                            help="path to the wasm object file")
         self.args = parser.parse_args()
-        if self.args.wasm is None:
-            raise Exception('empty wasm text file path')
 
-    def getWASMTPath(self):
+        if self.args.wasm is not None and self.args.wast is not None:
+            raise Exception("the --wast option and the --wasm option cannot\
+                            be set at the same time. you need to choose one.")
+
+    def getWASTPath(self):
+        return self.args.wast
+
+    def getWASMPath(self):
         return self.args.wasm
 
 
@@ -519,10 +542,81 @@ class WASM_CodeEmitter(object):
             print(bytecode)
 
 
+class ObjReader(object):
+    parsedstruct = ParsedStruct
+
+    def __init__(self, file_path, endianness, is_extended_isa):
+        self.wasm_file = open(file_path, "rb")
+        self.file_path = file_path
+        self.endianness = endianness
+        self.is_extended_isa = is_extended_isa
+
+    def testprintall(self):
+        for line in self.wasm_file:
+            print(line)
+        self.wasm_file.seek(0)
+
+    def testprintbyteall(self):
+        byte = self.wasm_file.read(1)
+        print(byte)
+        while byte != b"":
+            byte = self.wasm_file.read(1)
+            print(byte)
+        self.wasm_file.seek(0)
+
+    def ReadAByte(self):
+        # read the magic cookie
+        byte = self.wasm_file.read(WASM_OP_Code.uint32)
+        if byte != WASM_OP_Code.magic_number.to_bytes(WASM_OP_Code.uint32, byteorder=self.endianness, signed=False):
+            raise Exception("bad magic cookie")
+
+        # read the version number
+        byte = self.wasm_file.read(WASM_OP_Code.uint32)
+        if byte != WASM_OP_Code.version_number.to_bytes(WASM_OP_Code.uint32, byteorder=self.endianness, signed=False):
+            raise Exception("bad version number")
+        else:
+            self.parsedstruct.version_number = byte
+
+        # read first section header
+        byte = self.wasm_file.read(WASM_OP_Code.varuint7)
+        if byte == int(WASM_OP_Code.section_code_dict['type']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('type header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['import']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('import header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['function']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('function header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['table']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('table header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['memory']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('memory header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['global']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('global header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['export']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('export header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['start']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('start header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['element']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('element header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['code']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('code header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['data']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('data header palceholder')
+        elif byte == int(WASM_OP_Code.section_code_dict['custom']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
+            print('custom header palceholder')
+        else:
+            raise Exception("bad section byte")
+
+        # while byte != b"":
+        #    byte = self.wasm_file.read(1)
+
+    def getCursorLocation(self):
+        return(self.wasm_file.tell())
+
+
 class ParserV1(object):
     def run(self):
         argparser = CLIArgParser()
-        wasmtobj = WASMText(argparser.getWASMTPath())
+        wasmtobj = WASMText(argparser.getWASTPath())
         # wasmtobj.test_print()
         wasmtobj.RegExSearch()
         if __DBG__:
@@ -554,9 +648,27 @@ class ParserV1(object):
         wasm_codeemitter.PrintTypeHeaderObj()
 
 
+class PythonInterpreter(object):
+    def run(self):
+        argparser = CLIArgParser()
+        wasmobj = ObjReader(argparser.getWASMPath(), 'little', False)
+        # wasmobj.testprintall()
+        # wasmobj.testprintbyteall()
+        wasmobj.ReadAByte()
+
+
 def main():
-    parser = ParserV1()
-    parser.run()
+    argparser = CLIArgParser()
+
+    if argparser.getWASMPath() is not None:
+        print(argparser.getWASMPath())
+        parser = PythonInterpreter()
+        parser.run()
+
+    if argparser.getWASTPath() is not None:
+        print(argparser.getWASTPath())
+        parser = ParserV1()
+        parser.run()
 
 
 if __name__ == '__main__':
