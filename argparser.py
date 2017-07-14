@@ -611,7 +611,7 @@ class ObjReader(object):
             print(byte)
         self.wasm_file.seek(0)
 
-    def ReadAByte(self):
+    def ReadWASM(self):
         # read the magic cookie
         byte = self.wasm_file.read(WASM_OP_Code.uint32)
         if byte != WASM_OP_Code.magic_number.to_bytes(WASM_OP_Code.uint32, byteorder=self.endianness, signed=False):
@@ -718,7 +718,7 @@ class PythonInterpreter(object):
         wasmobj = ObjReader(argparser.getWASMPath(), 'little', False)
         # wasmobj.testprintall()
         # wasmobj.testprintbyteall()
-        wasmobj.ReadAByte()
+        wasmobj.ReadWASM()
 
 
 def main():
