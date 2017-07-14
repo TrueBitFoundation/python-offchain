@@ -164,8 +164,55 @@ class WASM_OP_Code:
     section_code_dict = dict(section_code)
 
 
+class ParsedSection(object):
+    def __init__(self, section_id, section_name,
+                 payload_length, is_custom_section,
+                 name_len, name, payload_data):
+        self.section_id = section_id
+        self.section_name = section_name
+        self.payload_length = payload_length
+        self.is_custom_section = is_custom_section
+        self.name_len = name_len
+        self.name = name
+        self.payload_data = payload_data
+
+        if not isinstance(self.section_id, int):
+            raise Exception("section_id must be an int")
+        if not isinstance(self.section_name, str):
+            raise Exception("section_name must be a str")
+        if not isinstance(self.payload_length, int):
+            raise Exception("payload_length must be an int")
+        if not isinstance(self.is_custom_section, bool):
+            raise Exception("is_custom_section must be a bool")
+        if not isinstance(self.name_len, int):
+            raise Exception("name_len must be an int")
+        if not isinstance(self.name, bytearray):
+            raise Exception("name must be a bytearray")
+        if not isinstance(self.payload_data, bytearray):
+            raise Exception("payload_data must be a bytearray")
+
+
 class ParsedStruct:
     version_number = int()
+    section_list = []
+
+
+def Conver2Int(little_endian, size, bytelist):
+    modifier = size - 1
+    sum = 0
+
+    if little_endian:
+        for bit in reversed(bytelist):
+            if bit != 0x80:
+                sum += bit*(pow(16, modifier))
+            modifier -= 1
+        return(sum)
+    else:
+        for bit in reversed(bytelist):
+            if bit != 0x80:
+                sum += bit*(pow(16, modifier))
+            modifier -= 1
+        return(sum)
 
 
 class CLIArgParser(object):
@@ -577,37 +624,54 @@ class ObjReader(object):
         else:
             self.parsedstruct.version_number = byte
 
-        # read first section header
-        byte = self.wasm_file.read(WASM_OP_Code.varuint7)
-        if byte == int(WASM_OP_Code.section_code_dict['type']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('type header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['import']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('import header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['function']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('function header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['table']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('table header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['memory']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('memory header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['global']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('global header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['export']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('export header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['start']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('start header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['element']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('element header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['code']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('code header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['data']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('data header palceholder')
-        elif byte == int(WASM_OP_Code.section_code_dict['custom']).to_bytes(WASM_OP_Code.varuint7, byteorder=self.endianness, signed=False):
-            print('custom header palceholder')
-        else:
-            raise Exception("bad section byte")
+        while self.ReadSection():
+            pass
 
-        # while byte != b"":
-        #    byte = self.wasm_file.read(1)
+    def ReadSection(self):
+        section_id_int = int()
+        payload_length_int = int()
+        name_len_int = int()
+        name = str()
+        payload_data = bytearray()
+        is_custom_section = False
+        not_end_of_the_line = True
+        section_id = self.wasm_file.read(WASM_OP_Code.varuint7)
+
+        if section_id == b"":
+            not_end_of_the_line = False
+        else:
+            section_id_int = Conver2Int(self.endianness, WASM_OP_Code.varuint7,
+                                        section_id)
+            print(section_id_int)
+
+            payload_length = self.wasm_file.read(WASM_OP_Code.varuint32)
+            payload_length_int = Conver2Int(self.endianness, WASM_OP_Code.varuint32,
+                                            payload_length)
+            print(payload_length_int)
+
+            if section_id is not WASM_OP_Code.section_code_dict['custom']:
+                payload_data = self.wasm_file.read(payload_length_int)
+                print(payload_data)
+            else:
+                is_custom_section = True
+                name_len = self.wasm_file.read(WASM_OP_Code.varuint32)
+                name_len_int = Conver2Int(self.endianness,
+                                          WASM_OP_Code.varuint32,
+                                          name_len)
+                print(name_len)
+                name = self.wasm_file.read(name_len)
+                print(name)
+                payload_data = self.wasm_file.read(payload_length_int
+                                                - name_len_int -
+                                                WASM_OP_Code.varuint32)
+
+        self.parsedstruct.section_list.append([section_id_int, 'jojo',
+                                               payload_length_int,
+                                               is_custom_section,
+                                               name_len_int, name,
+                                               payload_data])
+
+        return(not_end_of_the_line)
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
