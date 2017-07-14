@@ -215,6 +215,17 @@ def Conver2Int(little_endian, size, bytelist):
         return(sum)
 
 
+def LEB128UnsingedDecode(bytelist):
+    result = 0
+    shift = 0
+    for byte in bytelist:
+        result |= (byte & 0x7f) << shift
+        if (byte & 0x80) == 0:
+            break
+        shift += 7
+    return(result)
+
+
 class CLIArgParser(object):
     def __init__(self):
         parser = argparse.ArgumentParser()
@@ -645,8 +656,7 @@ class ObjReader(object):
             print(section_id_int)
 
             payload_length = self.wasm_file.read(WASM_OP_Code.varuint32)
-            payload_length_int = Conver2Int(self.endianness, WASM_OP_Code.varuint32,
-                                            payload_length)
+            payload_length_int = LEB128UnsingedDecode(payload_length) + 1
             print(payload_length_int)
 
             if section_id is not WASM_OP_Code.section_code_dict['custom']:
