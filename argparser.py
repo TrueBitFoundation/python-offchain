@@ -651,29 +651,28 @@ class ObjReader(object):
         if section_id == b"":
             not_end_of_the_line = False
         else:
-            section_id_int = Conver2Int(self.endianness, WASM_OP_Code.varuint7,
-                                        section_id)
+            section_id_int = LEB128UnsingedDecode(section_id)
             print(section_id_int)
 
             payload_length = self.wasm_file.read(WASM_OP_Code.varuint32)
             payload_length_int = LEB128UnsingedDecode(payload_length) + 1
-            print(payload_length_int)
+            # print(payload_length_int)
 
             if section_id is not WASM_OP_Code.section_code_dict['custom']:
                 payload_data = self.wasm_file.read(payload_length_int)
-                print(payload_data)
+                # print(payload_data)
             else:
                 is_custom_section = True
                 name_len = self.wasm_file.read(WASM_OP_Code.varuint32)
                 name_len_int = Conver2Int(self.endianness,
                                           WASM_OP_Code.varuint32,
                                           name_len)
-                print(name_len)
+                # print(name_len)
                 name = self.wasm_file.read(name_len)
                 print(name)
                 payload_data = self.wasm_file.read(payload_length_int
-                                                - name_len_int -
-                                                WASM_OP_Code.varuint32)
+                                                    - name_len_int -
+                                                    WASM_OP_Code.varuint32)
 
         self.parsedstruct.section_list.append([section_id_int, 'jojo',
                                                payload_length_int,
@@ -682,6 +681,20 @@ class ObjReader(object):
                                                payload_data])
 
         return(not_end_of_the_line)
+
+    def PrintAllSection(self):
+        for section in self.parsedstruct.section_list:
+            print(section)
+
+    def ReadCodeSection(self):
+        for whatever in self.parsedstruct.section_list:
+            # 10 is the code section
+            if whatever[0] == 10:
+                code_section = whatever.copy()
+
+        print(LEB128UnsingedDecode(code_section[6][1:2]))
+        for byte in code_section:
+            pass
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
@@ -729,6 +742,8 @@ class PythonInterpreter(object):
         # wasmobj.testprintall()
         # wasmobj.testprintbyteall()
         wasmobj.ReadWASM()
+        wasmobj.PrintAllSection()
+        wasmobj.ReadCodeSection()
 
 
 def main():
