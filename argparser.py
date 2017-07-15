@@ -652,7 +652,6 @@ class ObjReader(object):
             not_end_of_the_line = False
         else:
             section_id_int = LEB128UnsingedDecode(section_id)
-            print(section_id_int)
 
             payload_length = self.wasm_file.read(WASM_OP_Code.varuint32)
             payload_length_int = LEB128UnsingedDecode(payload_length) + 1
@@ -669,7 +668,6 @@ class ObjReader(object):
                                           name_len)
                 # print(name_len)
                 name = self.wasm_file.read(name_len)
-                print(name)
                 payload_data = self.wasm_file.read(payload_length_int
                                                     - name_len_int -
                                                     WASM_OP_Code.varuint32)
@@ -691,10 +689,29 @@ class ObjReader(object):
             # 10 is the code section
             if whatever[0] == 10:
                 code_section = whatever.copy()
+        print(code_section)
 
-        print(LEB128UnsingedDecode(code_section[6][1:2]))
+        function_cnt = LEB128UnsingedDecode(code_section[6][1:2])
+        print(function_cnt)
+
+        function_body_length = LEB128UnsingedDecode(code_section[6][2:6])
+        print(function_body_length)
+        local_count = LEB128UnsingedDecode(code_section[6][6:10])
+        print(local_count)
+
+        if local_count != 0:
+            pass
+
         for byte in code_section:
             pass
+
+    def ReadDataSection(self):
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 11:
+                data_section = whatever.copy()
+
+        data_cnt = LEB128UnsingedDecode(data_section[6][1:2])
+        # print(data_cnt)
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
@@ -742,8 +759,9 @@ class PythonInterpreter(object):
         # wasmobj.testprintall()
         # wasmobj.testprintbyteall()
         wasmobj.ReadWASM()
-        wasmobj.PrintAllSection()
+        # wasmobj.PrintAllSection()
         wasmobj.ReadCodeSection()
+        wasmobj.ReadDataSection()
 
 
 def main():
