@@ -731,8 +731,9 @@ class ObjReader(object):
                     partial_local_count = Conver2Int(True, 1, code_section[6][offset:offset + 1])
                     offset += 1
                     print(Colors.HEADER + repr(partial_local_count) + Colors.ENDC)
-                    for i in range(0, partial_local_count):
-                        offset += 1
+                    # for i in range(0, partial_local_count):
+                    #    offset += 1
+                    offset += 1
                     local_count -= partial_local_count
                     local_count_size += 1
             else:
