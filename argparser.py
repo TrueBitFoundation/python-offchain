@@ -34,6 +34,7 @@ class WASM_OP_Code:
                 ('f64', '7c'), ('anyfunc', '7b'), ('func', '60'),
                 ('empty_block_type', '40')]
     type_ops_dict = dict(type_ops)
+    type_ops_dict_rev = {v: k for k, v in type_ops_dict.items()}
 
     control_flow_ops = [('unreachable', '00'), ('nop', '01'),
                         ('block', '02'), ('loop', '03'),
@@ -42,17 +43,21 @@ class WASM_OP_Code:
                         ('br_if', '0d'), ('br_table', '0e'),
                         ('return', '0f')]
     control_flow_ops_dict = dict(control_flow_ops)
+    control_flow_ops_dict_rev = {v: k for k, v in control_flow_ops_dict.items()}
 
     call_ops = [('call', '10'), ('call_indirect', '11')]
     call_ops_dict = dict(call_ops)
+    call_ops_dict_rev = {v: k for k, v in call_ops_dict.items()}
 
     param_ops = [('drop', '1a'), ('select', '1b')]
     param_ops_dict = dict(param_ops)
+    param_ops_dict_rev = {v: k for k, v in param_ops_dict.items()}
 
     var_access = [('get_local', '20'), ('set_local', '21'),
                     ('tee_local', '22'), ('get_global', '23'),
                     ('set_global', '24')]
     var_access_dict = dict(var_access)
+    var_access_dict_rev = {v: k for k, v in var_access_dict.items()}
 
     mem_ops = [('i32.load', '28'), ('i64.load', '29'),
                 ('f32.load', '2a'), ('f64.load', '2b'),
@@ -68,10 +73,12 @@ class WASM_OP_Code:
                 ('i64.store32', '3e'), ('current_memory', '3f'),
                 ('grow_memory', '40')]
     mem_ops_dict = dict(mem_ops)
+    mem_ops_dict_rev = {v: k for k, v in mem_ops_dict.items()}
 
     consts = [('i32.const', '41'), ('i64.const', '42'),
               ('f32.const', '43'), ('f64', '44')]
     consts_dict = dict(consts)
+    consts_dict_rev = {v: k for k, v in consts_dict.items()}
 
     comp_ops = [('i32.eqz', '45'), ('i32.eq', '46'), ('i32.ne', '47'),
                 ('i32.lt_s', '48'), ('i32.lt_u', '49'),
@@ -91,6 +98,7 @@ class WASM_OP_Code:
                 ('f64.gt', '64'), ('f64.le', '65'),
                 ('f64.ge', '66')]
     comp_ops_dict = dict(comp_ops)
+    comp_ops_dict_rev = {v: k for k, v in comp_ops_dict.items()}
 
     num_ops = [('i32.clz', '67'), ('i32.ctz', '68'),
                ('i32.popcnt', '69'), ('i32.add', '6a'),
@@ -125,6 +133,7 @@ class WASM_OP_Code:
                ('f64.div', 'a3'), ('f64.min', 'a4'),
                ('f64.max', 'a5'), ('f64.copysign', 'a6')]
     num_ops_dict = dict(num_ops)
+    num_ops_dict_rev = {v: k for k, v in num_ops_dict.items()}
 
     conversion = [('i32.wrap/i64', 'a7'),
                     ('i32.trunc_s/f32', 'a8'),
@@ -148,12 +157,15 @@ class WASM_OP_Code:
                     ('f64.convert_u/i64', 'ba'),
                     ('f64.promote/f32', 'bb')]
     conversion_dict = dict(conversion)
+    conversion_dict_rev = {v: k for k, v in conversion_dict.items()}
 
     reinterpretations = [('i32.reinterpret/f32', 'bc'),
                          ('i64.reinterpret/f64', 'bd'),
                          ('f32.reinterpret/i32', 'be'),
                          ('f64.reinterpret/i64', 'bf')]
     reinterpretations_dict = dict(reinterpretations)
+    reinterpretations_dict_rev = {v: k for k,
+                                  v in reinterpretations_dict.items()}
 
     section_code = [('type', '01'), ('import', '02'),
                     ('function', '03'), ('table', '04'),
@@ -162,6 +174,7 @@ class WASM_OP_Code:
                     ('element', '09'), ('code', '0a'),
                     ('data', '0b'), ('custom', '00')]
     section_code_dict = dict(section_code)
+    section_code_dict_rev = {v: k for k, v in section_code_dict.items()}
 
 
 class ParsedSection(object):
@@ -685,25 +698,98 @@ class ObjReader(object):
             print(section)
 
     def ReadCodeSection(self):
+        offset = 1
         for whatever in self.parsedstruct.section_list:
             # 10 is the code section
             if whatever[0] == 10:
                 code_section = whatever.copy()
         print(code_section)
 
-        function_cnt = LEB128UnsingedDecode(code_section[6][1:2])
-        print(function_cnt)
+        function_cnt = LEB128UnsingedDecode(code_section[6][offset:offset + 1])
+        offset += 1
+        print('function count :' + repr(function_cnt))
 
-        function_body_length = LEB128UnsingedDecode(code_section[6][2:6])
-        print(function_body_length)
-        local_count = LEB128UnsingedDecode(code_section[6][6:10])
-        print(local_count)
+        while function_cnt > 0:
+            print(code_section[6][offset:offset + 4])
+            function_body_length = LEB128UnsingedDecode(code_section[6][offset:offset + 4])
+            offset += 4
+            print('function body length :' + repr(function_body_length))
 
-        if local_count != 0:
-            pass
+            # yolo
+            offset += 1
 
-        for byte in code_section:
-            pass
+            local_count = Conver2Int(True, 1, code_section[6][offset:offset + 1])
+            print(code_section[6][offset:offset + 1])
+            offset += 1
+            print('local count :' + repr(local_count))
+            # print(code_section[6][offset:offset+3])
+
+
+            local_count_size = 1 + local_count
+            if local_count != 0:
+                for i in range(0, local_count):
+                    partial_local_count = Conver2Int(True, 1, code_section[6][offset:offset + 1])
+                    offset += 1
+                    print(Colors.HEADER + repr(partial_local_count) + Colors.ENDC)
+                    for i in range(0, partial_local_count):
+                        offset += 1
+                    local_count -= partial_local_count
+                    local_count_size += 1
+            else:
+                # offset += 1
+                pass
+
+
+            print(Colors.HEADER + repr(local_count_size) + Colors.ENDC)
+            for i in range(0, function_body_length - local_count_size):
+                print('----------------------------------------')
+                byte = format(code_section[6][offset], '02x')
+
+                print(Colors.OKBLUE + byte + Colors.ENDC)
+                if WASM_OP_Code.control_flow_ops_dict_rev.get(byte):
+                    print(Colors.OKGREEN +  WASM_OP_Code.control_flow_ops_dict_rev[byte] + Colors.ENDC)
+                    matched = True
+                elif WASM_OP_Code.type_ops_dict_rev.get(byte):
+                    print(Colors.OKGREEN + WASM_OP_Code.type_ops_dict_rev[byte] + Colors.ENDC)
+                    matched = True
+                elif WASM_OP_Code.num_ops_dict_rev.get(byte):
+                    print(Colors.OKGREEN + WASM_OP_Code.num_ops_dict_rev[byte] + Colors.ENDC)
+                    matched = True
+                elif WASM_OP_Code.call_ops_dict_rev.get(byte):
+                    print(Colors.OKGREEN + WASM_OP_Code.call_ops_dict_rev[byte] + Colors.ENDC)
+                    matched = True
+                elif WASM_OP_Code.mem_ops_dict_rev.get(byte):
+                    print(Colors.OKGREEN + WASM_OP_Code.mem_ops_dict_rev[byte] + Colors.ENDC)
+                    matched = True
+                elif WASM_OP_Code.consts_dict_rev.get(byte):
+                    print(Colors.OKGREEN + WASM_OP_Code.consts_dict_rev[byte] + Colors.ENDC)
+                    matched = True
+                elif WASM_OP_Code.conversion_dict_rev.get(byte):
+                    print(Colors.OKGREEN + WASM_OP_Code.conversion_dict_rev[byte] + Colors.ENDC)
+                    matched = True
+                elif WASM_OP_Code.var_access_dict_rev.get(byte):
+                    print(Colors.OKGREEN + WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
+                    matched = True
+                elif WASM_OP_Code.var_access_dict_rev.get(byte):
+                    print(Colors.OKGREEN + WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
+                    matched = True
+                elif WASM_OP_Code.param_ops_dict_rev.get(byte):
+                    print(Colors.OKGREEN + WASM_OP_Code.param_ops_dict_rev[byte] + Colors.ENDC)
+                    matched = True
+
+                offset += 1
+
+                if not matched:
+                    print(Colors.FAIL + 'did not match anything' + Colors.ENDC)
+                else:
+                    print(Colors.WARNING + 'matched something' + Colors.ENDC)
+                matched = False
+
+
+
+            # offset += function_body_length
+            function_cnt -= 1
+
 
     def ReadDataSection(self):
         for whatever in self.parsedstruct.section_list:
