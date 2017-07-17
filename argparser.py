@@ -697,6 +697,42 @@ class ObjReader(object):
         for section in self.parsedstruct.section_list:
             print(section)
 
+    def Disassemble(self, byte, offset):
+        matched = False
+        if WASM_OP_Code.control_flow_ops_dict_rev.get(byte):
+            print(Colors.OKGREEN +  WASM_OP_Code.control_flow_ops_dict_rev[byte] + Colors.ENDC)
+            matched = True
+        elif WASM_OP_Code.type_ops_dict_rev.get(byte):
+            print(Colors.OKGREEN + WASM_OP_Code.type_ops_dict_rev[byte] + Colors.ENDC)
+            matched = True
+        elif WASM_OP_Code.num_ops_dict_rev.get(byte):
+            print(Colors.OKGREEN + WASM_OP_Code.num_ops_dict_rev[byte] + Colors.ENDC)
+            matched = True
+        elif WASM_OP_Code.call_ops_dict_rev.get(byte):
+            print(Colors.OKGREEN + WASM_OP_Code.call_ops_dict_rev[byte] + Colors.ENDC)
+            matched = True
+        elif WASM_OP_Code.mem_ops_dict_rev.get(byte):
+            print(Colors.OKGREEN + WASM_OP_Code.mem_ops_dict_rev[byte] + Colors.ENDC)
+            matched = True
+        elif WASM_OP_Code.consts_dict_rev.get(byte):
+            print(Colors.OKGREEN + WASM_OP_Code.consts_dict_rev[byte] + Colors.ENDC)
+            matched = True
+        elif WASM_OP_Code.conversion_dict_rev.get(byte):
+            print(Colors.OKGREEN + WASM_OP_Code.conversion_dict_rev[byte] + Colors.ENDC)
+            matched = True
+        elif WASM_OP_Code.var_access_dict_rev.get(byte):
+            print(Colors.OKGREEN + WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
+            matched = True
+        elif WASM_OP_Code.var_access_dict_rev.get(byte):
+            print(Colors.OKGREEN + WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
+            matched = True
+        elif WASM_OP_Code.param_ops_dict_rev.get(byte):
+            print(Colors.OKGREEN + WASM_OP_Code.param_ops_dict_rev[byte] + Colors.ENDC)
+            matched = True
+
+        offset += 1
+        return offset, matched
+
     def ReadCodeSection(self):
         offset = 1
         for whatever in self.parsedstruct.section_list:
@@ -718,12 +754,12 @@ class ObjReader(object):
             # yolo
             offset += 1
 
-            local_count = Conver2Int(True, 1, code_section[6][offset:offset + 1])
+            local_count = Conver2Int(True, 1,
+                                     code_section[6][offset:offset + 1])
             print(code_section[6][offset:offset + 1])
             offset += 1
             print('local count :' + repr(local_count))
             # print(code_section[6][offset:offset+3])
-
 
             local_count_size = 1 + local_count
             if local_count != 0:
@@ -740,45 +776,14 @@ class ObjReader(object):
                 # offset += 1
                 pass
 
-
             print(Colors.HEADER + repr(local_count_size) + Colors.ENDC)
             for i in range(0, function_body_length - local_count_size):
                 print('----------------------------------------')
                 byte = format(code_section[6][offset], '02x')
 
-                print(Colors.OKBLUE + byte + Colors.ENDC)
-                if WASM_OP_Code.control_flow_ops_dict_rev.get(byte):
-                    print(Colors.OKGREEN +  WASM_OP_Code.control_flow_ops_dict_rev[byte] + Colors.ENDC)
-                    matched = True
-                elif WASM_OP_Code.type_ops_dict_rev.get(byte):
-                    print(Colors.OKGREEN + WASM_OP_Code.type_ops_dict_rev[byte] + Colors.ENDC)
-                    matched = True
-                elif WASM_OP_Code.num_ops_dict_rev.get(byte):
-                    print(Colors.OKGREEN + WASM_OP_Code.num_ops_dict_rev[byte] + Colors.ENDC)
-                    matched = True
-                elif WASM_OP_Code.call_ops_dict_rev.get(byte):
-                    print(Colors.OKGREEN + WASM_OP_Code.call_ops_dict_rev[byte] + Colors.ENDC)
-                    matched = True
-                elif WASM_OP_Code.mem_ops_dict_rev.get(byte):
-                    print(Colors.OKGREEN + WASM_OP_Code.mem_ops_dict_rev[byte] + Colors.ENDC)
-                    matched = True
-                elif WASM_OP_Code.consts_dict_rev.get(byte):
-                    print(Colors.OKGREEN + WASM_OP_Code.consts_dict_rev[byte] + Colors.ENDC)
-                    matched = True
-                elif WASM_OP_Code.conversion_dict_rev.get(byte):
-                    print(Colors.OKGREEN + WASM_OP_Code.conversion_dict_rev[byte] + Colors.ENDC)
-                    matched = True
-                elif WASM_OP_Code.var_access_dict_rev.get(byte):
-                    print(Colors.OKGREEN + WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
-                    matched = True
-                elif WASM_OP_Code.var_access_dict_rev.get(byte):
-                    print(Colors.OKGREEN + WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
-                    matched = True
-                elif WASM_OP_Code.param_ops_dict_rev.get(byte):
-                    print(Colors.OKGREEN + WASM_OP_Code.param_ops_dict_rev[byte] + Colors.ENDC)
-                    matched = True
+                offset, matched = self.Disassemble(byte, offset)
 
-                offset += 1
+                print(Colors.OKBLUE + byte + Colors.ENDC)
 
                 if not matched:
                     print(Colors.FAIL + 'did not match anything' + Colors.ENDC)
@@ -786,11 +791,8 @@ class ObjReader(object):
                     print(Colors.WARNING + 'matched something' + Colors.ENDC)
                 matched = False
 
-
-
             # offset += function_body_length
             function_cnt -= 1
-
 
     def ReadDataSection(self):
         for whatever in self.parsedstruct.section_list:
