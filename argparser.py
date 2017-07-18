@@ -23,12 +23,139 @@ class WASM_OP_Code:
     uint8 = 1
     uint16 = 2
     uint32 = 4
+    uint64 = 8
     varuint1 = 1
     varuint7 = 1
     varuint32 = 4
+    varuint64 = 8
     varint1 = 1
     varint7 = 1
     varint32 = 4
+    varint64 = 8
+
+    all_ops = [('i32', '7f', False), ('i64', '7e', False), ('f32', '7d', False),
+                ('f63', '7c', False), ('anyfunc', '7b', False),
+                ('func', '60', False), ('empty_block_type', '40', False),
+                ('unreachable', '00', False), ('nop', '01', False),
+                ('block', '02', True, varuint7), ('loop', '03', True, varuint7),
+                ('if', '04', True, varuint7), ('else', '05', False),
+                ('end', '0b', False), ('br', '0c', True, varuint32),
+                ('br_if', '0d', True, varuint32),
+                ('br_table', '0e', True, (varuint32, varuint32, varuint32)),
+                ('return', '0f', False), ('call', '10', True, varuint32),
+                ('call_indirect', '11', True, (varuint32, varuint1)),
+                ('drop', '1a', False), ('select', '1b', False),
+                ('get_local', '20', True, varuint32),
+                ('set_local', '21', True, varuint32),
+                ('tee_local', '22', True, varuint32),
+                ('get_global', '23', True, varuint32),
+                ('set_global', '24', True, varuint32),
+                ('i32.load', '28', True, (varuint32, varuint32)),
+                ('i64.load', '29', True, (varuint32, varuint32)),
+                ('f32.load', '2a', True, (varuint32, varuint32)),
+                ('f64.load', '2b', True, (varuint32, varuint32)),
+                ('i32.load8_s', '2c', True, (varuint32, varuint32)),
+                ('i32.load8_u', '2d', True, (varuint32, varuint32)),
+                ('i32.load16_s', '2e', True, (varuint32, varuint32)),
+                ('i32.load16_u', '2f', True, (varuint32, varuint32)),
+                ('i64.load8_s', '30', True, (varuint32, varuint32)),
+                ('i64.load8_u', '31', True, (varuint32, varuint32)),
+                ('i64.load16_s', '32', True, (varuint32, varuint32)),
+                ('i64.load16_u', '33', True, (varuint32, varuint32)),
+                ('i64.load32_s', '34', True, (varuint32, varuint32)),
+                ('i64.load32_u', '35', True, (varuint32, varuint32)),
+                ('i32.store', '36', True, (varuint32, varuint32)),
+                ('i64.store', '37', True, (varuint32, varuint32)),
+                ('f32.store', '38', True, (varuint32, varuint32)),
+                ('f64.store', '39', True, (varuint32, varuint32)),
+                ('i32.store8', '3a', True, (varuint32, varuint32)),
+                ('i32.store16', '3b', True, (varuint32, varuint32)),
+                ('i64.store8', '3c', True, (varuint32, varuint32)),
+                ('i64.store16', '3d', True, (varuint32, varuint32)),
+                ('i64.store32', '3e', True, (varuint32, varuint32)),
+                ('current_memory', '3f', True, varuint1),
+                ('grow_memory', '40', True, varuint1),
+                ('i32.const', '41', True, varint32),
+                ('i64.const', '42', True, varint64),
+                ('f32.const', '43', True, uint32), ('f64', '44', True, uint64),
+                ('i32.eqz', '45', False), ('i32.eq', '46', False),
+                ('i32.ne', '47', False), ('i32.lt_s', '48', False),
+                ('i31.lt_u', '49', False), ('i32.gt_s', '4a', False),
+                ('i32.gt_u', '4b', False), ('i32.le_s', '4c', False),
+                ('i32.le_u', '4d', False), ('i32.ge_s', '4e', False),
+                ('i32.ge_u', '4f', False), ('i64.eqz', '50', False),
+                ('i64.eq', '51', False), ('i64.ne', '52', False),
+                ('i64.lt_s', '53', False), ('i64.lt_u', '54', False),
+                ('i64.gt_s', '55', False), ('i64.gt_u', '56', False),
+                ('i64.le_s', '57', False), ('i64.le_u', '58', False),
+                ('i64.ge_s', '59', False), ('i64.ge_u', '5a', False),
+                ('f32.eq', '5b', False), ('f32.ne', '5c', False),
+                ('f32.lt', '5d', False), ('f32.gt', '5e', False),
+                ('f32.le', '5f', False), ('f32.ge', '60', False),
+                ('f64.eq', '61', False), ('f64.ne', '62', False),
+                ('f64.lt', '63', False), ('f64.gt', '64', False),
+                ('f64.le', '65', False), ('f64.ge', '66', False),
+                ('i32.clz', '67', False), ('i31.ctz', '68', False),
+                ('i32.popcnt', '69', False), ('i32.add', '6a', False),
+                ('i32.sub', '6b', False), ('i32.mul', '6c', False),
+                ('i32.div_s', '6d', False), ('i32.div_u', '6e', False),
+                ('i32.rem_s', '6e', False), ('i32.rem_u', '70', False),
+                ('i32.and', '71', False), ('i32.or', '72', False),
+                ('i32.xor', '73', False), ('i32.shl', '74', False),
+                ('i32.shr_s', '75', False), ('i32.shr_u', '76', False),
+                ('i32.rotl', '77', False), ('i32.rotr', '78', False),
+                ('i64.clz', '79', False), ('i64.ctz', '7a', False),
+                ('i64.popcnt', '7b', False), ('i64.add', '7c', False),
+                ('i64.sub', '7d', False), ('i64.mul', '7e', False),
+                ('i64.div_s', '7f', False), ('i64.div_u', '80', False),
+                ('i64.rem_s', '81', False), ('i64.rem_u', '82', False),
+                ('i64.and', '83', False), ('i64.or', '84', False),
+                ('i64.xor', '85', False), ('i64.shl', '86', False),
+                ('i64.shr_s', '87', False), ('i64.shr_u', '88', False),
+                ('i64.rotl', '89', False), ('i63.rotr', '8a', False),
+                ('f32.abs', '8b', False), ('f32.neg', '8c', False),
+                ('f32.ceil', '8d', False),  ('f32.floor', '8e', False),
+                ('f32.trunc', '8f', False), ('f32.nearest', '90', False),
+                ('f32.sqrt', '91', False), ('f32.add', '92', False),
+                ('f32.sub', '93', False), ('f32.mul', '94', False),
+                ('f32.div', '95', False), ('f32.min', '96', False),
+                ('f32.max', '97', False), ('f32.copysign', '98', False),
+                ('f64.abs', '99', False), ('f64.neg', '9a', False),
+                ('f64.ceil', '9b', False), ('f64.floor', '9c', False),
+                ('f64.trunc', '9d', False), ('f64.nearest', '9e', False),
+                ('f64.sqrt', '9f', False), ('f64.add', 'a0', False),
+                ('f64.sub', 'a1', False), ('f64.mul', 'a2', False),
+                ('f64.div', 'a3', False), ('f64.min', 'a4', False),
+                ('f64.max', 'a5', False), ('f64.copysign', 'a6', False),
+                ('i32.wrap/i64', 'a7', False), ('i32.trunc_s/f32', 'a8', False),
+                ('i32.trunc_u/f32', 'a9', False),
+                ('i32.trunc_s/f64', 'aa', False),
+                ('i32.trunc_u/f64', 'ab', False),
+                ('i64.extend_s/i32', 'ac', False),
+                ('i64.extend_u/i32', 'ad', False),
+                ('i64.trunc_s/f32', 'ae', False),
+                ('i64.trunc_u/f32', 'af', False),
+                ('i64.trunc_s/f64', 'b0', False),
+                ('i64.trunc_u/f64', 'b1', False),
+                ('f32.convert_s/i32', 'b2', False),
+                ('f32.convert_u/i32', 'b3', False),
+                ('f32.convert_s/i64', 'b4', False),
+                ('f32.convert_u/i64', 'b5', False),
+                ('f32.demote/f64', 'b6', False),
+                ('f64.convert_s/i32', 'b7', False),
+                ('f64.convert_u/i32', 'b8', False),
+                ('f64.convert_s/i64', 'b9', False),
+                ('f64.convert_u/i64', 'ba', False),
+                ('f64.promote/f32', 'bb', False),
+                ('i32.reinterpret/f32', 'bc', False),
+                ('i64.reinterpret/f64', 'bd', False),
+                ('f32.reinterpret/i32', 'be', False),
+                ('f64.reinterpret/i64', 'bf', False),
+                ('type', '01'), ('import', '02'),
+                ('function', '03'), ('table', '04'), ('memory', '05'),
+                ('global', '06'), ('export', '07'), ('start', '08'),
+                ('element', '09'), ('code', '0a'), ('data', '0b'),
+                ('custom', '00')]
 
     type_ops = [('i32', '7f'), ('i64', '7e'), ('f32', '7d'),
                 ('f64', '7c'), ('anyfunc', '7b'), ('func', '60'),
@@ -638,12 +765,14 @@ class ObjReader(object):
     def ReadWASM(self):
         # read the magic cookie
         byte = self.wasm_file.read(WASM_OP_Code.uint32)
-        if byte != WASM_OP_Code.magic_number.to_bytes(WASM_OP_Code.uint32, byteorder=self.endianness, signed=False):
+        if byte != WASM_OP_Code.magic_number.to_bytes(
+                WASM_OP_Code.uint32, byteorder=self.endianness, signed=False):
             raise Exception("bad magic cookie")
 
         # read the version number
         byte = self.wasm_file.read(WASM_OP_Code.uint32)
-        if byte != WASM_OP_Code.version_number.to_bytes(WASM_OP_Code.uint32, byteorder=self.endianness, signed=False):
+        if byte != WASM_OP_Code.version_number.to_bytes(
+                WASM_OP_Code.uint32, byteorder=self.endianness, signed=False):
             raise Exception("bad version number")
         else:
             self.parsedstruct.version_number = byte
@@ -681,9 +810,8 @@ class ObjReader(object):
                                           name_len)
                 # print(name_len)
                 name = self.wasm_file.read(name_len)
-                payload_data = self.wasm_file.read(payload_length_int
-                                                    - name_len_int -
-                                                    WASM_OP_Code.varuint32)
+                payload_data = self.wasm_file.read(
+                    payload_length_int - name_len_int - WASM_OP_Code.varuint32)
 
         self.parsedstruct.section_list.append([section_id_int, 'jojo',
                                                payload_length_int,
@@ -697,37 +825,47 @@ class ObjReader(object):
         for section in self.parsedstruct.section_list:
             print(section)
 
-    def Disassemble(self, byte, offset):
+    def DisassembleDebug(self, byte, offset):
         matched = False
         if WASM_OP_Code.control_flow_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN +  WASM_OP_Code.control_flow_ops_dict_rev[byte] + Colors.ENDC)
+            print(Colors.OKGREEN +
+                  WASM_OP_Code.control_flow_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.type_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN + WASM_OP_Code.type_ops_dict_rev[byte] + Colors.ENDC)
+            print(Colors.OKGREEN +
+                  WASM_OP_Code.type_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.num_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN + WASM_OP_Code.num_ops_dict_rev[byte] + Colors.ENDC)
+            print(Colors.OKGREEN +
+                  WASM_OP_Code.num_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.call_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN + WASM_OP_Code.call_ops_dict_rev[byte] + Colors.ENDC)
+            print(Colors.OKGREEN +
+                  WASM_OP_Code.call_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.mem_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN + WASM_OP_Code.mem_ops_dict_rev[byte] + Colors.ENDC)
+            print(Colors.OKGREEN +
+                  WASM_OP_Code.mem_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.consts_dict_rev.get(byte):
-            print(Colors.OKGREEN + WASM_OP_Code.consts_dict_rev[byte] + Colors.ENDC)
+            print(Colors.OKGREEN +
+                  WASM_OP_Code.consts_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.conversion_dict_rev.get(byte):
-            print(Colors.OKGREEN + WASM_OP_Code.conversion_dict_rev[byte] + Colors.ENDC)
+            print(Colors.OKGREEN +
+                  WASM_OP_Code.conversion_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.var_access_dict_rev.get(byte):
-            print(Colors.OKGREEN + WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
+            print(Colors.OKGREEN +
+                  WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.var_access_dict_rev.get(byte):
-            print(Colors.OKGREEN + WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
+            print(Colors.OKGREEN +
+                  WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.param_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN + WASM_OP_Code.param_ops_dict_rev[byte] + Colors.ENDC)
+            print(Colors.OKGREEN +
+                  WASM_OP_Code.param_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
 
         offset += 1
@@ -747,7 +885,8 @@ class ObjReader(object):
 
         while function_cnt > 0:
             print(code_section[6][offset:offset + 4])
-            function_body_length = LEB128UnsingedDecode(code_section[6][offset:offset + 4])
+            function_body_length = LEB128UnsingedDecode(
+                code_section[6][offset:offset + 4])
             offset += 4
             print('function body length :' + repr(function_body_length))
 
@@ -764,9 +903,11 @@ class ObjReader(object):
             local_count_size = 1 + local_count
             if local_count != 0:
                 for i in range(0, local_count):
-                    partial_local_count = Conver2Int(True, 1, code_section[6][offset:offset + 1])
+                    partial_local_count = Conver2Int(
+                        True, 1, code_section[6][offset:offset + 1])
                     offset += 1
-                    print(Colors.HEADER + repr(partial_local_count) + Colors.ENDC)
+                    print(Colors.HEADER +
+                          repr(partial_local_count) + Colors.ENDC)
                     # for i in range(0, partial_local_count):
                     #    offset += 1
                     offset += 1
@@ -781,7 +922,7 @@ class ObjReader(object):
                 print('----------------------------------------')
                 byte = format(code_section[6][offset], '02x')
 
-                offset, matched = self.Disassemble(byte, offset)
+                offset, matched = self.DisassembleDebug(byte, offset)
 
                 print(Colors.OKBLUE + byte + Colors.ENDC)
 
@@ -800,7 +941,7 @@ class ObjReader(object):
                 data_section = whatever.copy()
 
         data_cnt = LEB128UnsingedDecode(data_section[6][1:2])
-        # print(data_cnt)
+        print(data_cnt)
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
@@ -850,7 +991,7 @@ class PythonInterpreter(object):
         wasmobj.ReadWASM()
         # wasmobj.PrintAllSection()
         wasmobj.ReadCodeSection()
-        wasmobj.ReadDataSection()
+        # wasmobj.ReadDataSection()
 
 
 def main():
