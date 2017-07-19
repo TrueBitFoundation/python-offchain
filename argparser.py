@@ -871,6 +871,7 @@ class ObjReader(object):
     def Disassemble(self, section_byte, offset):
         matched = False
         read_bytes = 0
+        instruction = str()
         byte = format(section_byte[6][offset], '02x')
         print(Colors.OKBLUE + repr(byte) + Colors.ENDC)
         offset += 1
@@ -878,7 +879,6 @@ class ObjReader(object):
         for op_code in WASM_OP_Code.all_ops:
             if op_code[1] == byte:
                 matched = True
-                print(Colors.OKGREEN + op_code[0] + Colors.ENDC)
 
                 if op_code[2]:
                     print(op_code[2])
@@ -887,16 +887,22 @@ class ObjReader(object):
                         for i in op_code[3]:
                             byte = LEB128UnsingedDecode(
                                 section_byte[offset:offset + i])
+                            instruction += repr(byte) + ' '
                             offset += i
                             read_bytes += i
                             print(i)
                     else:
                         byte = LEB128UnsingedDecode(
                             section_byte[6][offset:offset + op_code[3]])
+                        instruction += repr(byte) + ' '
                         print (LEB128UnsingedDecode(
                             section_byte[6][offset: offset + op_code[3]]))
                         offset += op_code[3]
                         read_bytes += op_code[3]
+
+                print(Colors.OKGREEN +
+                      op_code[0] + ' ' + instruction + Colors.ENDC)
+                instruction = str()
                 break
 
         print('read bytes this iteration:' + repr(read_bytes))
@@ -951,6 +957,8 @@ class ObjReader(object):
             read_bytes_so_far = int()
             print(Colors.HEADER + repr(local_count_size) + Colors.ENDC)
             for i in range(0, function_body_length - local_count_size):
+                if read_bytes_so_far >= function_body_length - local_count_size:
+                    break
                 print('----------------------------------------')
                 # byte = format(code_section[6][offset], '02x')
 
@@ -967,8 +975,6 @@ class ObjReader(object):
                     print(Colors.WARNING + 'matched something' + Colors.ENDC)
                 matched = False
                 read_bytes_so_far += read_bytes
-                if read_bytes_so_far == function_body_length - local_count_size:
-                    break
 
             # offset += function_body_length
             function_cnt -= 1
