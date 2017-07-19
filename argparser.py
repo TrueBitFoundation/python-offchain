@@ -3,7 +3,7 @@ import argparse
 import sys
 import re
 
-__DBG__ = False
+__DBG__ = True
 
 
 class Colors:
@@ -37,19 +37,20 @@ class WASM_OP_Code:
                 ('f63', '7c', False), ('anyfunc', '7b', False),
                 ('func', '60', False), ('empty_block_type', '40', False),
                 ('unreachable', '00', False), ('nop', '01', False),
-                ('block', '02', True, varuint7), ('loop', '03', True, varuint7),
-                ('if', '04', True, varuint7), ('else', '05', False),
-                ('end', '0b', False), ('br', '0c', True, varuint32),
+                ('block', '02', True, (varuint7)),
+                ('loop', '03', True, (varuint7)),
+                ('if', '04', True, (varuint7)), ('else', '05', False),
+                ('end', '0b', False), ('br', '0c', True, (varuint32)),
                 ('br_if', '0d', True, varuint32),
                 ('br_table', '0e', True, (varuint32, varuint32, varuint32)),
-                ('return', '0f', False), ('call', '10', True, varuint32),
+                ('return', '0f', False), ('call', '10', True, (varuint32)),
                 ('call_indirect', '11', True, (varuint32, varuint1)),
                 ('drop', '1a', False), ('select', '1b', False),
-                ('get_local', '20', True, varuint32),
-                ('set_local', '21', True, varuint32),
-                ('tee_local', '22', True, varuint32),
-                ('get_global', '23', True, varuint32),
-                ('set_global', '24', True, varuint32),
+                ('get_local', '20', True, (varuint32)),
+                ('set_local', '21', True, (varuint32)),
+                ('tee_local', '22', True, (varuint32)),
+                ('get_global', '23', True, (varuint32)),
+                ('set_global', '24', True, (varuint32)),
                 ('i32.load', '28', True, (varuint32, varuint32)),
                 ('i64.load', '29', True, (varuint32, varuint32)),
                 ('f32.load', '2a', True, (varuint32, varuint32)),
@@ -73,11 +74,12 @@ class WASM_OP_Code:
                 ('i64.store8', '3c', True, (varuint32, varuint32)),
                 ('i64.store16', '3d', True, (varuint32, varuint32)),
                 ('i64.store32', '3e', True, (varuint32, varuint32)),
-                ('current_memory', '3f', True, varuint1),
-                ('grow_memory', '40', True, varuint1),
-                ('i32.const', '41', True, varint32),
-                ('i64.const', '42', True, varint64),
-                ('f32.const', '43', True, uint32), ('f64', '44', True, uint64),
+                ('current_memory', '3f', True, (varuint1)),
+                ('grow_memory', '40', True, (varuint1)),
+                ('i32.const', '41', True, (varint32)),
+                ('i64.const', '42', True, (varint64)),
+                ('f32.const', '43', True, (uint32)),
+                ('f64', '44', True, (uint64)),
                 ('i32.eqz', '45', False), ('i32.eq', '46', False),
                 ('i32.ne', '47', False), ('i32.lt_s', '48', False),
                 ('i31.lt_u', '49', False), ('i32.gt_s', '4a', False),
@@ -150,12 +152,7 @@ class WASM_OP_Code:
                 ('i32.reinterpret/f32', 'bc', False),
                 ('i64.reinterpret/f64', 'bd', False),
                 ('f32.reinterpret/i32', 'be', False),
-                ('f64.reinterpret/i64', 'bf', False),
-                ('type', '01'), ('import', '02'),
-                ('function', '03'), ('table', '04'), ('memory', '05'),
-                ('global', '06'), ('export', '07'), ('start', '08'),
-                ('element', '09'), ('code', '0a'), ('data', '0b'),
-                ('custom', '00')]
+                ('f64.reinterpret/i64', 'bf', False)]
 
     type_ops = [('i32', '7f'), ('i64', '7e'), ('f32', '7d'),
                 ('f64', '7c'), ('anyfunc', '7b'), ('func', '60'),
@@ -871,6 +868,40 @@ class ObjReader(object):
         offset += 1
         return offset, matched
 
+    def Disassemble(self, section_byte, offset):
+        matched = False
+        read_bytes = 0
+        byte = format(section_byte[6][offset], '02x')
+        print(Colors.OKBLUE + repr(byte) + Colors.ENDC)
+        offset += 1
+        read_bytes += 1
+        for op_code in WASM_OP_Code.all_ops:
+            if op_code[1] == byte:
+                matched = True
+                print(Colors.OKGREEN + op_code[0] + Colors.ENDC)
+
+                if op_code[2]:
+                    print(op_code[2])
+                    print(op_code[3])
+                    if isinstance(op_code[3], tuple):
+                        for i in op_code[3]:
+                            byte = LEB128UnsingedDecode(
+                                section_byte[offset:offset + i])
+                            offset += i
+                            read_bytes += i
+                            print(i)
+                    else:
+                        byte = LEB128UnsingedDecode(
+                            section_byte[6][offset:offset + op_code[3]])
+                        print (LEB128UnsingedDecode(
+                            section_byte[6][offset: offset + op_code[3]]))
+                        offset += op_code[3]
+                        read_bytes += op_code[3]
+                break
+
+        print('read bytes this iteration:' + repr(read_bytes))
+        return offset, matched, read_bytes
+
     def ReadCodeSection(self):
         offset = 1
         for whatever in self.parsedstruct.section_list:
@@ -917,20 +948,27 @@ class ObjReader(object):
                 # offset += 1
                 pass
 
+            read_bytes_so_far = int()
             print(Colors.HEADER + repr(local_count_size) + Colors.ENDC)
             for i in range(0, function_body_length - local_count_size):
                 print('----------------------------------------')
-                byte = format(code_section[6][offset], '02x')
+                # byte = format(code_section[6][offset], '02x')
 
-                offset, matched = self.DisassembleDebug(byte, offset)
+                # offset, matched = self.DisassembleDebug(byte, offset)
+                offset, matched, read_bytes = self.Disassemble(
+                    code_section, offset)
 
-                print(Colors.OKBLUE + byte + Colors.ENDC)
+
+                # print(Colors.OKBLUE + byte + Colors.ENDC)
 
                 if not matched:
                     print(Colors.FAIL + 'did not match anything' + Colors.ENDC)
                 else:
                     print(Colors.WARNING + 'matched something' + Colors.ENDC)
                 matched = False
+                read_bytes_so_far += read_bytes
+                if read_bytes_so_far == function_body_length - local_count_size:
+                    break
 
             # offset += function_body_length
             function_cnt -= 1
