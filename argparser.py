@@ -7,11 +7,14 @@ __DBG__ = True
 
 
 class Colors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
+    purple = '\033[95m'
+    blue = '\033[94m'
+    green = '\033[92m'
+    yellow = '\033[93m'
+    red = '\033[91m'
+    grey = '\033[1;37m'
+    darkgrey = '\033[1;30m'
+    cyan = '\033[1;36m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
@@ -363,6 +366,34 @@ def LEB128UnsingedDecode(bytelist):
     return(result)
 
 
+def LEB128SingedDecode(bytelist):
+    result = 0
+    shift = 0
+    for byte in bytelist:
+        result |= (byte & 0x7f) << shift
+        last_byte = byte
+        shift += 7
+        if (byte & 0x80) == 0:
+            break
+
+    if (shift < len(bytelist.len()*8)) and (last_byte & 0x40 == 0x40):
+        result |= - (1 << shift)
+
+    return(result)
+
+
+def LEB128UnsingedEncode(int_val, num_byte):
+    byte_array = bytearray()
+    return(byte_array)
+    pass
+
+
+def LEB128SingedEncode(int_val, num_byte):
+    byte_array = bytearray()
+    return(byte_array)
+    pass
+
+
 class CLIArgParser(object):
     def __init__(self):
         parser = argparse.ArgumentParser()
@@ -370,6 +401,12 @@ class CLIArgParser(object):
                             help="path to the wasm text file")
         parser.add_argument("--wasm", type=str,
                             help="path to the wasm object file")
+        parser.add_argument("--asb", type=str,
+                            help="path to the wast file to assemble")
+        parser.add_argument("--dis", type=str,
+                            help="path to the wasm file to disassemble")
+        parser.add_argument("-o", type=str, help="the path to the output file")
+
         self.args = parser.parse_args()
 
         if self.args.wasm is not None and self.args.wast is not None:
@@ -381,6 +418,15 @@ class CLIArgParser(object):
 
     def getWASMPath(self):
         return self.args.wasm
+
+    def getASPath(self):
+        return self.args.asb
+
+    def getDISASPath(self):
+        return self.args.dis
+
+    def getOutputPath(self):
+        return self.args.o
 
 
 class WASMText(object):
@@ -509,36 +555,36 @@ class WASMText(object):
     def PrintTypeDict(self):
         for element in self.wast_header_type:
             # print(self.wast_header_type[element])
-            print(Colors.OKGREEN + self.wast_header_type[element] + Colors.ENDC)
+            print(Colors.green + self.wast_header_type[element] + Colors.ENDC)
 
     def PrintImportDict(self):
         for element in self.wast_header_import:
-            print(Colors.FAIL + self.wast_header_import[element] + Colors.ENDC)
+            print(Colors.red + self.wast_header_import[element] + Colors.ENDC)
 
     def PrintTableDict(self):
         for element in self.wast_header_table:
-            print(Colors.HEADER + self.wast_header_table[element] + Colors.ENDC)
+            print(Colors.purple + self.wast_header_table[element] + Colors.ENDC)
 
     def PrintElemDict(self):
         for element in self.wast_header_elem:
-            print(Colors.OKBLUE + self.wast_header_elem[element] + Colors.ENDC)
+            print(Colors.blue + self.wast_header_elem[element] + Colors.ENDC)
 
     def PrintMemoryDict(self):
         for element in self.wast_header_memory:
-            print(Colors.UNDERLINE + self.wast_header_memory[element] +
+            print(Colors.darkgrey + self.wast_header_memory[element] +
                   Colors.ENDC)
 
     def PrintDataDict(self):
         for element in self.wast_header_data:
-            print(Colors.WARNING + self.wast_header_data[element] + Colors.ENDC)
+            print(Colors.yellow + self.wast_header_data[element] + Colors.ENDC)
 
     def PrintExportDict(self):
         for element in self.wast_header_export:
-            print(Colors.BOLD + self.wast_header_export[element] + Colors.ENDC)
+            print(Colors.cyan + self.wast_header_export[element] + Colors.ENDC)
 
     def PrintFuncDict(self):
         for element in self.wast_header_func:
-            print(Colors.HEADER + self.wast_header_func[element] + Colors.ENDC)
+            print(Colors.purple + self.wast_header_func[element] + Colors.ENDC)
 
     def getTypeHeader(self):
         return self.wast_header_type
@@ -614,7 +660,7 @@ class FuncBodyParser(object):
         sexpr_pattern = re.compile('\([^(]*?\)')
 
         for funcbody in self.wast_obj_func:
-            print(Colors.OKBLUE + self.wast_obj_func[funcbody] + Colors.ENDC)
+            print(Colors.blue + self.wast_obj_func[funcbody] + Colors.ENDC)
 
             most_concat_sexpr = re.findall(sexpr_pattern,
                                            self.wast_obj_func[funcbody])
@@ -825,43 +871,43 @@ class ObjReader(object):
     def DisassembleDebug(self, byte, offset):
         matched = False
         if WASM_OP_Code.control_flow_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN +
+            print(Colors.green +
                   WASM_OP_Code.control_flow_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.type_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN +
+            print(Colors.green +
                   WASM_OP_Code.type_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.num_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN +
+            print(Colors.green +
                   WASM_OP_Code.num_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.call_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN +
+            print(Colors.green +
                   WASM_OP_Code.call_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.mem_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN +
+            print(Colors.green +
                   WASM_OP_Code.mem_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.consts_dict_rev.get(byte):
-            print(Colors.OKGREEN +
+            print(Colors.green +
                   WASM_OP_Code.consts_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.conversion_dict_rev.get(byte):
-            print(Colors.OKGREEN +
+            print(Colors.green +
                   WASM_OP_Code.conversion_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.var_access_dict_rev.get(byte):
-            print(Colors.OKGREEN +
+            print(Colors.green +
                   WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.var_access_dict_rev.get(byte):
-            print(Colors.OKGREEN +
+            print(Colors.green +
                   WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
             matched = True
         elif WASM_OP_Code.param_ops_dict_rev.get(byte):
-            print(Colors.OKGREEN +
+            print(Colors.green +
                   WASM_OP_Code.param_ops_dict_rev[byte] + Colors.ENDC)
             matched = True
 
@@ -872,8 +918,9 @@ class ObjReader(object):
         matched = False
         read_bytes = 0
         instruction = str()
+        print('offset = ' + repr(offset))
         byte = format(section_byte[6][offset], '02x')
-        print(Colors.OKBLUE + repr(byte) + Colors.ENDC)
+        print(Colors.blue + repr(byte) + Colors.ENDC)
         offset += 1
         read_bytes += 1
         for op_code in WASM_OP_Code.all_ops:
@@ -900,7 +947,7 @@ class ObjReader(object):
                         offset += op_code[3]
                         read_bytes += op_code[3]
 
-                print(Colors.OKGREEN +
+                print(Colors.green +
                       op_code[0] + ' ' + instruction + Colors.ENDC)
                 instruction = str()
                 break
@@ -935,7 +982,6 @@ class ObjReader(object):
             print(code_section[6][offset:offset + 1])
             offset += 1
             print('local count :' + repr(local_count))
-            # print(code_section[6][offset:offset+3])
 
             local_count_size = 1 + local_count
             if local_count != 0:
@@ -943,40 +989,31 @@ class ObjReader(object):
                     partial_local_count = Conver2Int(
                         True, 1, code_section[6][offset:offset + 1])
                     offset += 1
-                    print(Colors.HEADER +
+                    print(Colors.purple +
                           repr(partial_local_count) + Colors.ENDC)
-                    # for i in range(0, partial_local_count):
-                    #    offset += 1
                     offset += 1
                     local_count -= partial_local_count
                     local_count_size += 1
             else:
-                # offset += 1
                 pass
 
             read_bytes_so_far = int()
-            print(Colors.HEADER + repr(local_count_size) + Colors.ENDC)
+            print(Colors.purple + repr(local_count_size) + Colors.ENDC)
             for i in range(0, function_body_length - local_count_size):
                 if read_bytes_so_far >= function_body_length - local_count_size:
                     break
                 print('----------------------------------------')
-                # byte = format(code_section[6][offset], '02x')
 
-                # offset, matched = self.DisassembleDebug(byte, offset)
                 offset, matched, read_bytes = self.Disassemble(
                     code_section, offset)
 
-
-                # print(Colors.OKBLUE + byte + Colors.ENDC)
-
                 if not matched:
-                    print(Colors.FAIL + 'did not match anything' + Colors.ENDC)
+                    print(Colors.red + 'did not match anything' + Colors.ENDC)
                 else:
-                    print(Colors.WARNING + 'matched something' + Colors.ENDC)
+                    print(Colors.yellow + 'matched something' + Colors.ENDC)
                 matched = False
                 read_bytes_so_far += read_bytes
 
-            # offset += function_body_length
             function_cnt -= 1
 
     def ReadDataSection(self):
@@ -1035,7 +1072,7 @@ class PythonInterpreter(object):
         wasmobj.ReadWASM()
         # wasmobj.PrintAllSection()
         wasmobj.ReadCodeSection()
-        # wasmobj.ReadDataSection()
+        wasmobj.ReadDataSection()
 
 
 def main():
@@ -1050,6 +1087,12 @@ def main():
         print(argparser.getWASTPath())
         parser = ParserV1()
         parser.run()
+
+    if argparser.getASPath() is not None:
+        print("not implemented yet")
+
+    if argparser.getDISASPath() is not None:
+        print("not implemented yet")
 
 
 if __name__ == '__main__':
