@@ -34,7 +34,7 @@ The WASM `if` instruction pushes an entry onto the control flow stack which cont
   ```ASM
 
   push $value_stack_length, $block_sinature_type, $unbound_label
-  move %r1, $condition
+  mov %r1, $condition
   jnz $label
 
   ```
