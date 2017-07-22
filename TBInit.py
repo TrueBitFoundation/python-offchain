@@ -8,6 +8,10 @@ class TBMachine(object):
         Stack_Call = list()
         Stack_Value = list()
         Vector_Globals = list()
+        Index_Space_Function = list()
+        Index_Space_Global = list()
+        Index_Space_Linear = list()
+        Index_Space_Table = list()
 
 
 class TBInit(object):
