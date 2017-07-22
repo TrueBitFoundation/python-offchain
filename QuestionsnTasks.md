@@ -44,4 +44,7 @@ The WASM `if` instruction pushes an entry onto the control flow stack which cont
   * `if`
   * `else`
   * `end`
-  * ``
+  * `tee_local`
+  * `call_indirect`
+
+  This list is subject to change.<br/>
