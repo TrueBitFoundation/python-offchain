@@ -39,3 +39,9 @@ The WASM `if` instruction pushes an entry onto the control flow stack which cont
 
   ```
   Values starting with a `$` are labels, palceholders for the real values. `%r1` is one of the registers of the implicit register machine. Do note that these registers are a part of the overall machine state so we will need to add them as leaves to the merkle tree.<br/>
+
+  Here's a list of such instructions:<br/>
+  * `if`
+  * `else`
+  * `end`
+  * ``
