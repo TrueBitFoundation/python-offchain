@@ -31,11 +31,11 @@ List of the tasks we need done:<br/>
 * We will need to break down some of the WASM ops into smaller steps so that the Truebit machine can see those state transitions as well. Here's what we mean:<br/>
 The WASM `if` instruction pushes an entry onto the control flow stack which contains an unbound label, the current length of the value stack and the block signature then branches if the condition is false. We can break this down into multiple steps using an implicit register machine. Step one will only include the push, and the second step deals with checking the condition and step three will either be a branch or a fall-through:<br/>
 
-```
+  ```
 
-push $value_stack_length, $block_sinature_type, $unbound_label
-move %r1, $condition
-jnz $label
+  push $value_stack_length, $block_sinature_type, $unbound_label
+  move %r1, $condition
+  jnz $label
 
-```
-Values starting with a `$` are labels, palceholders for the real values. `%r1` is one of the registers of the implicit register machine. Do note that these registers are a part of the overall machine state so we will need to add them as leaves to the merkle tree.<br/>
+  ```
+  Values starting with a `$` are labels, palceholders for the real values. `%r1` is one of the registers of the implicit register machine. Do note that these registers are a part of the overall machine state so we will need to add them as leaves to the merkle tree.<br/>
