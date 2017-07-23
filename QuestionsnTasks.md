@@ -13,23 +13,23 @@ List of the tasks we need done:<br/>
 
 * **TESTS!!** I don't need to yell, I know, but we really do need to write tests. Right now we need to write WAST(web assembly text) or WASM(web assembly binary) test files.<br/>
   * The time estimation for this one is honestly as much as you can spend time on it.<br/>
-* Section decoding: We need the following sections in object files to be decoded and recorded in the memory:<br/>
-  * Type Section
-  * Import Section
-  * Function Section
-  * Table
-  * Memory Section
-  * Global Section
-  * Export Section
-  * Start Section
-  * Element Section
-  * Data Section
-  * The time estimation for this one is one day per section.<br/>
-* Validation: we need to run the validation tests specified by the WASM document before running the code. For the proof of concept implementation(namely, this one right here), we will be running the validations at the same time that we will be running our parsing so we'll be doing a single pass.<br/>
-* A signed LEB128 encoder. Time estimation is a couple of hours.<br/>
-* An unsigned LEB128 encoder. Time estimation is a couple of hours.<br/>
-* We will need to break down some of the WASM ops into smaller steps so that the Truebit machine can see those state transitions as well. Here's what we mean:<br/>
-The WASM `if` instruction pushes an entry onto the control flow stack which contains an unbound label, the current length of the value stack and the block signature then branches if the condition is false. We can break this down into multiple steps using an implicit register machine. Step one will only include the push, and the second step deals with checking the condition and step three will either be a branch or a fall-through:<br/>
+1. Section decoding: We need the following sections in object files to be decoded and recorded in the memory:<br/>
+  1. Type Section
+  2. Import Section
+  3. Function Section
+  4. Table
+  5. Memory Section
+  6. Global Section
+  7. Export Section
+  8. Start Section
+  9. Element Section
+  10. Data Section
+  11. The time estimation for this one is one day per section.<br/>
+2. Validation: we need to run the validation tests specified by the WASM document before running the code. For the proof of concept implementation(namely, this one right here), we will be running the validations at the same time that we will be running our parsing so we'll be doing a single pass.<br/>
+3. A signed LEB128 encoder. Time estimation is a couple of hours.<br/>
+4. An unsigned LEB128 encoder. Time estimation is a couple of hours.<br/>
+5. We will need to break down some of the WASM ops into smaller steps so that the Truebit machine can see those state transitions as well. Here's what we mean:<br/>
+The WASM `if` instruction pushes an entry onto the control flow stack which contains an unbound label(a label that does not have an index bound to it), the current length of the value stack(the stack where the values are put) and the block signature(think of it as a block return type) then branches if the condition is false. We can break this down into multiple steps using an implicit register machine. Step one will only include the push, and the second step deals with checking the condition and step three will either be a branch or a fall-through:<br/>
 
   ```ASM
 
@@ -40,17 +40,17 @@ The WASM `if` instruction pushes an entry onto the control flow stack which cont
   ```
   Values starting with a `$` are labels, palceholders for the real values. `%r1` is one of the registers of the implicit register machine. Do note that these registers are a part of the overall machine state so we will need to add them as leaves to the merkle tree.<br/>
 
-  Here's a list of the actual WASM instructions that are being considered for being run in the implicit register machine:<br/>
-  * `if`
-  * `else`
-  * `end`
-  * `tee_local`
-  * `call_indirect`
-  * all the intetger arithmetic operations
-  * floating-point arithmetic operations
-  * conversion instructions
-  * extending load instructions
-  * wrapping store instructions
-  * `grow_memory`
+  Here's a list of the actual WASM instructions that are being considered for being run in the implicit register machine(the code is pseudo-ASM):<br/>
+  1. `if`
+  2. `else`
+  3. `end`
+  4. `tee_local`
+  5. `call_indirect`
+  6. all the intetger arithmetic operations
+  7. floating-point arithmetic operations
+  8. conversion instructions
+  9. extending load instructions
+  10. wrapping store instructions
+  11. `grow_memory`
 
   This list is subject to change.<br/>
