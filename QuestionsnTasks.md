@@ -7,6 +7,7 @@ List of the questions that need to be answered:<br/>
 * Where are we getting our wasm(Web Assembly Object) files from? different sources can use different encodings to cut down code-size or execution time.<br/>
 * `binaryen` encodes `varuint32` values to one byte when need be, but when the size is bigger, it uses more than one byte. How can the interpreter know that?<br/>
 * For the validation checks, why would we want to run a "naive" parser first(to just run the validations) in contrast to running the tests at the same time as parsing the object file? In other words why single-pass versus multi-pass?<br/>
+* Are we going to allow for sys calls inside the code that the interpreter is supposed to run?<br/>
 
 ### Tasks
 List of the tasks we need done:<br/>
@@ -29,7 +30,7 @@ List of the tasks we need done:<br/>
 3. A signed LEB128 encoder. Time estimation is a couple of hours.<br/>
 4. An unsigned LEB128 encoder. Time estimation is a couple of hours.<br/>
 5. We will need to break down some of the WASM ops into smaller steps so that the Truebit machine can see those state transitions as well. Here's what we mean:<br/>
-The WASM `if` instruction pushes an entry onto the control flow stack which contains an unbound label(a label that does not have an index bound to it), the current length of the value stack(the stack where the values are put) and the block signature(think of it as a block return type) then branches if the condition is false. We can break this down into multiple steps using an implicit register machine. Step one will only include the push, and the second step deals with checking the condition and step three will either be a branch or a fall-through:<br/>
+The WASM `if` instruction pushes an entry onto the control flow stack which contains an unbound label(a label that does not have an index bound to it), the current length of the value stack(the stack where the values are put) and the block signature(think of it as a block return type) then branches if the condition is false. We can break this down into multiple steps using an implicit register machine. Step one will only include the push, and the second step deals with checking the condition and step three will either be a branch or a fall-through(the code is pseudo-ASM):<br/>
 
   ```ASM
 
@@ -40,7 +41,7 @@ The WASM `if` instruction pushes an entry onto the control flow stack which cont
   ```
   Values starting with a `$` are labels, palceholders for the real values. `%r1` is one of the registers of the implicit register machine. Do note that these registers are a part of the overall machine state so we will need to add them as leaves to the merkle tree.<br/>
 
-  Here's a list of the actual WASM instructions that are being considered for being run in the implicit register machine(the code is pseudo-ASM):<br/>
+  Here's a list of the actual WASM instructions that are being considered for being run in the implicit register machine:<br/>
   1. `if`
   2. `else`
   3. `end`
