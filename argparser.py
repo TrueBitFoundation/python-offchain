@@ -1017,12 +1017,45 @@ class ObjReader(object):
             function_cnt -= 1
 
     def ReadDataSection(self):
+        loop = True
+        offset = 1
+        init_expr = []
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 11:
                 data_section = whatever.copy()
 
-        data_cnt = LEB128UnsingedDecode(data_section[6][1:2])
-        print(data_cnt)
+        print(data_section)
+        print('')
+        data_entry_count = data_section[6][offset]
+        print(Colors.purple + 'data entry count:' + repr(data_entry_count) + Colors.ENDC)
+        offset += 1
+
+        while data_entry_count != 0:
+            linear_memory_index = data_section[6][offset]
+            print(Colors.cyan + 'linear memory index:' + repr(linear_memory_index) + Colors.ENDC)
+            offset += 1
+
+            while loop:
+                if data_section[6][offset] == 0x0b:
+                    loop = False
+                init_expr.append(data_section[6][offset])
+                offset += 1
+
+            print(Colors.red + 'init expression:' + repr(init_expr) + Colors.ENDC)
+
+            data_entry_length = data_section[6][offset]
+            offset += 1
+            print(Colors.blue + 'data entry length:' + repr(data_entry_length) + Colors.ENDC)
+
+            data_itself = data_section[6][offset:offset + data_entry_length]
+            print(Colors.green + 'data itslef:' + repr(data_itself) + Colors.ENDC)
+            offset += data_entry_length
+
+            print(Colors.yellow + '-------------------------------------------------------' + Colors.ENDC)
+            data_entry_count -= 1
+            init_expr = []
+            loop = True
+
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
