@@ -15,7 +15,6 @@ List of the tasks we need done:<br/>
 * **TESTS!!** I don't need to yell, I know, but we really do need to write tests. Right now we need to write WAST(web assembly text) or WASM(web assembly binary) test files.<br/>
   * The time estimation for this one is honestly as much as you can spend time on it.<br/>
 1. Section decoding: We need the following sections in object files to be decoded and recorded in the memory:<br/>
-  1. Type Section
   2. Function Section
   3. Table
   4. Memory Section

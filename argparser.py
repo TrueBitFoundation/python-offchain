@@ -1159,6 +1159,53 @@ class ObjReader(object):
             export_entry_cnt -= 1
             field_name = []
 
+    def ReadSectionType(self):
+        offset = 1
+        param_list = []
+        return_list = []
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 1:
+                type_section = whatever.copy()
+
+        print(Colors.purple + 'type section:' + Colors.ENDC)
+        print(type_section)
+        print()
+
+        type_entry_count = type_section[6][offset]
+        offset += 1
+        print(Colors.purple +
+              'type section entry count:'
+              + repr(type_entry_count) + Colors.ENDC)
+
+        while type_entry_count != 0:
+            form = type_section[6][offset]
+            offset += 1
+            print(Colors.grey + 'form:' + repr(form) + Colors.grey)
+            param_count = type_section[6][offset]
+            offset += 1
+            print(Colors.blue +
+                  'param count:' + repr(param_count) + Colors.ENDC)
+
+            for i in range(0, param_count):
+                param_list.append(type_section[6][offset + i])
+            offset += param_count
+            print(Colors.red + 'param list:' + repr(param_list) + Colors.ENDC)
+
+            return_count = type_section[6][offset]
+            offset += 1
+            print(Colors.cyan +
+                  'return count:' + repr(return_count) + Colors.ENDC)
+
+            for i in range(0, return_count):
+                return_list.append(type_section[6][offset + i])
+            offset += return_count
+            print(Colors.yellow +
+                  'return list:' + repr(return_list) + Colors.ENDC)
+
+
+            type_entry_count -= 1
+            param_list = []
+            return_list = []
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
@@ -1211,6 +1258,7 @@ class PythonInterpreter(object):
         wasmobj.ReadDataSection()
         wasmobj.ReadImportSection()
         wasmobj.ReadSectionExport()
+        wasmobj.ReadSectionType()
 
 
 def main():
