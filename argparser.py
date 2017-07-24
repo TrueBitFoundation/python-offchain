@@ -1027,12 +1027,15 @@ class ObjReader(object):
         print(data_section)
         print('')
         data_entry_count = data_section[6][offset]
-        print(Colors.purple + 'data entry count:' + repr(data_entry_count) + Colors.ENDC)
+        print(Colors.purple +
+              'data entry count:' + repr(data_entry_count) + Colors.ENDC)
         offset += 1
 
         while data_entry_count != 0:
             linear_memory_index = data_section[6][offset]
-            print(Colors.cyan + 'linear memory index:' + repr(linear_memory_index) + Colors.ENDC)
+            print(Colors.cyan +
+                  'linear memory index:' +
+                  repr(linear_memory_index) + Colors.ENDC)
             offset += 1
 
             while loop:
@@ -1041,21 +1044,78 @@ class ObjReader(object):
                 init_expr.append(data_section[6][offset])
                 offset += 1
 
-            print(Colors.red + 'init expression:' + repr(init_expr) + Colors.ENDC)
+            print(Colors.red +
+                  'init expression:' + repr(init_expr) + Colors.ENDC)
 
             data_entry_length = data_section[6][offset]
             offset += 1
-            print(Colors.blue + 'data entry length:' + repr(data_entry_length) + Colors.ENDC)
+            print(Colors.blue +
+                  'data entry length:' + repr(data_entry_length) + Colors.ENDC)
 
             data_itself = data_section[6][offset:offset + data_entry_length]
-            print(Colors.green + 'data itslef:' + repr(data_itself) + Colors.ENDC)
+            print(Colors.green +
+                  'data itslef:' + repr(data_itself) + Colors.ENDC)
             offset += data_entry_length
 
-            print(Colors.yellow + '-------------------------------------------------------' + Colors.ENDC)
+            print(Colors.yellow +
+                  '-------------------------------------------------------'
+                  + Colors.ENDC)
             data_entry_count -= 1
             init_expr = []
             loop = True
 
+    def ReadImportSection(self):
+        offset = 1
+        loop = True
+        module_name = []
+        field_name = []
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 2:
+                import_section = whatever.copy()
+
+        print(Colors.purple + 'import section:' + Colors.ENDC)
+        print(import_section)
+        print()
+
+        import_cnt = import_section[6][offset]
+        print(Colors.purple + 'import count:' + repr(import_cnt) + Colors.ENDC)
+        offset += 1
+
+        while import_cnt != 0:
+            module_length = import_section[6][offset]
+            offset += 1
+            print(Colors.blue +
+                  'module length:' + repr(module_length) + Colors.ENDC)
+
+            for i in range(0, module_length):
+                module_name.append(import_section[6][offset + i])
+            print(Colors.cyan
+                  + 'module name:' + repr(module_name) + Colors.ENDC)
+            offset += module_length
+
+            field_length = import_section[6][offset]
+            offset += 1
+            print(Colors.grey
+                  + 'field length:' + repr(field_length) + Colors.ENDC)
+            for i in range(0, field_length):
+                field_name.append(import_section[6][offset + i])
+            print(Colors.red + 'field name:' + repr(field_name) + Colors.ENDC)
+            offset += field_length
+
+            kind = import_section[6][offset]
+            print(Colors.purple + 'kind:' + repr(kind) + Colors.ENDC)
+            offset += 1
+
+            yolo_byte = import_section[6][offset:offset + 1]
+            offset += 1
+            print(Colors.yellow + 'yolo bytes:' + repr(yolo_byte) + Colors.ENDC)
+
+            print(Colors.yellow +
+                  '-------------------------------------------------------'
+                  + Colors.ENDC)
+            import_cnt -= 1
+            module_name = []
+            field_name
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
@@ -1106,6 +1166,7 @@ class PythonInterpreter(object):
         # wasmobj.PrintAllSection()
         wasmobj.ReadCodeSection()
         wasmobj.ReadDataSection()
+        wasmobj.ReadImportSection()
 
 
 def main():
