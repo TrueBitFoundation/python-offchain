@@ -961,6 +961,7 @@ class ObjReader(object):
             # 10 is the code section
             if whatever[0] == 10:
                 code_section = whatever.copy()
+        print(Colors.purple + 'code section:' + Colors.ENDC)
         print(code_section)
 
         function_cnt = LEB128UnsingedDecode(code_section[6][offset:offset + 1])
@@ -1024,6 +1025,7 @@ class ObjReader(object):
             if whatever[0] == 11:
                 data_section = whatever.copy()
 
+        print(Colors.purple+ 'data section:' + Colors.ENDC)
         print(data_section)
         print('')
         data_entry_count = data_section[6][offset]
@@ -1066,7 +1068,6 @@ class ObjReader(object):
 
     def ReadImportSection(self):
         offset = 1
-        loop = True
         module_name = []
         field_name = []
         for whatever in self.parsedstruct.section_list:
@@ -1115,7 +1116,49 @@ class ObjReader(object):
                   + Colors.ENDC)
             import_cnt -= 1
             module_name = []
-            field_name
+            field_name = []
+
+    def ReadSectionExport(self):
+        offset = 1
+        field_name = []
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 7:
+                export_section = whatever.copy()
+
+        print(Colors.purple + 'export section:' + Colors.ENDC)
+        print(export_section)
+        print()
+
+        export_entry_cnt = export_section[6][offset]
+        offset += 1
+        print(Colors.purple
+              + 'export entry count:' + repr(export_entry_cnt) + Colors.ENDC)
+
+        while export_entry_cnt != 0:
+            field_length = export_section[6][offset]
+            offset += 1
+            print(Colors.blue
+                  + 'field_length:' + repr(field_length) + Colors.ENDC)
+
+            for i in range(0, field_length):
+                field_name.append(export_section[6][offset + i])
+            offset += field_length
+            print(Colors.cyan + 'field name:' + repr(field_name) + Colors.ENDC)
+
+            kind = export_section[6][offset]
+            offset += 1
+            print(Colors.red + 'kind:' + repr(kind) + Colors.ENDC)
+
+            index = export_section[6][offset]
+            offset += 1
+            print(Colors.grey + 'index:' + repr(index) + Colors.ENDC)
+
+            print(Colors.green +
+                  '-------------------------------------------------------'
+                  + Colors.ENDC)
+            export_entry_cnt -= 1
+            field_name = []
+
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
@@ -1167,6 +1210,7 @@ class PythonInterpreter(object):
         wasmobj.ReadCodeSection()
         wasmobj.ReadDataSection()
         wasmobj.ReadImportSection()
+        wasmobj.ReadSectionExport()
 
 
 def main():
