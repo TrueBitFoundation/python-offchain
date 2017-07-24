@@ -16,16 +16,13 @@ List of the tasks we need done:<br/>
   * The time estimation for this one is honestly as much as you can spend time on it.<br/>
 1. Section decoding: We need the following sections in object files to be decoded and recorded in the memory:<br/>
   1. Type Section
-  2. Import Section
-  3. Function Section
-  4. Table
-  5. Memory Section
-  6. Global Section
-  7. Export Section
-  8. Start Section
-  9. Element Section
-  10. Data Section
-  11. The time estimation for this one is one day per section.<br/>
+  2. Function Section
+  3. Table
+  4. Memory Section
+  5. Global Section
+  6. Start Section
+  7. Element Section
+  8. The time estimation for this one is one day per section.<br/>
 2. Validation: we need to run the validation tests specified by the WASM document before running the code. For the proof of concept implementation(namely, this one right here), we will be running the validations at the same time that we will be running our parsing so we'll be doing a single pass.<br/>
 3. A signed LEB128 encoder. Time estimation is a couple of hours.<br/>
 4. An unsigned LEB128 encoder. Time estimation is a couple of hours.<br/>
