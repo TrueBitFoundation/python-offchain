@@ -1203,9 +1203,158 @@ class ObjReader(object):
                   'return list:' + repr(return_list) + Colors.ENDC)
 
 
+            print(Colors.green +
+                  '-------------------------------------------------------'
+                  + Colors.ENDC)
             type_entry_count -= 1
             param_list = []
             return_list = []
+
+    def ReadSectionFunction(self):
+        offset = 1
+        index_to_type = []
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 3:
+                function_section = whatever.copy()
+
+        print()
+        print(Colors.purple + 'function section:' + Colors.ENDC)
+        print(function_section)
+        print()
+
+        function_entry_count = function_section[6][offset]
+        offset += 1
+        print(Colors.purple +
+              'function entry count:' +
+              repr(function_entry_count) + Colors.ENDC)
+
+        for i in range(0, function_entry_count):
+            index_to_type.append(function_section[6][offset + i])
+        offset += function_entry_count
+        print(Colors.red +
+              'indices into type section:' +
+              repr(index_to_type) + Colors.ENDC)
+
+    def ReadSectionElement(self):
+        offset = 1
+        init_expr = []
+        loop = True
+        function_indices = []
+
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 9:
+                element_section = whatever.copy()
+
+        print()
+        print(Colors.purple + 'element section:' + Colors.ENDC)
+        print(element_section)
+        print()
+
+        element_entry_count = element_section[6][offset]
+        offset += 1
+        print(Colors.purple +
+              'entry count:' + repr(element_entry_count) + Colors.ENDC)
+
+        while element_entry_count != 0:
+            table_index = element_section[6][offset]
+            offset += 1
+            print(Colors.green +
+                  'table index:' + repr(table_index) + Colors.ENDC)
+
+            while loop:
+                if element_section[6][offset] == 0x0b:
+                    loop = False
+                init_expr.append(element_section[6][offset])
+                offset += 1
+
+            print(Colors.red + 'init expr:' + repr(init_expr) + Colors.ENDC)
+
+            num_elements = element_section[6][offset]
+            print(Colors.cyan +
+                  'number of elements:' + repr(num_elements) + Colors.ENDC)
+
+            for i in range(0, num_elements):
+                function_indices.append(element_section[6][offset + i])
+            offset += num_elements
+            print(Colors.grey +
+                  'function indices:' + repr(function_indices) + Colors.ENDC)
+
+            loop = True
+            init_expr = []
+            function_indices = []
+            element_entry_count -= 1
+
+    def ReadMemorySection(self):
+        offset = 1
+
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 5:
+                memory_section = whatever.copy()
+
+        print()
+        print(Colors.purple + 'memory section:' + Colors.ENDC)
+        print(memory_section)
+        print()
+
+        num_linear_mems = memory_section[6][offset]
+        offset += 1
+        print(Colors.purple
+              + 'num_linear_mems:' + repr(num_linear_mems) + Colors.ENDC)
+
+        while num_linear_mems != 0:
+            flag = memory_section[6][offset]
+            offset += 1
+            print(Colors.grey + 'flag:' + repr(flag) + Colors.ENDC)
+
+            initial = LEB128UnsingedDecode(memory_section[6][offset:offset + 2])
+            offset += 2
+            print(Colors.green + 'initial size:' + repr(initial) + Colors.ENDC)
+
+            if flag == 1:
+                maximum = LEB128UnsingedDecode(
+                    memory_section[6][offset:offset + 2])
+                offset += 2
+                print(Colors.blue + 'maximum:' + repr(maximum) + Colors.ENDC)
+
+            num_linear_mems -= 1
+
+    def ReadSectionTable(self):
+        offset = 1
+
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 4:
+                table_section = whatever.copy()
+
+        print()
+        print(Colors.purple + 'table section:' + Colors.ENDC)
+        print(table_section)
+        print()
+
+        table_count = table_section[6][offset]
+        offset += 1
+        print(Colors.purple + 'table count:' + repr(table_count) + Colors.ENDC)
+
+        while table_count != 0:
+            element_type = table_section[6][offset]
+            offset += 1
+            print(Colors.cyan +
+                  'element type:' + repr(element_type) + Colors.ENDC)
+
+            flag = table_section[6][offset]
+            offset += 1
+            print(Colors.yellow + 'flag:' + repr(flag) + Colors.ENDC)
+
+            initial = LEB128UnsingedDecode(table_section[6][offset:offset + 2])
+            offset += 2
+            print(Colors.green + 'initial size:' + repr(initial) + Colors.ENDC)
+
+            if flag == 1:
+                maximum = LEB128UnsingedDecode(
+                    table_section[6][offset:offset + 2])
+                offset += 2
+                print(Colors.blue + 'maximum:' + repr(maximum) + Colors.ENDC)
+
+            table_count -= 1
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
@@ -1254,11 +1403,15 @@ class PythonInterpreter(object):
         # wasmobj.testprintbyteall()
         wasmobj.ReadWASM()
         # wasmobj.PrintAllSection()
-        wasmobj.ReadCodeSection()
+        # wasmobj.ReadCodeSection()
         wasmobj.ReadDataSection()
         wasmobj.ReadImportSection()
         wasmobj.ReadSectionExport()
         wasmobj.ReadSectionType()
+        wasmobj.ReadSectionFunction()
+        wasmobj.ReadSectionElement()
+        wasmobj.ReadMemorySection()
+        wasmobj.ReadSectionTable()
 
 
 def main():
