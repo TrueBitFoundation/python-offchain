@@ -1415,6 +1415,27 @@ class ObjReader(object):
         offset += 1
         print(Colors.purple + 'count:' + repr(count) + Colors.ENDC)
 
+    def ReadStartSection(self):
+        offset = 1
+        section_exists = False
+
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 8:
+                start_section = whatever.copy()
+                section_exists = True
+
+        if not section_exists:
+            return None
+        print()
+        print(Colors.purple + 'start section:' + Colors.ENDC)
+        print(start_section)
+        print()
+
+        function_index = start_section[6][offset]
+        offset += 1
+        print(Colors.blue +
+              'function index:' + repr(function_index) + Colors.ENDC)
+
     def getCursorLocation(self):
         return(self.wasm_file.tell())
 
@@ -1472,6 +1493,7 @@ class PythonInterpreter(object):
         wasmobj.ReadMemorySection()
         wasmobj.ReadSectionTable()
         wasmobj.ReadSectionGlobal()
+        wasmobj.ReadStartSection()
 
 
 def main():
