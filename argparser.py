@@ -957,12 +957,19 @@ class ObjReader(object):
 
     def ReadCodeSection(self):
         offset = 1
+        section_exists = False
         for whatever in self.parsedstruct.section_list:
             # 10 is the code section
             if whatever[0] == 10:
                 code_section = whatever.copy()
+                section_exists = True
+
+        if not section_exists:
+            return None
+        print()
         print(Colors.purple + 'code section:' + Colors.ENDC)
         print(code_section)
+        print()
 
         function_cnt = LEB128UnsingedDecode(code_section[6][offset:offset + 1])
         offset += 1
@@ -1019,12 +1026,16 @@ class ObjReader(object):
 
     def ReadDataSection(self):
         loop = True
+        section_exists = False
         offset = 1
         init_expr = []
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 11:
                 data_section = whatever.copy()
+                section_exists = True
 
+        if not section_exists:
+            return None
         print(Colors.purple+ 'data section:' + Colors.ENDC)
         print(data_section)
         print('')
@@ -1068,12 +1079,16 @@ class ObjReader(object):
 
     def ReadImportSection(self):
         offset = 1
+        section_exists = False
         module_name = []
         field_name = []
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 2:
                 import_section = whatever.copy()
+                section_exists = True
 
+        if not section_exists:
+            return None
         print(Colors.purple + 'import section:' + Colors.ENDC)
         print(import_section)
         print()
@@ -1120,11 +1135,15 @@ class ObjReader(object):
 
     def ReadSectionExport(self):
         offset = 1
+        section_exists = False
         field_name = []
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 7:
                 export_section = whatever.copy()
+                section_exists = True
 
+        if not section_exists:
+            return None
         print(Colors.purple + 'export section:' + Colors.ENDC)
         print(export_section)
         print()
@@ -1161,12 +1180,16 @@ class ObjReader(object):
 
     def ReadSectionType(self):
         offset = 1
+        section_exists = False
         param_list = []
         return_list = []
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 1:
                 type_section = whatever.copy()
+                section_exists = True
 
+        if not section_exists:
+            return None
         print(Colors.purple + 'type section:' + Colors.ENDC)
         print(type_section)
         print()
@@ -1212,11 +1235,15 @@ class ObjReader(object):
 
     def ReadSectionFunction(self):
         offset = 1
+        section_exists = False
         index_to_type = []
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 3:
                 function_section = whatever.copy()
+                section_exists = True
 
+        if not section_exists:
+            return None
         print()
         print(Colors.purple + 'function section:' + Colors.ENDC)
         print(function_section)
@@ -1237,6 +1264,7 @@ class ObjReader(object):
 
     def ReadSectionElement(self):
         offset = 1
+        section_exists = False
         init_expr = []
         loop = True
         function_indices = []
@@ -1244,7 +1272,10 @@ class ObjReader(object):
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 9:
                 element_section = whatever.copy()
+                section_exists = True
 
+        if not section_exists:
+            return None
         print()
         print(Colors.purple + 'element section:' + Colors.ENDC)
         print(element_section)
@@ -1286,11 +1317,15 @@ class ObjReader(object):
 
     def ReadMemorySection(self):
         offset = 1
+        section_exists = False
 
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 5:
                 memory_section = whatever.copy()
+                section_exists = True
 
+        if not section_exists:
+            return None
         print()
         print(Colors.purple + 'memory section:' + Colors.ENDC)
         print(memory_section)
@@ -1320,11 +1355,15 @@ class ObjReader(object):
 
     def ReadSectionTable(self):
         offset = 1
+        section_exists = False
 
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 4:
                 table_section = whatever.copy()
+                section_exists = True
 
+        if not section_exists:
+            return None
         print()
         print(Colors.purple + 'table section:' + Colors.ENDC)
         print(table_section)
@@ -1355,6 +1394,26 @@ class ObjReader(object):
                 print(Colors.blue + 'maximum:' + repr(maximum) + Colors.ENDC)
 
             table_count -= 1
+
+    def ReadSectionGlobal(self):
+        offset = 1
+        section_exists = False
+
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 6:
+                global_section = whatever.copy()
+                section_exists = True
+
+        if not section_exists:
+            return None
+        print()
+        print(Colors.purple + 'global section:' + Colors.ENDC)
+        print(global_section)
+        print()
+
+        count = global_section[6][offset]
+        offset += 1
+        print(Colors.purple + 'count:' + repr(count) + Colors.ENDC)
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
@@ -1412,6 +1471,7 @@ class PythonInterpreter(object):
         wasmobj.ReadSectionElement()
         wasmobj.ReadMemorySection()
         wasmobj.ReadSectionTable()
+        wasmobj.ReadSectionGlobal()
 
 
 def main():
