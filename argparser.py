@@ -382,13 +382,13 @@ def LEB128SingedDecode(bytelist):
     return(result)
 
 
-def LEB128UnsingedEncode(int_val, num_byte):
+def LEB128UnsingedEncode(int_val, num_byte, pad=True):
     byte_array = bytearray()
     return(byte_array)
     pass
 
 
-def LEB128SingedEncode(int_val, num_byte):
+def LEB128SingedEncode(int_val, num_byte, pad=True):
     byte_array = bytearray()
     return(byte_array)
     pass
@@ -1036,7 +1036,7 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print(Colors.purple+ 'data section:' + Colors.ENDC)
+        print(Colors.purple + 'data section:' + Colors.ENDC)
         print(data_section)
         print('')
         data_entry_count = data_section[6][offset]
@@ -1224,7 +1224,6 @@ class ObjReader(object):
             offset += return_count
             print(Colors.yellow +
                   'return list:' + repr(return_list) + Colors.ENDC)
-
 
             print(Colors.green +
                   '-------------------------------------------------------'
