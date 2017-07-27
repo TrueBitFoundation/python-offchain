@@ -394,6 +394,47 @@ def LEB128SingedEncode(int_val, num_byte, pad=True):
     pass
 
 
+def ReadLEB128OperandsU(section_byte, offset, operand_count):
+    seen_padding = False
+    byte_count = 0
+    operand = []
+    return_list = []
+    read_bytes = 0
+    for i in range(0, operand_count):
+        while True:
+            # print(Colors.red + repr(section_byte) + Colors.ENDC)
+            byte = int(section_byte[6][offset])
+            byte_count += 1
+            read_bytes += 1
+            offset += 1
+            if not seen_padding:
+                operand.append(byte)
+
+                if byte == 0x80:
+                    # we have seen a padding byte so we should read 4 bytes in
+                    # total
+                    seen_padding = True
+                elif byte & 0x80 != 0:
+                    # we havent reached the last byre of the operand yet
+                    pass
+                else:
+                    # we are reading the last byte of the operand
+                    break
+
+            if seen_padding:
+                # if seen_padding:
+                if seen_padding and byte_count == 4:
+                    break
+                elif seen_padding and not byte_count == 4:
+                    operand.append(byte)
+
+        seen_padding = False
+        byte_count = 0
+        return_list.append(operand)
+        operand = []
+    return return_list, offset, read_bytes
+
+
 class CLIArgParser(object):
     def __init__(self):
         parser = argparse.ArgumentParser()
@@ -917,6 +958,7 @@ class ObjReader(object):
     def Disassemble(self, section_byte, offset):
         matched = False
         read_bytes = 0
+        read_bytes_temp = 0
         instruction = str()
         print('offset = ' + repr(offset))
         byte = format(section_byte[6][offset], '02x')
@@ -931,27 +973,22 @@ class ObjReader(object):
                     print(op_code[2])
                     print(op_code[3])
                     if isinstance(op_code[3], tuple):
-                        for i in op_code[3]:
-                            byte = LEB128UnsingedDecode(
-                                section_byte[offset:offset + i])
-                            instruction += repr(byte) + ' '
-                            offset += i
-                            read_bytes += i
-                            print(i)
+                        temp, offset, read_bytes_temp = ReadLEB128OperandsU(
+                            section_byte, offset, len(op_code[3]))
+                        print('temp:' + repr(temp))
+                        for i in range(0, len(op_code[3])):
+                            instruction += repr(temp[i]) + ' '
                     else:
-                        byte = LEB128UnsingedDecode(
-                            section_byte[6][offset:offset + op_code[3]])
-                        instruction += repr(byte) + ' '
-                        print (LEB128UnsingedDecode(
-                            section_byte[6][offset: offset + op_code[3]]))
-                        offset += op_code[3]
-                        read_bytes += op_code[3]
+                        temp, offset, read_bytes_temp = ReadLEB128OperandsU(
+                            section_byte, offset, 1)
+                        print('temp:' + repr(temp))
 
                 print(Colors.green +
                       op_code[0] + ' ' + instruction + Colors.ENDC)
                 instruction = str()
                 break
 
+        read_bytes += read_bytes_temp
         print('read bytes this iteration:' + repr(read_bytes))
         return offset, matched, read_bytes
 
@@ -971,7 +1008,7 @@ class ObjReader(object):
         print(code_section)
         print()
 
-        function_cnt = LEB128UnsingedDecode(code_section[6][offset:offset + 1])
+        function_cnt = code_section[6][offset]
         offset += 1
         print('function count :' + repr(function_cnt))
 
@@ -1005,11 +1042,9 @@ class ObjReader(object):
             else:
                 pass
 
-            read_bytes_so_far = int()
+            read_bytes_so_far = local_count_size
             print(Colors.purple + repr(local_count_size) + Colors.ENDC)
             for i in range(0, function_body_length - local_count_size):
-                if read_bytes_so_far >= function_body_length - local_count_size:
-                    break
                 print('----------------------------------------')
 
                 offset, matched, read_bytes = self.Disassemble(
@@ -1021,6 +1056,8 @@ class ObjReader(object):
                     print(Colors.yellow + 'matched something' + Colors.ENDC)
                 matched = False
                 read_bytes_so_far += read_bytes
+                if read_bytes_so_far == function_body_length:
+                    break
 
             function_cnt -= 1
 
@@ -1482,7 +1519,7 @@ class PythonInterpreter(object):
         # wasmobj.testprintbyteall()
         wasmobj.ReadWASM()
         # wasmobj.PrintAllSection()
-        # wasmobj.ReadCodeSection()
+        wasmobj.ReadCodeSection()
         wasmobj.ReadDataSection()
         wasmobj.ReadImportSection()
         wasmobj.ReadSectionExport()
