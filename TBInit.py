@@ -23,9 +23,6 @@ class TBInit(object):
         self.InitLinearMemory()
         self.InitTables()
 
-    def ValidateModule(self):
-        pass
-
     def InitLinearMemory(self):
         pass
 
@@ -33,9 +30,50 @@ class TBInit(object):
         pass
 
 
-class RTEnv(object):
+class RTE(object):
     def __init__(self):
         Stack_Control_Flow = list()
         Stack_Value = list()
         Vector_Locals = list()
         Current_Position = int()
+
+
+class ValidateModule(object):
+    def __init__(self, section_list):
+        self.section_list = section_list
+
+    def run(self):
+        pass
+
+    def validateTypeSection(self):
+        pass
+
+    def validateImportSection(self):
+        pass
+
+    def validateFunctionSection(self):
+        pass
+
+    def validateTableSection(self):
+        pass
+
+    def validateMemorySection(self):
+        pass
+
+    def validateGlobalSection(self):
+        pass
+
+    def validateExportSection(self):
+        pass
+
+    def validateStartSection(self):
+        pass
+
+    def validateElementSection(self):
+        pass
+
+    def validateCodeSection(self):
+        pass
+
+    def validateDataSection(self):
+        pass
