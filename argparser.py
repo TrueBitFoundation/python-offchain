@@ -104,7 +104,7 @@ class WASM_OP_Code:
                 ('i32.popcnt', '69', False), ('i32.add', '6a', False),
                 ('i32.sub', '6b', False), ('i32.mul', '6c', False),
                 ('i32.div_s', '6d', False), ('i32.div_u', '6e', False),
-                ('i32.rem_s', '6e', False), ('i32.rem_u', '70', False),
+                ('i32.rem_s', '6f', False), ('i32.rem_u', '70', False),
                 ('i32.and', '71', False), ('i32.or', '72', False),
                 ('i32.xor', '73', False), ('i32.shl', '74', False),
                 ('i32.shr_s', '75', False), ('i32.shr_u', '76', False),
