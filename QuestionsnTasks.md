@@ -5,6 +5,8 @@ This document contains the current questions we have and the available tasks if 
 ### Questions
 List of the questions that need to be answered:<br/>
 * Are we going to allow for sys calls inside the code that the interpreter is supposed to run?<br/>
+* Are we going to write a linker, assmebler and disassembler?<br/>
+* How are we going to enforce our restraints on the high-level source-code(C, Cpp, Rust, ...)? For C and Cpp we could write a lib-tooling tool to handle that. For other langugaes I'm out of ideas.<br/>
 
 ### Tasks
 List of the tasks we need done:<br/>

@@ -1,6 +1,10 @@
 import argparser as agp
 
 
+class CSection(object):
+    pass
+
+
 class TBMachine(object):
     def __init__(self):
         Linear_Memory = bytearray()
