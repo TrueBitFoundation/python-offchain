@@ -4,9 +4,6 @@ This document contains the current questions we have and the available tasks if 
 
 ### Questions
 List of the questions that need to be answered:<br/>
-* Where are we getting our wasm(Web Assembly Object) files from? different sources can use different encodings to cut down code-size or execution time.<br/>
-* `binaryen` encodes `varuint32` values to one byte when need be, but when the size is bigger, it uses more than one byte. How can the interpreter know that?<br/>
-* For the validation checks, why would we want to run a "naive" parser first(to just run the validations) in contrast to running the tests at the same time as parsing the object file?<br/>
 * Are we going to allow for sys calls inside the code that the interpreter is supposed to run?<br/>
 
 ### Tasks
