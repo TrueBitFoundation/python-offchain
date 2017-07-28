@@ -435,6 +435,10 @@ def ReadLEB128OperandsU(section_byte, offset, operand_count):
     return return_list, offset, read_bytes
 
 
+def ReadLEB128OperandsS(section_byte, offset, operand_count):
+    pass
+
+
 class CLIArgParser(object):
     def __init__(self):
         parser = argparse.ArgumentParser()
@@ -1433,7 +1437,9 @@ class ObjReader(object):
 
     def ReadSectionGlobal(self):
         offset = 1
+        loop = True
         section_exists = False
+        init_expr = []
 
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 6:
@@ -1450,6 +1456,27 @@ class ObjReader(object):
         count = global_section[6][offset]
         offset += 1
         print(Colors.purple + 'count:' + repr(count) + Colors.ENDC)
+
+        while count != 0:
+            content_type = global_section[6][offset]
+            offset += 1
+            print(Colors.cyan + repr(content_type) + Colors.ENDC)
+
+            mutability = global_section[6][offset]
+            offset += 1
+            print(Colors.blue + repr(mutability) + Colors.ENDC)
+
+            while loop:
+                if global_section[6][offset] == 0x0b:
+                    loop = False
+                init_expr.append(global_section[6][offset])
+                offset += 1
+
+            print(Colors.red + repr(init_expr) + Colors.ENDC)
+
+            count -= 1
+            loop = True
+            init_expr = []
 
     def ReadStartSection(self):
         offset = 1
