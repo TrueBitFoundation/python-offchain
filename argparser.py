@@ -2,6 +2,7 @@ from __future__ import print_function
 import argparse
 import sys
 import re
+from enum import Enum
 
 __DBG__ = True
 
@@ -18,6 +19,22 @@ class Colors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+
+class TypeType(Enum):
+    none = 1
+    lebu = 2
+    lebs = 3
+    flot = 4
+    dobl = 5
+
+
+TypeKS = [['uint8', 8, TypeType.none], ['uint16', 16, TypeType.none],
+          ['uint32', 32, TypeType.none], ['uint64', 64, TypeType.none],
+          ['varuint1', 1, TypeType.lebu], ['varuint7', 7, TypeType.lebu],
+          ['varuint32', 32, TypeType.lebu], ['varuint64', 64, TypeType.lebu],
+          ['varint1', 1, TypeType.lebs], ['varint7', 7, TypeType.lebs],
+          ['varint32', 32, TypeType.lebs], ['varint64', 64, TypeType.lebs]]
 
 
 class WASM_OP_Code:
