@@ -15,8 +15,6 @@ List of the tasks we need done:<br/>
   * The time estimation for this one is honestly as much as you can spend time on it.<br/>
 1. Section decoding: We need the following sections in object files to be decoded and recorded in the memory:<br/>
 2. Validation: we need to run the validation tests specified by the WASM document before running the code. For the proof of concept implementation(namely, this one right here), we will be running the validations at the same time that we will be running our parsing so we'll be doing a single pass.<br/>
-3. A signed LEB128 encoder. Time estimation is a couple of hours.<br/>
-4. An unsigned LEB128 encoder. Time estimation is a couple of hours.<br/>
 5. We will need to break down some of the WASM ops into smaller steps so that the Truebit machine can see those state transitions as well. Here's what we mean:<br/>
 The WASM `if` instruction pushes an entry onto the control flow stack which contains an unbound label(a label that does not have an index bound to it), the current length of the value stack(the stack where the values are put) and the block signature(think of it as a block return type) then branches if the condition is false. We can break this down into multiple steps using an implicit register machine. Step one will only include the push, and the second step deals with checking the condition and step three will either be a branch or a fall-through(the code is pseudo-ASM):<br/>
 
