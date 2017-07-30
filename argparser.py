@@ -399,16 +399,34 @@ def LEB128SingedDecode(bytelist):
     return(result)
 
 
-def LEB128UnsingedEncode(int_val, num_byte, pad=True):
+def LEB128UnsingedEncode(int_val):
+    if int_val < 0:
+        raise Exception("value must not be negative")
+    elif int_val == 0:
+        return bytes([0])
+
     byte_array = bytearray()
+    while int_val:
+        byte = int_val & 0x7f
+        byte_array.append(byte | 0x80)
+        int_val >>= 7
+
+    byte_array[-1] ^= 0x80
+
     return(byte_array)
-    pass
 
 
-def LEB128SingedEncode(int_val, num_byte, pad=True):
+def LEB128SingedEncode(int_val):
     byte_array = bytearray()
+    while True:
+        byte = int_val & 0x7f
+        byte_array.append(byte | 0x80)
+        int_val >>= 7
+        if (int_val == 0 and byte&0x40 == 0) or (int_val == -1 and byte&0x40):
+            byte_array[-1] ^= 0x80
+            break
+
     return(byte_array)
-    pass
 
 
 def ReadLEB128OperandsU(section_byte, offset, operand_count):
