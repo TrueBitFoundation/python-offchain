@@ -372,7 +372,7 @@ def Conver2Int(little_endian, size, bytelist):
         return(sum)
 
 
-def LEB128UnsingedDecode(bytelist):
+def LEB128UnsignedDecode(bytelist):
     result = 0
     shift = 0
     for byte in bytelist:
@@ -383,7 +383,7 @@ def LEB128UnsingedDecode(bytelist):
     return(result)
 
 
-def LEB128SingedDecode(bytelist):
+def LEB128SignedDecode(bytelist):
     result = 0
     shift = 0
     for byte in bytelist:
@@ -393,22 +393,40 @@ def LEB128SingedDecode(bytelist):
         if (byte & 0x80) == 0:
             break
 
-    if (shift < len(bytelist.len()*8)) and (last_byte & 0x40 == 0x40):
+    if last_byte & 0x40:
         result |= - (1 << shift)
 
     return(result)
 
 
-def LEB128UnsingedEncode(int_val, num_byte, pad=True):
+def LEB128UnsignedEncode(int_val):
+    if int_val < 0:
+        raise Exception("value must not be negative")
+    elif int_val == 0:
+        return bytes([0])
+
     byte_array = bytearray()
+    while int_val:
+        byte = int_val & 0x7f
+        byte_array.append(byte | 0x80)
+        int_val >>= 7
+
+    byte_array[-1] ^= 0x80
+
     return(byte_array)
-    pass
 
 
-def LEB128SingedEncode(int_val, num_byte, pad=True):
+def LEB128SignedEncode(int_val):
     byte_array = bytearray()
+    while True:
+        byte = int_val & 0x7f
+        byte_array.append(byte | 0x80)
+        int_val >>= 7
+        if (int_val == 0 and byte&0x40 == 0) or (int_val == -1 and byte&0x40):
+            byte_array[-1] ^= 0x80
+            break
+
     return(byte_array)
-    pass
 
 
 def ReadLEB128OperandsU(section_byte, offset, operand_count):
@@ -898,10 +916,10 @@ class ObjReader(object):
         if section_id == b"":
             not_end_of_the_line = False
         else:
-            section_id_int = LEB128UnsingedDecode(section_id)
+            section_id_int = LEB128UnsignedDecode(section_id)
 
             payload_length = self.wasm_file.read(WASM_OP_Code.varuint32)
-            payload_length_int = LEB128UnsingedDecode(payload_length) + 1
+            payload_length_int = LEB128UnsignedDecode(payload_length) + 1
             # print(payload_length_int)
 
             if section_id is not WASM_OP_Code.section_code_dict['custom']:
@@ -1035,7 +1053,7 @@ class ObjReader(object):
 
         while function_cnt > 0:
             print(code_section[6][offset:offset + 4])
-            function_body_length = LEB128UnsingedDecode(
+            function_body_length = LEB128UnsignedDecode(
                 code_section[6][offset:offset + 4])
             offset += 4
             print('function body length :' + repr(function_body_length))
@@ -1398,12 +1416,12 @@ class ObjReader(object):
             offset += 1
             print(Colors.grey + 'flag:' + repr(flag) + Colors.ENDC)
 
-            initial = LEB128UnsingedDecode(memory_section[6][offset:offset + 2])
+            initial = LEB128UnsignedDecode(memory_section[6][offset:offset + 2])
             offset += 2
             print(Colors.green + 'initial size:' + repr(initial) + Colors.ENDC)
 
             if flag == 1:
-                maximum = LEB128UnsingedDecode(
+                maximum = LEB128UnsignedDecode(
                     memory_section[6][offset:offset + 2])
                 offset += 2
                 print(Colors.blue + 'maximum:' + repr(maximum) + Colors.ENDC)
@@ -1440,12 +1458,12 @@ class ObjReader(object):
             offset += 1
             print(Colors.yellow + 'flag:' + repr(flag) + Colors.ENDC)
 
-            initial = LEB128UnsingedDecode(table_section[6][offset:offset + 2])
+            initial = LEB128UnsignedDecode(table_section[6][offset:offset + 2])
             offset += 2
             print(Colors.green + 'initial size:' + repr(initial) + Colors.ENDC)
 
             if flag == 1:
-                maximum = LEB128UnsingedDecode(
+                maximum = LEB128UnsignedDecode(
                     table_section[6][offset:offset + 2])
                 offset += 2
                 print(Colors.blue + 'maximum:' + repr(maximum) + Colors.ENDC)
