@@ -393,7 +393,7 @@ def LEB128SingedDecode(bytelist):
         if (byte & 0x80) == 0:
             break
 
-    if (shift < len(bytelist.len()*8)) and (last_byte & 0x40 == 0x40):
+    if last_byte & 0x40:
         result |= - (1 << shift)
 
     return(result)
