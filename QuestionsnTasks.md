@@ -40,4 +40,6 @@ The WASM `if` instruction pushes an entry onto the control flow stack which cont
   10. wrapping store instructions
   11. `grow_memory`
 
+  * The second family of tasks revolves around writing AST matchers for TBC(Truebit checker) that flag the unnecessary and unwanted features used in the high-level source code.<br/>
+
   This list is subject to change.<br/>

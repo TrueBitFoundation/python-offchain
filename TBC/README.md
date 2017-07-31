@@ -1,5 +1,7 @@
 ## TBC - Truebit Checker
 
+The current implementation will only flag unwanted and unnecessary high-level contructs for the C-family of languages.<br/>
+
 ### Building
 You need to have the LLVM libraries installed. TBC will use the same options that were used to build your LLVM libraries to build TBC so your `llvm-config` should exist and be in path.<br/>
 
