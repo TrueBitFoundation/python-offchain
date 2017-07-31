@@ -11,5 +11,5 @@ This section introduces the various files and directories inside the repository:
 * `QuestionnTasks.md` holds the current tasks that need to be done and the current questions/challenges that we are facing.<br/>
 * `README.md` is the readme. You should first read that.<br/>
 * `TBInit.py` is the file that holds the containers for the Trueit Interpreter's internal state.<br/>
-* `test_LEB128.py` holds the tests for the LEB128 encoders.<br/>
+* `test` holds the tests.<br/>
 * `TBC` the directory holds the checker that enforces the conditions on the high-level source code that is going to run by the interpreter.<br/>
