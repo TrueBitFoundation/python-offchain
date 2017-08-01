@@ -4,6 +4,34 @@ PoC for process virtual machine to interpret WASM binaries within the context of
 For a list of currently available tasks or questions/challenges we are facing, please take a look at `QuestionsnTasks.md`.<br/>
 For a description of the files and directories along with requirements on having your pull-request reviewed, please look at `Contributions.md`.<br/>
 
+### Building
+To clone the repo you should:<br/>
+```bash
+
+git clone https://github.com/ronin010011/tb-wasm-machine-poc
+
+```
+To initialize and clone the submodules:<br/>
+```bash
+
+git submodule init
+git submodule update
+
+```
+To get the wasm objects for the testsuite, run the script names `testsuiteobjectify.sh` and pass it the name of the assembler you're using:<br/>
+For wabt:<br/>
+```bash
+
+./testsuiteobjectify.sh wast2wasm
+
+```
+
+For binaryen:<br/>
+```bash
+./testsuiteobjectify.sh wasm-as
+```
+
+For instructions on building `TBC`, please look at the respective readme under `TBC`'s directory.<br/>
 
 ### Tools
 Just what the name says:
