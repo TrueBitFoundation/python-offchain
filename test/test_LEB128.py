@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../')
 
-from argparser import *
+from utils import *
 from binascii import hexlify
 
 vals = [-624485, -1, 0, 1, 624485]
