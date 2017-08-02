@@ -5,7 +5,7 @@ import re
 from utils import *
 from OpCodes import *
 
-__DBG__ = True
+_DBG_ = True
 
 
 class ParsedSection(object):
@@ -116,6 +116,7 @@ class CLIArgParser(object):
         parser.add_argument("--dis", type=str,
                             help="path to the wasm file to disassemble")
         parser.add_argument("-o", type=str, help="the path to the output file")
+        parser.add_argument("-dbg", type=bool, help="print debug info")
 
         self.args = parser.parse_args()
 
@@ -496,11 +497,12 @@ class WASM_CodeEmitter(object):
 class ObjReader(object):
     parsedstruct = ParsedStruct
 
-    def __init__(self, file_path, endianness, is_extended_isa):
+    def __init__(self, file_path, endianness, is_extended_isa, dbg):
         self.wasm_file = open(file_path, "rb")
         self.file_path = file_path
         self.endianness = endianness
         self.is_extended_isa = is_extended_isa
+        self.dbg = dbg
 
     def testprintall(self):
         for line in self.wasm_file:
@@ -1206,7 +1208,7 @@ class ParserV1(object):
 class PythonInterpreter(object):
     def run(self):
         argparser = CLIArgParser()
-        wasmobj = ObjReader(argparser.getWASMPath(), 'little', False)
+        wasmobj = ObjReader(argparser.getWASMPath(), 'little', False, True)
         # wasmobj.testprintall()
         # wasmobj.testprintbyteall()
         wasmobj.ReadWASM()
