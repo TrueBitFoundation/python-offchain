@@ -1,11 +1,11 @@
+# call it the regression testing file
 import sys
+import os
 from test_LEB128 import test_signed_LEB128
 from test_LEB128 import test_unsigned_LEB128
 sys.path.append('../')
-from utils import *
+from utils import Colors
 from argparser import ObjReader
-import os
-
 
 success = Colors.green + "SUCCESS: " + Colors.ENDC
 fail = Colors.red + "FAIL: " + Colors.ENDC
@@ -22,25 +22,43 @@ def ObjectList():
 
 
 def main():
-    #LEB128 tests
+    return_list = []
+    # LEB128 tests
     test_unsigned_LEB128()
     test_signed_LEB128()
+    # parser test on the WASM testsuite
     obj_list = ObjectList()
-    #parser test on the WASM testsuite
     for testfile in obj_list:
-        wasmobj = ObjReader(testfile, 'little', False)
-        wasmobj.ReadWASM()
-        wasmobj.ReadCodeSection()
-        wasmobj.ReadDataSection()
-        wasmobj.ReadImportSection()
-        wasmobj.ReadSectionExport()
-        wasmobj.ReadSectionType()
-        wasmobj.ReadSectionFunction()
-        wasmobj.ReadSectionElement()
-        wasmobj.ReadMemorySection()
-        wasmobj.ReadSectionTable()
-        wasmobj.ReadSectionGlobal()
-        wasmobj.ReadStartSection()
+        pid = os.fork()
+        # I dont have a bellybutton
+        if pid == 0:
+            # @DEVI-FIXME- the dbg option in argparser is not working yet
+            sys.stdout = open('/dev/null', 'w')
+            sys.stderr = open('/dev/null', 'w')
+
+            wasmobj = ObjReader(testfile, 'little', False, False)
+            wasmobj.ReadWASM()
+            wasmobj.ReadCodeSection()
+            wasmobj.ReadDataSection()
+            wasmobj.ReadImportSection()
+            wasmobj.ReadSectionExport()
+            wasmobj.ReadSectionType()
+            wasmobj.ReadSectionFunction()
+            wasmobj.ReadSectionElement()
+            wasmobj.ReadMemorySection()
+            wasmobj.ReadSectionTable()
+            wasmobj.ReadSectionGlobal()
+            wasmobj.ReadStartSection()
+            sys.exit()
+        # the parent process
+        elif pid > 0:
+            cpid, status = os.waitpid(pid, 0)
+            return_list.append(status)
+            # @DEVI-FIXME- if you pipe it its broken because stdout is buffered
+            if status == 0:
+                print(success + testfile)
+            else:
+                print(fail + testfile)
 
 
 if __name__ == '__main__':
