@@ -1,6 +1,5 @@
 import sys
 sys.path.append('../')
-
 from utils import *
 from binascii import hexlify
 
@@ -9,24 +8,25 @@ uResults = [None,
             None,
             bytes([0x00]),
             bytes([0x01]),
-            bytes([0xE5,0x8E,0x26])]
-sResults = [bytes([0x9B,0xF1,0x59]),
+            bytes([0xE5, 0x8E, 0x26])]
+sResults = [bytes([0x9B, 0xF1, 0x59]),
             bytes([0x7F]),
             bytes([0x00]),
             bytes([0x01]),
-            bytes([0xE5,0x8E,0x26])]
+            bytes([0xE5, 0x8E, 0x26])]
 
 success = Colors.green + "SUCCESS: " + Colors.ENDC
 fail = Colors.red + "FAIL: " + Colors.ENDC
 
+
 def test_unsigned_LEB128():
-    for idx,val in enumerate(vals):
+    for idx, val in enumerate(vals):
         try:
             result = LEB128UnsignedEncode(val)
             if result != uResults[idx]:
                 print(fail + "result from LEB128UnsignedEncode (%s) failed to "
                       "provide correct output (%s)" %
-                      (hexlify(result),hexlify(uResults[idx])))
+                      (hexlify(result), hexlify(uResults[idx])))
                 continue
             else:
                 print(success + "result from LEB128UnsignedEncode is correct")
@@ -45,14 +45,15 @@ def test_unsigned_LEB128():
             else:
                 print(fail + "%d could not be encoded properly")
 
+
 def test_signed_LEB128():
-    for idx,val in enumerate(vals):
+    for idx, val in enumerate(vals):
         try:
             result = LEB128SignedEncode(val)
             if result != sResults[idx]:
                 print(fail + "result from LEB128SignedEncode (%s) failed to "
                       "provide correct output (%s)" %
-                      (hexlify(result),hexlify(sResults[idx])))
+                      (hexlify(result), hexlify(sResults[idx])))
                 continue
             else:
                 print(success + "result from LEB128SignedEncode is correct")
@@ -71,9 +72,11 @@ def test_signed_LEB128():
             else:
                 print(fail + "%d could not be encoded properly")
 
+
 def main():
     test_unsigned_LEB128()
     test_signed_LEB128()
+
 
 if __name__ == '__main__':
     main()
