@@ -7,6 +7,10 @@ sys.path.append('../')
 from utils import Colors
 from argparser import ObjReader
 
+total_test_cnt = int()
+expected_pass_cnt = int()
+expected_fail_cnt = int()
+
 success = Colors.green + "SUCCESS: " + Colors.ENDC
 fail = Colors.red + "FAIL: " + Colors.ENDC
 
@@ -33,6 +37,7 @@ def main():
         # I dont have a bellybutton
         if pid == 0:
             # @DEVI-FIXME- the dbg option in argparser is not working yet
+            # if you want to pipe this, run with python -u
             sys.stdout = open('/dev/null', 'w')
             sys.stderr = open('/dev/null', 'w')
 
@@ -54,11 +59,15 @@ def main():
         elif pid > 0:
             cpid, status = os.waitpid(pid, 0)
             return_list.append(status)
-            # @DEVI-FIXME- if you pipe it its broken because stdout is buffered
+            # @DEVI-FIXME- if you pipe it its broken
             if status == 0:
                 print(success + testfile)
             else:
                 print(fail + testfile)
+        else:
+            # badically we couldnt fork a child
+            print(fail + 'return code:' + pid)
+            raise Exception("could not fork child")
 
 
 if __name__ == '__main__':
