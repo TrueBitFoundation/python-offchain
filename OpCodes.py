@@ -32,6 +32,8 @@ class WASM_OP_Code:
     varint7 = 1
     varint32 = 4
     varint64 = 8
+    floatt = 4
+    doublet = 8
 
     all_ops = [('i32', '7f', False), ('i64', '7e', False), ('f32', '7d', False),
                 ('f63', '7c', False), ('anyfunc', '7b', False),
@@ -41,7 +43,7 @@ class WASM_OP_Code:
                 ('loop', '03', True, (varuint7)),
                 ('if', '04', True, (varuint7)), ('else', '05', False),
                 ('end', '0b', False), ('br', '0c', True, (varuint32)),
-                ('br_if', '0d', True, varuint32),
+                ('br_if', '0d', True, (varuint32)),
                 ('br_table', '0e', True, (varuint32, varuint32, varuint32)),
                 ('return', '0f', False), ('call', '10', True, (varuint32)),
                 ('call_indirect', '11', True, (varuint32, varuint1)),
