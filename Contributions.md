@@ -11,5 +11,13 @@ This section introduces the various files and directories inside the repository:
 * `QuestionnTasks.md` holds the current tasks that need to be done and the current questions/challenges that we are facing.<br/>
 * `README.md` is the readme. You should first read that.<br/>
 * `TBInit.py` is the file that holds the containers for the Trueit Interpreter's internal state.<br/>
+* `OpCodes.py` is the file that contains the OpCodes for the WASM instructions.<br/>
+* `utils.py` is the file that holds methods and classes that are used across multiple files<br/>
 * `test` holds the tests.<br/>
 * `TBC` the directory holds the checker that enforces the conditions on the high-level source code that is going to run by the interpreter.<br/>
+
+### Contribution
+Below you will find requirements for adding a pull request. Submissions that don't meet the requirements will not be reviewed:<br/>
+* PEP-8: use it. In case a PEP-8 guideline is irrational in a certain case, use your judgement.<br/>
+* Your pull request must be accompanied by a test file. Your test file must be able to run on its own and by another python module.<br/>
+* Python 2 compatibility is not a requirement.<br/>
