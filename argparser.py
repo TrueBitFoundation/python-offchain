@@ -109,7 +109,7 @@ class CLIArgParser(object):
         parser = argparse.ArgumentParser()
         parser.add_argument("--wast", type=str,
                             help="path to the wasm text file")
-        parser.add_argument("--wasm", type=str,
+        parser.add_argument("--wasm", type=str, nargs='+',
                             help="path to the wasm object file")
         parser.add_argument("--asb", type=str,
                             help="path to the wast file to assemble")
@@ -1208,22 +1208,23 @@ class ParserV1(object):
 class PythonInterpreter(object):
     def run(self):
         argparser = CLIArgParser()
-        wasmobj = ObjReader(argparser.getWASMPath(), 'little', False, True)
-        # wasmobj.testprintall()
-        # wasmobj.testprintbyteall()
-        wasmobj.ReadWASM()
-        # wasmobj.PrintAllSection()
-        wasmobj.ReadCodeSection()
-        wasmobj.ReadDataSection()
-        wasmobj.ReadImportSection()
-        wasmobj.ReadSectionExport()
-        wasmobj.ReadSectionType()
-        wasmobj.ReadSectionFunction()
-        wasmobj.ReadSectionElement()
-        wasmobj.ReadMemorySection()
-        wasmobj.ReadSectionTable()
-        wasmobj.ReadSectionGlobal()
-        wasmobj.ReadStartSection()
+        for obj_file in argparser.getWASMPath():
+            wasmobj = ObjReader(obj_file, 'little', False, True)
+            # wasmobj.testprintall()
+            # wasmobj.testprintbyteall()
+            wasmobj.ReadWASM()
+            # wasmobj.PrintAllSection()
+            wasmobj.ReadCodeSection()
+            wasmobj.ReadDataSection()
+            wasmobj.ReadImportSection()
+            wasmobj.ReadSectionExport()
+            wasmobj.ReadSectionType()
+            wasmobj.ReadSectionFunction()
+            wasmobj.ReadSectionElement()
+            wasmobj.ReadMemorySection()
+            wasmobj.ReadSectionTable()
+            wasmobj.ReadSectionGlobal()
+            wasmobj.ReadStartSection()
 
 
 def main():
