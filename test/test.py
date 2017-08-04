@@ -1,3 +1,5 @@
+#!/bin/python3.5
+
 # call it the regression testing file
 import sys
 import os
