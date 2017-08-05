@@ -2,6 +2,7 @@ from __future__ import print_function
 import argparse
 import sys
 import re
+from section_structs import *
 from utils import *
 from OpCodes import *
 
@@ -736,6 +737,8 @@ class ObjReader(object):
         loop = True
         section_exists = False
         offset = 1
+        DS = Data_Section()
+        temp_data_segment = Data_Segment()
         init_expr = []
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 11:
@@ -748,12 +751,14 @@ class ObjReader(object):
         print(data_section)
         print('')
         data_entry_count = data_section[6][offset]
+        DS.count = data_entry_count
         print(Colors.purple +
               'data entry count:' + repr(data_entry_count) + Colors.ENDC)
         offset += 1
 
         while data_entry_count != 0:
             linear_memory_index = data_section[6][offset]
+            temp_data_segment.index = linear_memory_index
             print(Colors.cyan +
                   'linear memory index:' +
                   repr(linear_memory_index) + Colors.ENDC)
@@ -765,18 +770,24 @@ class ObjReader(object):
                 init_expr.append(data_section[6][offset])
                 offset += 1
 
+            temp_data_segment.offset = init_expr
+
             print(Colors.red +
                   'init expression:' + repr(init_expr) + Colors.ENDC)
 
             data_entry_length = data_section[6][offset]
+            temp_data_segment.size = data_entry_length
             offset += 1
             print(Colors.blue +
                   'data entry length:' + repr(data_entry_length) + Colors.ENDC)
 
             data_itself = data_section[6][offset:offset + data_entry_length]
+            temp_data_segment.data = data_itself
             print(Colors.green +
                   'data itslef:' + repr(data_itself) + Colors.ENDC)
             offset += data_entry_length
+
+            DS.data_segments.append(temp_data_segment)
 
             print(Colors.yellow +
                   '-------------------------------------------------------'
@@ -784,12 +795,15 @@ class ObjReader(object):
             data_entry_count -= 1
             init_expr = []
             loop = True
+        return(DS)
 
     def ReadImportSection(self):
         offset = 1
         section_exists = False
         module_name = []
         field_name = []
+        IS = Import_Section()
+        temp_import_entry = Import_Entry()
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 2:
                 import_section = whatever.copy()
@@ -802,37 +816,46 @@ class ObjReader(object):
         print()
 
         import_cnt = import_section[6][offset]
+        IS.count = import_cnt
         print(Colors.purple + 'import count:' + repr(import_cnt) + Colors.ENDC)
         offset += 1
 
         while import_cnt != 0:
             module_length = import_section[6][offset]
+            temp_import_entry.module_len = module_length
             offset += 1
             print(Colors.blue +
                   'module length:' + repr(module_length) + Colors.ENDC)
 
             for i in range(0, module_length):
                 module_name.append(import_section[6][offset + i])
+            temp_import_entry.module_str = module_name
             print(Colors.cyan
                   + 'module name:' + repr(module_name) + Colors.ENDC)
             offset += module_length
 
             field_length = import_section[6][offset]
+            temp_import_entry.field_len = field_length
             offset += 1
             print(Colors.grey
                   + 'field length:' + repr(field_length) + Colors.ENDC)
             for i in range(0, field_length):
                 field_name.append(import_section[6][offset + i])
+            temp_import_entry.field_str = field_name
             print(Colors.red + 'field name:' + repr(field_name) + Colors.ENDC)
             offset += field_length
 
             kind = import_section[6][offset]
+            temp_import_entry.kind = kind
             print(Colors.purple + 'kind:' + repr(kind) + Colors.ENDC)
             offset += 1
 
             yolo_byte = import_section[6][offset:offset + 1]
+            temp_import_entry.type = yolo_byte
             offset += 1
             print(Colors.yellow + 'yolo bytes:' + repr(yolo_byte) + Colors.ENDC)
+
+            IS.import_entry.append(temp_import_entry)
 
             print(Colors.yellow +
                   '-------------------------------------------------------'
@@ -840,11 +863,14 @@ class ObjReader(object):
             import_cnt -= 1
             module_name = []
             field_name = []
+        return(IS)
 
     def ReadSectionExport(self):
         offset = 1
         section_exists = False
         field_name = []
+        ES = Export_Section()
+        temp_export_entry = Export_Entry()
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 7:
                 export_section = whatever.copy()
@@ -857,40 +883,50 @@ class ObjReader(object):
         print()
 
         export_entry_cnt = export_section[6][offset]
+        ES.count = export_entry_cnt
         offset += 1
         print(Colors.purple
               + 'export entry count:' + repr(export_entry_cnt) + Colors.ENDC)
 
         while export_entry_cnt != 0:
             field_length = export_section[6][offset]
+            temp_export_entry.field_len = field_length
             offset += 1
             print(Colors.blue
                   + 'field_length:' + repr(field_length) + Colors.ENDC)
 
             for i in range(0, field_length):
                 field_name.append(export_section[6][offset + i])
+            temp_export_entry.fiels_str = field_name
             offset += field_length
             print(Colors.cyan + 'field name:' + repr(field_name) + Colors.ENDC)
 
             kind = export_section[6][offset]
+            temp_export_entry.kind = kind
             offset += 1
             print(Colors.red + 'kind:' + repr(kind) + Colors.ENDC)
 
             index = export_section[6][offset]
+            temp_export_entry.index = index
             offset += 1
             print(Colors.grey + 'index:' + repr(index) + Colors.ENDC)
+
+            ES.export_entries.append(temp_export_entry)
 
             print(Colors.green +
                   '-------------------------------------------------------'
                   + Colors.ENDC)
             export_entry_cnt -= 1
             field_name = []
+        return(ES)
 
     def ReadSectionType(self):
         offset = 1
         section_exists = False
         param_list = []
         return_list = []
+        TS = Type_Section()
+        temp_func_type = Func_Type()
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 1:
                 type_section = whatever.copy()
@@ -903,6 +939,7 @@ class ObjReader(object):
         print()
 
         type_entry_count = type_section[6][offset]
+        TS.count = type_entry_count
         offset += 1
         print(Colors.purple +
               'type section entry count:'
@@ -910,28 +947,35 @@ class ObjReader(object):
 
         while type_entry_count != 0:
             form = type_section[6][offset]
+            temp_func_type.form = form
             offset += 1
             print(Colors.grey + 'form:' + repr(form) + Colors.grey)
             param_count = type_section[6][offset]
+            temp_func_type.param_cnt = param_count
             offset += 1
             print(Colors.blue +
                   'param count:' + repr(param_count) + Colors.ENDC)
 
             for i in range(0, param_count):
                 param_list.append(type_section[6][offset + i])
+            temp_func_type.param_types = param_list
             offset += param_count
             print(Colors.red + 'param list:' + repr(param_list) + Colors.ENDC)
 
             return_count = type_section[6][offset]
+            temp_func_type.return_cnt = return_count
             offset += 1
             print(Colors.cyan +
                   'return count:' + repr(return_count) + Colors.ENDC)
 
             for i in range(0, return_count):
                 return_list.append(type_section[6][offset + i])
+            temp_func_type.return_type = return_list
             offset += return_count
             print(Colors.yellow +
                   'return list:' + repr(return_list) + Colors.ENDC)
+
+            TS.func_types.append(temp_func_type)
 
             print(Colors.green +
                   '-------------------------------------------------------'
@@ -939,11 +983,13 @@ class ObjReader(object):
             type_entry_count -= 1
             param_list = []
             return_list = []
+        return(TS)
 
     def ReadSectionFunction(self):
         offset = 1
         section_exists = False
         index_to_type = []
+        FS = Function_Section()
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 3:
                 function_section = whatever.copy()
@@ -957,6 +1003,7 @@ class ObjReader(object):
         print()
 
         function_entry_count = function_section[6][offset]
+        FS.count = function_entry_count
         offset += 1
         print(Colors.purple +
               'function entry count:' +
@@ -964,10 +1011,12 @@ class ObjReader(object):
 
         for i in range(0, function_entry_count):
             index_to_type.append(function_section[6][offset + i])
+        FS.type_section_index = index_to_type
         offset += function_entry_count
         print(Colors.red +
               'indices into type section:' +
               repr(index_to_type) + Colors.ENDC)
+        return(FS)
 
     def ReadSectionElement(self):
         offset = 1
@@ -975,6 +1024,8 @@ class ObjReader(object):
         init_expr = []
         loop = True
         function_indices = []
+        ES = Element_Section()
+        temp_elem_segment = Elem_Segment()
 
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 9:
@@ -989,12 +1040,14 @@ class ObjReader(object):
         print()
 
         element_entry_count = element_section[6][offset]
+        ES.count = element_entry_count
         offset += 1
         print(Colors.purple +
               'entry count:' + repr(element_entry_count) + Colors.ENDC)
 
         while element_entry_count != 0:
             table_index = element_section[6][offset]
+            temp_elem_segment.index = table_index
             offset += 1
             print(Colors.green +
                   'table index:' + repr(table_index) + Colors.ENDC)
@@ -1004,27 +1057,35 @@ class ObjReader(object):
                     loop = False
                 init_expr.append(element_section[6][offset])
                 offset += 1
+            temp_elem_segment.offset = init_expr
 
             print(Colors.red + 'init expr:' + repr(init_expr) + Colors.ENDC)
 
             num_elements = element_section[6][offset]
+            temp_elem_segment.num_elem = num_elements
             print(Colors.cyan +
                   'number of elements:' + repr(num_elements) + Colors.ENDC)
 
             for i in range(0, num_elements):
                 function_indices.append(element_section[6][offset + i])
+            temp_elem_segment.elems = function_indices
             offset += num_elements
             print(Colors.grey +
                   'function indices:' + repr(function_indices) + Colors.ENDC)
+
+            ES.elem_segments.append(temp_elem_segment)
 
             loop = True
             init_expr = []
             function_indices = []
             element_entry_count -= 1
+        return(ES)
 
     def ReadMemorySection(self):
         offset = 1
         section_exists = False
+        MS = Memory_Section()
+        temp_rsz_limits = Resizable_Limits()
 
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 5:
@@ -1039,30 +1100,39 @@ class ObjReader(object):
         print()
 
         num_linear_mems = memory_section[6][offset]
+        MS.count = num_linear_mems
         offset += 1
         print(Colors.purple
               + 'num_linear_mems:' + repr(num_linear_mems) + Colors.ENDC)
 
         while num_linear_mems != 0:
             flag = memory_section[6][offset]
+            temp_rsz_limits.flags = flag
             offset += 1
             print(Colors.grey + 'flag:' + repr(flag) + Colors.ENDC)
 
             initial = LEB128UnsignedDecode(memory_section[6][offset:offset + 2])
+            temp_rsz_limits.flags = initial
             offset += 2
             print(Colors.green + 'initial size:' + repr(initial) + Colors.ENDC)
 
             if flag == 1:
                 maximum = LEB128UnsignedDecode(
                     memory_section[6][offset:offset + 2])
+                temp_rsz_limits.maximum = maximum
                 offset += 2
                 print(Colors.blue + 'maximum:' + repr(maximum) + Colors.ENDC)
 
+            MS.memory_types.append(temp_rsz_limits)
             num_linear_mems -= 1
+        return(MS)
 
     def ReadSectionTable(self):
         offset = 1
         section_exists = False
+        TS = Table_Section()
+        temp_table_type = Table_Type()
+        temp_rsz_limits = Resizable_Limits()
 
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 4:
@@ -1077,36 +1147,48 @@ class ObjReader(object):
         print()
 
         table_count = table_section[6][offset]
+        TS.count = table_count
         offset += 1
         print(Colors.purple + 'table count:' + repr(table_count) + Colors.ENDC)
 
         while table_count != 0:
             element_type = table_section[6][offset]
+            temp_table_type.element_type = element_type
             offset += 1
             print(Colors.cyan +
                   'element type:' + repr(element_type) + Colors.ENDC)
 
             flag = table_section[6][offset]
+            temp_rsz_limits.flag = flag
             offset += 1
             print(Colors.yellow + 'flag:' + repr(flag) + Colors.ENDC)
 
             initial = LEB128UnsignedDecode(table_section[6][offset:offset + 2])
+            temp_rsz_limits.initial = initial
             offset += 2
             print(Colors.green + 'initial size:' + repr(initial) + Colors.ENDC)
 
             if flag == 1:
                 maximum = LEB128UnsignedDecode(
                     table_section[6][offset:offset + 2])
+                temp_rsz_limits.maximum = maximum
                 offset += 2
                 print(Colors.blue + 'maximum:' + repr(maximum) + Colors.ENDC)
 
+            temp_table_type.limit = temp_rsz_limits
+            TS.table_types.append(temp_table_type)
+
             table_count -= 1
+        return(TS)
 
     def ReadSectionGlobal(self):
         offset = 1
         loop = True
         section_exists = False
         init_expr = []
+        GS = Global_Section()
+        temp_gl_var = Global_Variable()
+        temp_gl_type = Global_Type()
 
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 6:
@@ -1121,15 +1203,18 @@ class ObjReader(object):
         print()
 
         count = global_section[6][offset]
+        GS.count = count
         offset += 1
         print(Colors.purple + 'count:' + repr(count) + Colors.ENDC)
 
         while count != 0:
             content_type = global_section[6][offset]
+            temp_gl_type.content_type = content_type
             offset += 1
             print(Colors.cyan + repr(content_type) + Colors.ENDC)
 
             mutability = global_section[6][offset]
+            temp_gl_type.mutability = mutability
             offset += 1
             print(Colors.blue + repr(mutability) + Colors.ENDC)
 
@@ -1138,16 +1223,22 @@ class ObjReader(object):
                     loop = False
                 init_expr.append(global_section[6][offset])
                 offset += 1
+            temp_gl_var.init_expr = init_expr
+
+            temp_gl_var.global_type = temp_gl_type
+            GS.global_variables.append(temp_gl_var)
 
             print(Colors.red + repr(init_expr) + Colors.ENDC)
 
             count -= 1
             loop = True
             init_expr = []
+        return(GS)
 
     def ReadStartSection(self):
         offset = 1
         section_exists = False
+        SS = Start_Section()
 
         for whatever in self.parsedstruct.section_list:
             if whatever[0] == 8:
@@ -1162,9 +1253,11 @@ class ObjReader(object):
         print()
 
         function_index = start_section[6][offset]
+        SS.function_section_index = function_index
         offset += 1
         print(Colors.blue +
               'function index:' + repr(function_index) + Colors.ENDC)
+        return(SS)
 
     def getCursorLocation(self):
         return(self.wasm_file.tell())
@@ -1215,16 +1308,16 @@ class PythonInterpreter(object):
             wasmobj.ReadWASM()
             # wasmobj.PrintAllSection()
             wasmobj.ReadCodeSection()
-            wasmobj.ReadDataSection()
-            wasmobj.ReadImportSection()
-            wasmobj.ReadSectionExport()
-            wasmobj.ReadSectionType()
-            wasmobj.ReadSectionFunction()
-            wasmobj.ReadSectionElement()
-            wasmobj.ReadMemorySection()
-            wasmobj.ReadSectionTable()
-            wasmobj.ReadSectionGlobal()
-            wasmobj.ReadStartSection()
+            print(repr(wasmobj.ReadDataSection()))
+            print(repr(wasmobj.ReadImportSection()))
+            print(repr(wasmobj.ReadSectionExport()))
+            print(repr(wasmobj.ReadSectionType()))
+            print(repr(wasmobj.ReadSectionFunction()))
+            print(repr(wasmobj.ReadSectionElement()))
+            print(repr(wasmobj.ReadMemorySection()))
+            print(repr(wasmobj.ReadSectionTable()))
+            print(repr(wasmobj.ReadSectionGlobal()))
+            print(repr(wasmobj.ReadStartSection()))
 
 
 def main():
