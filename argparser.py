@@ -5,6 +5,7 @@ import re
 from section_structs import *
 from utils import *
 from OpCodes import *
+from copy import deepcopy
 
 _DBG_ = True
 
@@ -117,7 +118,7 @@ class CLIArgParser(object):
         parser.add_argument("--dis", type=str,
                             help="path to the wasm file to disassemble")
         parser.add_argument("-o", type=str, help="the path to the output file")
-        parser.add_argument("-dbg", type=bool, help="print debug info")
+        parser.add_argument("--dbg", action='store_true', help="print debug info", default=False)
 
         self.args = parser.parse_args()
 
@@ -139,6 +140,9 @@ class CLIArgParser(object):
 
     def getOutputPath(self):
         return self.args.o
+
+    def getDBG(self):
+        return self.args.dbg
 
 
 class WASMText(object):
@@ -632,9 +636,8 @@ class ObjReader(object):
         read_bytes = 0
         read_bytes_temp = 0
         instruction = str()
-        print('offset = ' + repr(offset))
+        temp_wasm_ins = WASM_Ins()
         byte = format(section_byte[6][offset], '02x')
-        print(Colors.blue + repr(byte) + Colors.ENDC)
         offset += 1
         read_bytes += 1
         for op_code in WASM_OP_Code.all_ops:
@@ -642,30 +645,28 @@ class ObjReader(object):
                 matched = True
 
                 if op_code[2]:
-                    print(op_code[2])
-                    print(op_code[3])
                     if isinstance(op_code[3], tuple):
                         temp, offset, read_bytes_temp = ReadLEB128OperandsU(
                             section_byte, offset, len(op_code[3]))
-                        print('temp:' + repr(temp))
                         for i in range(0, len(op_code[3])):
                             instruction += repr(temp[i]) + ' '
                     else:
                         temp, offset, read_bytes_temp = ReadLEB128OperandsU(
                             section_byte, offset, 1)
-                        print('temp:' + repr(temp))
+                        instruction += repr(temp[0])
 
-                print(Colors.green +
-                      op_code[0] + ' ' + instruction + Colors.ENDC)
+                temp_wasm_ins.opcode = op_code[0]
+                temp_wasm_ins.operands = instruction
                 instruction = str()
                 break
 
         read_bytes += read_bytes_temp
-        print('read bytes this iteration:' + repr(read_bytes))
-        return offset, matched, read_bytes
+        return offset, matched, read_bytes, temp_wasm_ins
 
     def ReadCodeSection(self):
         offset = 1
+        CS = Code_Section()
+        temp_func_bodies = Func_Body()
         section_exists = False
         for whatever in self.parsedstruct.section_list:
             # 10 is the code section
@@ -675,39 +676,32 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print()
-        print(Colors.purple + 'code section:' + Colors.ENDC)
-        print(code_section)
-        print()
 
         function_cnt = code_section[6][offset]
+        CS.count.append(function_cnt)
         offset += 1
-        print('function count :' + repr(function_cnt))
 
         while function_cnt > 0:
-            print(code_section[6][offset:offset + 4])
             function_body_length = LEB128UnsignedDecode(
                 code_section[6][offset:offset + 4])
+            temp_func_bodies.body_size = function_body_length
             offset += 4
-            print('function body length :' + repr(function_body_length))
 
             # yolo
             offset += 1
 
             local_count = Conver2Int(True, 1,
                                      code_section[6][offset:offset + 1])
-            print(code_section[6][offset:offset + 1])
+            temp_func_bodies.local_count = local_count
             offset += 1
-            print('local count :' + repr(local_count))
 
             local_count_size = 1 + local_count
             if local_count != 0:
                 for i in range(0, local_count):
                     partial_local_count = Conver2Int(
                         True, 1, code_section[6][offset:offset + 1])
+                    temp_func_bodies.locals.append(deepcopy(partial_local_count))
                     offset += 1
-                    print(Colors.purple +
-                          repr(partial_local_count) + Colors.ENDC)
                     offset += 1
                     local_count -= partial_local_count
                     local_count_size += 1
@@ -715,23 +709,27 @@ class ObjReader(object):
                 pass
 
             read_bytes_so_far = local_count_size
-            print(Colors.purple + repr(local_count_size) + Colors.ENDC)
             for i in range(0, function_body_length - local_count_size):
-                print('----------------------------------------')
 
-                offset, matched, read_bytes = self.Disassemble(
+                offset, matched, read_bytes, temp_wasm_ins = self.Disassemble(
                     code_section, offset)
+                temp_func_bodies.code.append(deepcopy(temp_wasm_ins))
 
                 if not matched:
                     print(Colors.red + 'did not match anything' + Colors.ENDC)
                 else:
-                    print(Colors.yellow + 'matched something' + Colors.ENDC)
+                    pass
+                    # print(Colors.yellow + 'matched something' + Colors.ENDC)
                 matched = False
                 read_bytes_so_far += read_bytes
                 if read_bytes_so_far == function_body_length:
                     break
 
+            CS.func_bodies.append(deepcopy(temp_func_bodies))
+            temp_func_bodies.locals = []
+            temp_func_bodies.code = []
             function_cnt -= 1
+        return(CS)
 
     def ReadDataSection(self):
         loop = True
@@ -747,21 +745,14 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print(Colors.purple + 'data section:' + Colors.ENDC)
-        print(data_section)
-        print('')
+
         data_entry_count = data_section[6][offset]
-        DS.count = data_entry_count
-        print(Colors.purple +
-              'data entry count:' + repr(data_entry_count) + Colors.ENDC)
+        DS.count.append(data_entry_count)
         offset += 1
 
         while data_entry_count != 0:
             linear_memory_index = data_section[6][offset]
             temp_data_segment.index = linear_memory_index
-            print(Colors.cyan +
-                  'linear memory index:' +
-                  repr(linear_memory_index) + Colors.ENDC)
             offset += 1
 
             while loop:
@@ -772,29 +763,20 @@ class ObjReader(object):
 
             temp_data_segment.offset = init_expr
 
-            print(Colors.red +
-                  'init expression:' + repr(init_expr) + Colors.ENDC)
-
             data_entry_length = data_section[6][offset]
             temp_data_segment.size = data_entry_length
             offset += 1
-            print(Colors.blue +
-                  'data entry length:' + repr(data_entry_length) + Colors.ENDC)
 
             data_itself = data_section[6][offset:offset + data_entry_length]
             temp_data_segment.data = data_itself
-            print(Colors.green +
-                  'data itslef:' + repr(data_itself) + Colors.ENDC)
             offset += data_entry_length
 
-            DS.data_segments.append(temp_data_segment)
+            DS.data_segments.append(deepcopy(temp_data_segment))
 
-            print(Colors.yellow +
-                  '-------------------------------------------------------'
-                  + Colors.ENDC)
             data_entry_count -= 1
             init_expr = []
             loop = True
+
         return(DS)
 
     def ReadImportSection(self):
@@ -811,55 +793,39 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print(Colors.purple + 'import section:' + Colors.ENDC)
-        print(import_section)
-        print()
 
         import_cnt = import_section[6][offset]
-        IS.count = import_cnt
-        print(Colors.purple + 'import count:' + repr(import_cnt) + Colors.ENDC)
+        IS.count.append(import_cnt)
         offset += 1
 
         while import_cnt != 0:
             module_length = import_section[6][offset]
             temp_import_entry.module_len = module_length
             offset += 1
-            print(Colors.blue +
-                  'module length:' + repr(module_length) + Colors.ENDC)
 
             for i in range(0, module_length):
                 module_name.append(import_section[6][offset + i])
             temp_import_entry.module_str = module_name
-            print(Colors.cyan
-                  + 'module name:' + repr(module_name) + Colors.ENDC)
             offset += module_length
 
             field_length = import_section[6][offset]
             temp_import_entry.field_len = field_length
             offset += 1
-            print(Colors.grey
-                  + 'field length:' + repr(field_length) + Colors.ENDC)
             for i in range(0, field_length):
                 field_name.append(import_section[6][offset + i])
             temp_import_entry.field_str = field_name
-            print(Colors.red + 'field name:' + repr(field_name) + Colors.ENDC)
             offset += field_length
 
             kind = import_section[6][offset]
             temp_import_entry.kind = kind
-            print(Colors.purple + 'kind:' + repr(kind) + Colors.ENDC)
             offset += 1
 
             yolo_byte = import_section[6][offset:offset + 1]
             temp_import_entry.type = yolo_byte
             offset += 1
-            print(Colors.yellow + 'yolo bytes:' + repr(yolo_byte) + Colors.ENDC)
 
-            IS.import_entry.append(temp_import_entry)
+            IS.import_entry.append(deepcopy(temp_import_entry))
 
-            print(Colors.yellow +
-                  '-------------------------------------------------------'
-                  + Colors.ENDC)
             import_cnt -= 1
             module_name = []
             field_name = []
@@ -878,44 +844,31 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print(Colors.purple + 'export section:' + Colors.ENDC)
-        print(export_section)
-        print()
 
         export_entry_cnt = export_section[6][offset]
-        ES.count = export_entry_cnt
+        ES.count.append(export_entry_cnt)
         offset += 1
-        print(Colors.purple
-              + 'export entry count:' + repr(export_entry_cnt) + Colors.ENDC)
 
         while export_entry_cnt != 0:
             field_length = export_section[6][offset]
             temp_export_entry.field_len = field_length
             offset += 1
-            print(Colors.blue
-                  + 'field_length:' + repr(field_length) + Colors.ENDC)
 
             for i in range(0, field_length):
                 field_name.append(export_section[6][offset + i])
             temp_export_entry.fiels_str = field_name
             offset += field_length
-            print(Colors.cyan + 'field name:' + repr(field_name) + Colors.ENDC)
 
             kind = export_section[6][offset]
             temp_export_entry.kind = kind
             offset += 1
-            print(Colors.red + 'kind:' + repr(kind) + Colors.ENDC)
 
             index = export_section[6][offset]
             temp_export_entry.index = index
             offset += 1
-            print(Colors.grey + 'index:' + repr(index) + Colors.ENDC)
 
-            ES.export_entries.append(temp_export_entry)
+            ES.export_entries.append(deepcopy(temp_export_entry))
 
-            print(Colors.green +
-                  '-------------------------------------------------------'
-                  + Colors.ENDC)
             export_entry_cnt -= 1
             field_name = []
         return(ES)
@@ -934,52 +887,35 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print(Colors.purple + 'type section:' + Colors.ENDC)
-        print(type_section)
-        print()
 
         type_entry_count = type_section[6][offset]
-        TS.count = type_entry_count
+        TS.count.append(type_entry_count)
         offset += 1
-        print(Colors.purple +
-              'type section entry count:'
-              + repr(type_entry_count) + Colors.ENDC)
 
         while type_entry_count != 0:
             form = type_section[6][offset]
             temp_func_type.form = form
             offset += 1
-            print(Colors.grey + 'form:' + repr(form) + Colors.grey)
             param_count = type_section[6][offset]
             temp_func_type.param_cnt = param_count
             offset += 1
-            print(Colors.blue +
-                  'param count:' + repr(param_count) + Colors.ENDC)
 
             for i in range(0, param_count):
                 param_list.append(type_section[6][offset + i])
             temp_func_type.param_types = param_list
             offset += param_count
-            print(Colors.red + 'param list:' + repr(param_list) + Colors.ENDC)
 
             return_count = type_section[6][offset]
             temp_func_type.return_cnt = return_count
             offset += 1
-            print(Colors.cyan +
-                  'return count:' + repr(return_count) + Colors.ENDC)
 
             for i in range(0, return_count):
                 return_list.append(type_section[6][offset + i])
             temp_func_type.return_type = return_list
             offset += return_count
-            print(Colors.yellow +
-                  'return list:' + repr(return_list) + Colors.ENDC)
 
-            TS.func_types.append(temp_func_type)
+            TS.func_types.append(deepcopy(temp_func_type))
 
-            print(Colors.green +
-                  '-------------------------------------------------------'
-                  + Colors.ENDC)
             type_entry_count -= 1
             param_list = []
             return_list = []
@@ -997,25 +933,15 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print()
-        print(Colors.purple + 'function section:' + Colors.ENDC)
-        print(function_section)
-        print()
 
         function_entry_count = function_section[6][offset]
-        FS.count = function_entry_count
+        FS.count.append(function_entry_count)
         offset += 1
-        print(Colors.purple +
-              'function entry count:' +
-              repr(function_entry_count) + Colors.ENDC)
 
         for i in range(0, function_entry_count):
             index_to_type.append(function_section[6][offset + i])
         FS.type_section_index = index_to_type
         offset += function_entry_count
-        print(Colors.red +
-              'indices into type section:' +
-              repr(index_to_type) + Colors.ENDC)
         return(FS)
 
     def ReadSectionElement(self):
@@ -1034,23 +960,15 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print()
-        print(Colors.purple + 'element section:' + Colors.ENDC)
-        print(element_section)
-        print()
 
         element_entry_count = element_section[6][offset]
-        ES.count = element_entry_count
+        ES.count.append(element_entry_count)
         offset += 1
-        print(Colors.purple +
-              'entry count:' + repr(element_entry_count) + Colors.ENDC)
 
         while element_entry_count != 0:
             table_index = element_section[6][offset]
             temp_elem_segment.index = table_index
             offset += 1
-            print(Colors.green +
-                  'table index:' + repr(table_index) + Colors.ENDC)
 
             while loop:
                 if element_section[6][offset] == 0x0b:
@@ -1059,21 +977,15 @@ class ObjReader(object):
                 offset += 1
             temp_elem_segment.offset = init_expr
 
-            print(Colors.red + 'init expr:' + repr(init_expr) + Colors.ENDC)
-
             num_elements = element_section[6][offset]
             temp_elem_segment.num_elem = num_elements
-            print(Colors.cyan +
-                  'number of elements:' + repr(num_elements) + Colors.ENDC)
 
             for i in range(0, num_elements):
                 function_indices.append(element_section[6][offset + i])
             temp_elem_segment.elems = function_indices
             offset += num_elements
-            print(Colors.grey +
-                  'function indices:' + repr(function_indices) + Colors.ENDC)
 
-            ES.elem_segments.append(temp_elem_segment)
+            ES.elem_segments.append(deepcopy(temp_elem_segment))
 
             loop = True
             init_expr = []
@@ -1094,36 +1006,27 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print()
-        print(Colors.purple + 'memory section:' + Colors.ENDC)
-        print(memory_section)
-        print()
 
         num_linear_mems = memory_section[6][offset]
-        MS.count = num_linear_mems
+        MS.count.append(num_linear_mems)
         offset += 1
-        print(Colors.purple
-              + 'num_linear_mems:' + repr(num_linear_mems) + Colors.ENDC)
 
         while num_linear_mems != 0:
             flag = memory_section[6][offset]
             temp_rsz_limits.flags = flag
             offset += 1
-            print(Colors.grey + 'flag:' + repr(flag) + Colors.ENDC)
 
             initial = LEB128UnsignedDecode(memory_section[6][offset:offset + 2])
-            temp_rsz_limits.flags = initial
+            temp_rsz_limits.initial = initial
             offset += 2
-            print(Colors.green + 'initial size:' + repr(initial) + Colors.ENDC)
 
             if flag == 1:
                 maximum = LEB128UnsignedDecode(
                     memory_section[6][offset:offset + 2])
                 temp_rsz_limits.maximum = maximum
                 offset += 2
-                print(Colors.blue + 'maximum:' + repr(maximum) + Colors.ENDC)
 
-            MS.memory_types.append(temp_rsz_limits)
+            MS.memory_types.append(deepcopy(temp_rsz_limits))
             num_linear_mems -= 1
         return(MS)
 
@@ -1141,42 +1044,32 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print()
-        print(Colors.purple + 'table section:' + Colors.ENDC)
-        print(table_section)
-        print()
 
         table_count = table_section[6][offset]
-        TS.count = table_count
+        TS.count.append(table_count)
         offset += 1
-        print(Colors.purple + 'table count:' + repr(table_count) + Colors.ENDC)
 
         while table_count != 0:
             element_type = table_section[6][offset]
             temp_table_type.element_type = element_type
             offset += 1
-            print(Colors.cyan +
-                  'element type:' + repr(element_type) + Colors.ENDC)
 
             flag = table_section[6][offset]
-            temp_rsz_limits.flag = flag
+            temp_rsz_limits.flags = flag
             offset += 1
-            print(Colors.yellow + 'flag:' + repr(flag) + Colors.ENDC)
 
             initial = LEB128UnsignedDecode(table_section[6][offset:offset + 2])
             temp_rsz_limits.initial = initial
             offset += 2
-            print(Colors.green + 'initial size:' + repr(initial) + Colors.ENDC)
 
             if flag == 1:
                 maximum = LEB128UnsignedDecode(
                     table_section[6][offset:offset + 2])
                 temp_rsz_limits.maximum = maximum
                 offset += 2
-                print(Colors.blue + 'maximum:' + repr(maximum) + Colors.ENDC)
 
             temp_table_type.limit = temp_rsz_limits
-            TS.table_types.append(temp_table_type)
+            TS.table_types.append(deepcopy(temp_table_type))
 
             table_count -= 1
         return(TS)
@@ -1197,26 +1090,19 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print()
-        print(Colors.purple + 'global section:' + Colors.ENDC)
-        print(global_section)
-        print()
 
         count = global_section[6][offset]
-        GS.count = count
+        GS.count.append(count)
         offset += 1
-        print(Colors.purple + 'count:' + repr(count) + Colors.ENDC)
 
         while count != 0:
             content_type = global_section[6][offset]
             temp_gl_type.content_type = content_type
             offset += 1
-            print(Colors.cyan + repr(content_type) + Colors.ENDC)
 
             mutability = global_section[6][offset]
             temp_gl_type.mutability = mutability
             offset += 1
-            print(Colors.blue + repr(mutability) + Colors.ENDC)
 
             while loop:
                 if global_section[6][offset] == 0x0b:
@@ -1226,9 +1112,8 @@ class ObjReader(object):
             temp_gl_var.init_expr = init_expr
 
             temp_gl_var.global_type = temp_gl_type
-            GS.global_variables.append(temp_gl_var)
+            GS.global_variables.append(deepcopy(temp_gl_var))
 
-            print(Colors.red + repr(init_expr) + Colors.ENDC)
 
             count -= 1
             loop = True
@@ -1247,16 +1132,10 @@ class ObjReader(object):
 
         if not section_exists:
             return None
-        print()
-        print(Colors.purple + 'start section:' + Colors.ENDC)
-        print(start_section)
-        print()
 
         function_index = start_section[6][offset]
-        SS.function_section_index = function_index
+        SS.function_section_index.append(function_index)
         offset += 1
-        print(Colors.blue +
-              'function index:' + repr(function_index) + Colors.ENDC)
         return(SS)
 
     def getCursorLocation(self):
@@ -1299,6 +1178,8 @@ class ParserV1(object):
 
 
 class PythonInterpreter(object):
+    modules = []
+
     def run(self):
         argparser = CLIArgParser()
         for obj_file in argparser.getWASMPath():
@@ -1307,23 +1188,144 @@ class PythonInterpreter(object):
             # wasmobj.testprintbyteall()
             wasmobj.ReadWASM()
             # wasmobj.PrintAllSection()
-            wasmobj.ReadCodeSection()
-            print(repr(wasmobj.ReadDataSection()))
-            print(repr(wasmobj.ReadImportSection()))
-            print(repr(wasmobj.ReadSectionExport()))
-            print(repr(wasmobj.ReadSectionType()))
-            print(repr(wasmobj.ReadSectionFunction()))
-            print(repr(wasmobj.ReadSectionElement()))
-            print(repr(wasmobj.ReadMemorySection()))
-            print(repr(wasmobj.ReadSectionTable()))
-            print(repr(wasmobj.ReadSectionGlobal()))
-            print(repr(wasmobj.ReadStartSection()))
+            self.modules.append(deepcopy(Module(wasmobj.ReadSectionType(),
+                                       wasmobj.ReadImportSection(),
+                                       wasmobj.ReadSectionFunction(),
+                                       wasmobj.ReadSectionTable(),
+                                       wasmobj.ReadMemorySection(),
+                                       wasmobj.ReadSectionGlobal(),
+                                       wasmobj.ReadSectionExport(),
+                                       wasmobj.ReadStartSection(),
+                                       wasmobj.ReadSectionElement(),
+                                       wasmobj.ReadCodeSection(),
+                                       wasmobj.ReadDataSection())))
+
+    def dump_sections(self):
+        print(Colors.blue + Colors.BOLD + 'RUNNING IN DEBUG MODE' + Colors.ENDC)
+        for module in self.modules:
+            print(Colors.blue + Colors.BOLD +
+                  'BEGENNING OF MODULE' + Colors.ENDC)
+
+            # type_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Type Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.type_section.count))
+            for iter in module.type_section.func_types:
+                print(Colors.cyan + 'form: ' + repr(iter.form) + Colors.ENDC)
+                print(Colors.green + 'param count: ' + repr(iter.param_cnt) + Colors.ENDC)
+                print(Colors.red + 'param types: ' + repr(iter.param_types) + Colors.ENDC)
+                print(Colors.purple + 'return count: ' + repr(iter.return_cnt) + Colors.ENDC)
+                print(Colors.yellow + 'return type: ' + repr(iter.return_type) + Colors.ENDC)
+
+            # import_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Import Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.import_section.count))
+            for iter in module.import_section.import_entry:
+                print(Colors.cyan + 'module length: ' + repr(iter.module_len) + Colors.ENDC)
+                print(Colors.green + 'module str: ' + repr(iter.module_str) + Colors.ENDC)
+                print(Colors.red + 'field length: ' + repr(iter.field_len) + Colors.ENDC)
+                print(Colors.purple + 'field str: ' + repr(iter.field_str) + Colors.ENDC)
+                print(Colors.yellow + 'kind: ' + repr(iter.kind) + Colors.ENDC)
+                print(Colors.grey + 'type: ' + repr(iter.type) + Colors.ENDC)
+
+            # function_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Function Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.function_section.count))
+            for iter in module.function_section.type_section_index:
+                print(Colors.cyan + 'type section index: ' + repr(iter) + Colors.ENDC)
+
+            # table_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Table Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.table_section.count))
+            for iter in module.table_section.table_types:
+                print(Colors.cyan + 'element type: ' + repr(iter.element_type) + Colors.ENDC)
+                print(Colors.green + 'Resizable_Limits:flags: ' + repr(iter.limit.flags) + Colors.ENDC)
+                print(Colors.red + 'Resizable_Limits:initial: ' + repr(iter.limit.initial) + Colors.ENDC)
+                print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.limit.maximum) + Colors.ENDC)
+
+            # memory_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Memory Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.memory_section.count))
+            for iter in module.memory_section.memory_types:
+                print(Colors.green + 'Resizable_Limits:flags: ' + repr(iter.flags) + Colors.ENDC)
+                print(Colors.red + 'Resizable_Limits:initial: ' + repr(iter.initial) + Colors.ENDC)
+                print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.maximum) + Colors.ENDC)
+
+            # global_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Global Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.global_section.count))
+            for iter in module.global_section.global_variables:
+                print(Colors.green + 'global type: ' + repr(iter.global_type) + Colors.ENDC)
+                print(Colors.red + 'init expr: ' + repr(iter.init_expr) + Colors.ENDC)
+
+            # export_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Export Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.export_section.count))
+            for iter in module.export_section.export_entries:
+                print(Colors.green + 'field length: ' + repr(iter.field_len) + Colors.ENDC)
+                print(Colors.red + 'field str: ' + repr(iter.field_str) + Colors.ENDC)
+                print(Colors.purple + 'kind: ' + repr(iter.kind) + Colors.ENDC)
+                print(Colors.cyan + 'index: ' + repr(iter.index) + Colors.ENDC)
+
+            # start_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Start Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('start function index: ' + repr(module.start_section.function_section_index))
+
+            # element_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Element Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.element_section.count))
+            for iter in module.element_section.elem_segments:
+                print(Colors.green + 'index: ' + repr(iter.index) + Colors.ENDC)
+                print(Colors.red + 'offset: ' + repr(iter.offset) + Colors.ENDC)
+                print(Colors.purple + 'num_elem: ' + repr(iter.num_elem) + Colors.ENDC)
+                print(Colors.cyan + 'elemes:' + repr(iter.elems) + Colors.ENDC)
+
+            # code_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Code Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.code_section.count))
+            for iter in module.code_section.func_bodies:
+                print(Colors.green + 'body_size: ' + repr(iter.body_size) + Colors.ENDC)
+                print(Colors.red + 'local_count: ' + repr(iter.local_count) + Colors.ENDC)
+                print(Colors.purple + 'locals: ' + repr(iter.locals) + Colors.ENDC)
+                for iterer in iter.code:
+                    print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
+                    print(Colors.grey + 'code: ' + repr(iterer.operands) + Colors.ENDC)
+
+            # data_section
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Data Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.data_section.count))
+            for iter in module.data_section.data_segments:
+                print(Colors.green + 'index: ' + repr(iter.index) + Colors.ENDC)
+                print(Colors.red + 'offset: ' + repr(iter.offset) + Colors.ENDC)
+                print(Colors.purple + 'size: ' + repr(iter.size) + Colors.ENDC)
+                print(Colors.cyan + 'data:' + repr(iter.data) + Colors.ENDC)
 
 
 def main():
     argparser = CLIArgParser()
 
-    if argparser.getWASMPath() is not None:
+    if argparser.getWASMPath() is not None and not argparser.getDBG:
         print(argparser.getWASMPath())
         parser = PythonInterpreter()
         parser.run()
@@ -1332,6 +1334,11 @@ def main():
         print(argparser.getWASTPath())
         parser = ParserV1()
         parser.run()
+
+    if argparser.getDBG():
+        interpreter = PythonInterpreter()
+        interpreter.run()
+        interpreter.dump_sections()
 
     if argparser.getASPath() is not None:
         print("not implemented yet")
