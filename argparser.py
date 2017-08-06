@@ -719,7 +719,6 @@ class ObjReader(object):
                     print(Colors.red + 'did not match anything' + Colors.ENDC)
                 else:
                     pass
-                    # print(Colors.yellow + 'matched something' + Colors.ENDC)
                 matched = False
                 read_bytes_so_far += read_bytes
                 if read_bytes_so_far == function_body_length:
@@ -776,7 +775,6 @@ class ObjReader(object):
             data_entry_count -= 1
             init_expr = []
             loop = True
-
         return(DS)
 
     def ReadImportSection(self):
@@ -1180,165 +1178,155 @@ class ParserV1(object):
 class PythonInterpreter(object):
     modules = []
 
-    def run(self):
-        argparser = CLIArgParser()
-        for obj_file in argparser.getWASMPath():
-            wasmobj = ObjReader(obj_file, 'little', False, True)
-            # wasmobj.testprintall()
-            # wasmobj.testprintbyteall()
-            wasmobj.ReadWASM()
-            # wasmobj.PrintAllSection()
-            self.modules.append(deepcopy(Module(wasmobj.ReadSectionType(),
-                                       wasmobj.ReadImportSection(),
-                                       wasmobj.ReadSectionFunction(),
-                                       wasmobj.ReadSectionTable(),
-                                       wasmobj.ReadMemorySection(),
-                                       wasmobj.ReadSectionGlobal(),
-                                       wasmobj.ReadSectionExport(),
-                                       wasmobj.ReadStartSection(),
-                                       wasmobj.ReadSectionElement(),
-                                       wasmobj.ReadCodeSection(),
-                                       wasmobj.ReadDataSection())))
+    def parse(self, file_path):
+        wasmobj = ObjReader(file_path, 'little', False, True)
+        wasmobj.ReadWASM()
+        return(Module(wasmobj.ReadSectionType(), wasmobj.ReadImportSection(),
+                      wasmobj.ReadSectionFunction(), wasmobj.ReadSectionTable(),
+                      wasmobj.ReadMemorySection(), wasmobj.ReadSectionGlobal(),
+                      wasmobj.ReadSectionExport(), wasmobj.ReadStartSection(),
+                      wasmobj.ReadSectionElement(), wasmobj.ReadCodeSection(),
+                      wasmobj.ReadDataSection()))
 
-    def dump_sections(self):
-        print(Colors.blue + Colors.BOLD + 'RUNNING IN DEBUG MODE' + Colors.ENDC)
-        for module in self.modules:
-            print(Colors.blue + Colors.BOLD +
-                  'BEGENNING OF MODULE' + Colors.ENDC)
+    def dump_sections(self, module):
+        print(Colors.blue + Colors.BOLD +
+                'BEGENNING OF MODULE' + Colors.ENDC)
 
-            # type_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Type Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('count: ' + repr(module.type_section.count))
-            for iter in module.type_section.func_types:
-                print(Colors.cyan + 'form: ' + repr(iter.form) + Colors.ENDC)
-                print(Colors.green + 'param count: ' + repr(iter.param_cnt) + Colors.ENDC)
-                print(Colors.red + 'param types: ' + repr(iter.param_types) + Colors.ENDC)
-                print(Colors.purple + 'return count: ' + repr(iter.return_cnt) + Colors.ENDC)
-                print(Colors.yellow + 'return type: ' + repr(iter.return_type) + Colors.ENDC)
+        # type_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Type Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('count: ' + repr(module.type_section.count))
+        for iter in module.type_section.func_types:
+            print(Colors.cyan + 'form: ' + repr(iter.form) + Colors.ENDC)
+            print(Colors.green + 'param count: ' + repr(iter.param_cnt) + Colors.ENDC)
+            print(Colors.red + 'param types: ' + repr(iter.param_types) + Colors.ENDC)
+            print(Colors.purple + 'return count: ' + repr(iter.return_cnt) + Colors.ENDC)
+            print(Colors.yellow + 'return type: ' + repr(iter.return_type) + Colors.ENDC)
 
-            # import_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Import Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('count: ' + repr(module.import_section.count))
-            for iter in module.import_section.import_entry:
-                print(Colors.cyan + 'module length: ' + repr(iter.module_len) + Colors.ENDC)
-                print(Colors.green + 'module str: ' + repr(iter.module_str) + Colors.ENDC)
-                print(Colors.red + 'field length: ' + repr(iter.field_len) + Colors.ENDC)
-                print(Colors.purple + 'field str: ' + repr(iter.field_str) + Colors.ENDC)
-                print(Colors.yellow + 'kind: ' + repr(iter.kind) + Colors.ENDC)
-                print(Colors.grey + 'type: ' + repr(iter.type) + Colors.ENDC)
+        # import_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Import Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('count: ' + repr(module.import_section.count))
+        for iter in module.import_section.import_entry:
+            print(Colors.cyan + 'module length: ' + repr(iter.module_len) + Colors.ENDC)
+            print(Colors.green + 'module str: ' + repr(iter.module_str) + Colors.ENDC)
+            print(Colors.red + 'field length: ' + repr(iter.field_len) + Colors.ENDC)
+            print(Colors.purple + 'field str: ' + repr(iter.field_str) + Colors.ENDC)
+            print(Colors.yellow + 'kind: ' + repr(iter.kind) + Colors.ENDC)
+            print(Colors.grey + 'type: ' + repr(iter.type) + Colors.ENDC)
 
-            # function_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Function Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('count: ' + repr(module.function_section.count))
-            for iter in module.function_section.type_section_index:
-                print(Colors.cyan + 'type section index: ' + repr(iter) + Colors.ENDC)
+        # function_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Function Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('count: ' + repr(module.function_section.count))
+        for iter in module.function_section.type_section_index:
+            print(Colors.cyan + 'type section index: ' + repr(iter) + Colors.ENDC)
 
-            # table_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Table Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('count: ' + repr(module.table_section.count))
-            for iter in module.table_section.table_types:
-                print(Colors.cyan + 'element type: ' + repr(iter.element_type) + Colors.ENDC)
-                print(Colors.green + 'Resizable_Limits:flags: ' + repr(iter.limit.flags) + Colors.ENDC)
-                print(Colors.red + 'Resizable_Limits:initial: ' + repr(iter.limit.initial) + Colors.ENDC)
-                print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.limit.maximum) + Colors.ENDC)
+        # table_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Table Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('count: ' + repr(module.table_section.count))
+        for iter in module.table_section.table_types:
+            print(Colors.cyan + 'element type: ' + repr(iter.element_type) + Colors.ENDC)
+            print(Colors.green + 'Resizable_Limits:flags: ' + repr(iter.limit.flags) + Colors.ENDC)
+            print(Colors.red + 'Resizable_Limits:initial: ' + repr(iter.limit.initial) + Colors.ENDC)
+            print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.limit.maximum) + Colors.ENDC)
 
-            # memory_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Memory Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('count: ' + repr(module.memory_section.count))
-            for iter in module.memory_section.memory_types:
-                print(Colors.green + 'Resizable_Limits:flags: ' + repr(iter.flags) + Colors.ENDC)
-                print(Colors.red + 'Resizable_Limits:initial: ' + repr(iter.initial) + Colors.ENDC)
-                print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.maximum) + Colors.ENDC)
+        # memory_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Memory Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('count: ' + repr(module.memory_section.count))
+        for iter in module.memory_section.memory_types:
+            print(Colors.green + 'Resizable_Limits:flags: ' + repr(iter.flags) + Colors.ENDC)
+            print(Colors.red + 'Resizable_Limits:initial: ' + repr(iter.initial) + Colors.ENDC)
+            print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.maximum) + Colors.ENDC)
 
-            # global_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Global Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('count: ' + repr(module.global_section.count))
-            for iter in module.global_section.global_variables:
-                print(Colors.green + 'global type: ' + repr(iter.global_type) + Colors.ENDC)
-                print(Colors.red + 'init expr: ' + repr(iter.init_expr) + Colors.ENDC)
+        # global_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Global Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('count: ' + repr(module.global_section.count))
+        for iter in module.global_section.global_variables:
+            print(Colors.green + 'global type: ' + repr(iter.global_type) + Colors.ENDC)
+            print(Colors.red + 'init expr: ' + repr(iter.init_expr) + Colors.ENDC)
 
-            # export_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Export Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('count: ' + repr(module.export_section.count))
-            for iter in module.export_section.export_entries:
-                print(Colors.green + 'field length: ' + repr(iter.field_len) + Colors.ENDC)
-                print(Colors.red + 'field str: ' + repr(iter.field_str) + Colors.ENDC)
-                print(Colors.purple + 'kind: ' + repr(iter.kind) + Colors.ENDC)
-                print(Colors.cyan + 'index: ' + repr(iter.index) + Colors.ENDC)
+        # export_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Export Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('count: ' + repr(module.export_section.count))
+        for iter in module.export_section.export_entries:
+            print(Colors.green + 'field length: ' + repr(iter.field_len) + Colors.ENDC)
+            print(Colors.red + 'field str: ' + repr(iter.field_str) + Colors.ENDC)
+            print(Colors.purple + 'kind: ' + repr(iter.kind) + Colors.ENDC)
+            print(Colors.cyan + 'index: ' + repr(iter.index) + Colors.ENDC)
 
-            # start_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Start Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('start function index: ' + repr(module.start_section.function_section_index))
+        # start_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Start Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('start function index: ' + repr(module.start_section.function_section_index))
 
-            # element_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Element Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('count: ' + repr(module.element_section.count))
-            for iter in module.element_section.elem_segments:
-                print(Colors.green + 'index: ' + repr(iter.index) + Colors.ENDC)
-                print(Colors.red + 'offset: ' + repr(iter.offset) + Colors.ENDC)
-                print(Colors.purple + 'num_elem: ' + repr(iter.num_elem) + Colors.ENDC)
-                print(Colors.cyan + 'elemes:' + repr(iter.elems) + Colors.ENDC)
+        # element_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Element Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('count: ' + repr(module.element_section.count))
+        for iter in module.element_section.elem_segments:
+            print(Colors.green + 'index: ' + repr(iter.index) + Colors.ENDC)
+            print(Colors.red + 'offset: ' + repr(iter.offset) + Colors.ENDC)
+            print(Colors.purple + 'num_elem: ' + repr(iter.num_elem) + Colors.ENDC)
+            print(Colors.cyan + 'elemes:' + repr(iter.elems) + Colors.ENDC)
 
-            # code_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Code Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('count: ' + repr(module.code_section.count))
-            for iter in module.code_section.func_bodies:
-                print(Colors.green + 'body_size: ' + repr(iter.body_size) + Colors.ENDC)
-                print(Colors.red + 'local_count: ' + repr(iter.local_count) + Colors.ENDC)
-                print(Colors.purple + 'locals: ' + repr(iter.locals) + Colors.ENDC)
-                for iterer in iter.code:
-                    print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
-                    print(Colors.grey + 'code: ' + repr(iterer.operands) + Colors.ENDC)
+        # code_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Code Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('count: ' + repr(module.code_section.count))
+        for iter in module.code_section.func_bodies:
+            print(Colors.green + 'body_size: ' + repr(iter.body_size) + Colors.ENDC)
+            print(Colors.red + 'local_count: ' + repr(iter.local_count) + Colors.ENDC)
+            print(Colors.purple + 'locals: ' + repr(iter.locals) + Colors.ENDC)
+            for iterer in iter.code:
+                print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
+                print(Colors.grey + 'code: ' + repr(iterer.operands) + Colors.ENDC)
 
-            # data_section
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Data Section:' + Colors.ENDC)
-            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print('count: ' + repr(module.data_section.count))
-            for iter in module.data_section.data_segments:
-                print(Colors.green + 'index: ' + repr(iter.index) + Colors.ENDC)
-                print(Colors.red + 'offset: ' + repr(iter.offset) + Colors.ENDC)
-                print(Colors.purple + 'size: ' + repr(iter.size) + Colors.ENDC)
-                print(Colors.cyan + 'data:' + repr(iter.data) + Colors.ENDC)
+        # data_section
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print(Colors.blue + 'Data Section:' + Colors.ENDC)
+        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+        print('count: ' + repr(module.data_section.count))
+        for iter in module.data_section.data_segments:
+            print(Colors.green + 'index: ' + repr(iter.index) + Colors.ENDC)
+            print(Colors.red + 'offset: ' + repr(iter.offset) + Colors.ENDC)
+            print(Colors.purple + 'size: ' + repr(iter.size) + Colors.ENDC)
+            print(Colors.cyan + 'data:' + repr(iter.data) + Colors.ENDC)
+
+    def runValidations(self):
+        pass
 
 
 def main():
     argparser = CLIArgParser()
 
-    if argparser.getWASMPath() is not None and not argparser.getDBG:
-        print(argparser.getWASMPath())
-        parser = PythonInterpreter()
-        parser.run()
+    if argparser.getWASMPath() is not None:
+        interpreter = PythonInterpreter()
+        for file_path in argparser.getWASMPath():
+            module = interpreter.parse(file_path)
+            interpreter.modules.append(module)
+            interpreter.runValidations()
+            if argparser.getDBG():
+                interpreter.dump_sections(module)
 
     if argparser.getWASTPath() is not None:
         print(argparser.getWASTPath())
         parser = ParserV1()
         parser.run()
-
-    if argparser.getDBG():
-        interpreter = PythonInterpreter()
-        interpreter.run()
-        interpreter.dump_sections()
 
     if argparser.getASPath() is not None:
         print("not implemented yet")
