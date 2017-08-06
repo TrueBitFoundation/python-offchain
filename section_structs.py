@@ -1,28 +1,28 @@
-class Func_Type(object):
-        form = int()
-        param_cnt = int()
-        param_types = []
-        return_cnt = int()
-        return_type = []
+class Func_Type():
+    form = int()
+    param_cnt = int()
+    param_types = []
+    return_cnt = int()
+    return_type = []
 
 
 class Global_Type():
-        content_type = int()
-        mutability = int()
+    content_type = int()
+    mutability = int()
 
 
 class Resizable_Limits():
-        flags = int()
-        initial = int()
-        maximum = int()
+    flags = int()
+    initial = int()
+    maximum = int()
 
 
 class Table_Type():
-        element_type = int()
-        limit = Resizable_Limits()
+    element_type = int()
+    limit = Resizable_Limits()
 
 
-class External_Kind(object):
+class External_Kind():
     Function = 0
     Table = 1
     Memory = 2
@@ -30,106 +30,114 @@ class External_Kind(object):
 
 
 class Memory_Type():
-        limits = [Resizable_Limits()]
+    limits = [Resizable_Limits()]
 
 
 # @DEVI-FIXME-
-class Init_Expr(object):
+class Init_Expr():
     pass
 
 
-class Type_Section(object):
-        count = int()
-        func_types = [Func_Type()]
+class Type_Section():
+    count = []
+    func_types = []
 
 
 class Import_Entry():
-        module_len = int()
-        module_str = []
-        field_len = int()
-        field_str = []
-        kind = int()
-        type = int()
+    module_len = int()
+    module_str = []
+    field_len = int()
+    field_str = []
+    kind = int()
+    type = int()
 
 
 class Import_Section():
-        count = int()
-        import_entry = [Import_Entry()]
+    count = []
+    import_entry = []
 
 
 class Function_Section():
-        count = int()
-        type_section_index = [int()]
+    count = []
+    type_section_index = [int()]
 
 
 class Table_Section():
-        count = int()
-        table_types = [Table_Type()]
+    count = []
+    table_types = []
 
 
 class Memory_Section():
-        count = int()
-        memory_types = [Resizable_Limits()]
+    count = []
+    #Resizable_Limits
+    memory_types = []
 
 
 class Global_Variable():
-        global_type = Global_Type()
-        init_expr = []
+    global_type = Global_Type()
+    init_expr = []
 
 
 class Global_Section():
-        count = int()
-        global_variables = [Global_Variable()]
+    count = []
+    # Global_Variable
+    global_variables = []
 
 
 class Export_Entry():
-        field_len = int()
-        field_str = []
-        kind = int()
-        index = int()
+    field_len = int()
+    field_str = []
+    kind = int()
+    index = int()
 
 
-class Export_Section(object):
-        count = int()
-        export_entries = [Export_Entry()]
+class Export_Section():
+    count = []
+    # Export_Entry
+    export_entries = []
 
 
 class Start_Section():
-    function_section_index = int()
+    function_section_index = []
 
 
-class Elem_Segment(object):
-        index = int()
-        offset = []
-        num_elem = int()
-        elems = []
+class Elem_Segment():
+    index = int()
+    offset = []
+    num_elem = int()
+    elems = []
 
 
-class Element_Section(object):
-        count = int()
-        elem_segments = [Elem_Segment()]
+class Element_Section():
+    count = []
+    # Elem_Segment
+    elem_segments = []
 
 
-class Local_Entry(object):
-    def __init__(self, count, type):
-        self.count = count
-        self.type = type
+class Local_Entry():
+    count = int()
+    type = int()
 
 
-class Func_Body(object):
-    def __init__(self, body_size, local_count, locals, code, end):
-        self.body_size = body_size
-        self.local_count = local_count
-        self.locals = []
-        self.locals = local_entry
-        self.code = code
-        self.end = end
+class WASM_Ins():
+    opcode = int()
+    operands = []
 
 
-class Code_Section(object):
-    def __init__(self, count, func_body):
-        self.count = count
-        self.func_body = func_body
+class Func_Body():
+    body_size = int()
+    local_count = int()
+    # Local_Entry
+    locals = []
+    # WASM_Ins
+    code = []
+    end = int()
+
+
+class Code_Section():
+    count = []
+    # Func_Body
+    func_bodies = []
 
 
 class Data_Segment():
@@ -140,8 +148,9 @@ class Data_Segment():
 
 
 class Data_Section():
-    count = int()
-    data_segments = [Data_Segment()]
+    count = []
+    # Data_Segment
+    data_segments = []
 
 
 class Name_Type():
@@ -181,3 +190,20 @@ class Name_Map(object):
         self.count = count
         self.naming = []
         self.naming = naming
+
+
+class Module():
+    def __init__(self, type_section, import_section, function_section,
+                 table_section, memory_section, global_section, export_section,
+                 start_section, element_section, code_section, data_section):
+        self.type_section = Type_Section()
+        self.import_section = Import_Section()
+        self.function_section = Function_Section()
+        self.table_section = Table_Section()
+        self.memory_section = Memory_Section()
+        self.global_section = Global_Section()
+        self.export_section = Export_Section()
+        self.start_section = Start_Section()
+        self.element_section = Element_Section()
+        self.code_section = Code_Section()
+        self.data_section = Data_Section()
