@@ -10,37 +10,16 @@ from copy import deepcopy
 _DBG_ = True
 
 
-class ParsedSection(object):
-    def __init__(self, section_id, section_name,
-                 payload_length, is_custom_section,
-                 name_len, name, payload_data):
-        self.section_id = section_id
-        self.section_name = section_name
-        self.payload_length = payload_length
-        self.is_custom_section = is_custom_section
-        self.name_len = name_len
-        self.name = name
-        self.payload_data = payload_data
-
-        if not isinstance(self.section_id, int):
-            raise Exception("section_id must be an int")
-        if not isinstance(self.section_name, str):
-            raise Exception("section_name must be a str")
-        if not isinstance(self.payload_length, int):
-            raise Exception("payload_length must be an int")
-        if not isinstance(self.is_custom_section, bool):
-            raise Exception("is_custom_section must be a bool")
-        if not isinstance(self.name_len, int):
-            raise Exception("name_len must be an int")
-        if not isinstance(self.name, bytearray):
-            raise Exception("name must be a bytearray")
-        if not isinstance(self.payload_data, bytearray):
-            raise Exception("payload_data must be a bytearray")
-
-
 class ParsedStruct:
-    version_number = int()
-    section_list = []
+    def __init__(self):
+        self.version_number = int()
+        self.section_list = []
+
+
+class ParsedStructV2:
+    def __init__(self, version_number, section_list):
+        self.version_number = version_number
+        self.section_list = section_list
 
 
 def Conver2Int(little_endian, size, bytelist):
@@ -499,137 +478,69 @@ class WASM_CodeEmitter(object):
             print(bytecode)
 
 
-class ObjReader(object):
-    parsedstruct = ParsedStruct
+def ReadWASM(file_path, endianness, is_extended_isa, dbg):
+    wasm_file = open(file_path, "rb")
+    parsedstruct = ParsedStruct()
+    # read the magic cookie
+    byte = wasm_file.read(WASM_OP_Code.uint32)
+    if byte != WASM_OP_Code.magic_number.to_bytes(
+            WASM_OP_Code.uint32, byteorder=endianness, signed=False):
+        raise Exception("bad magic cookie")
 
-    def __init__(self, file_path, endianness, is_extended_isa, dbg):
-        self.wasm_file = open(file_path, "rb")
-        self.file_path = file_path
-        self.endianness = endianness
-        self.is_extended_isa = is_extended_isa
-        self.dbg = dbg
+    # read the version number
+    byte = wasm_file.read(WASM_OP_Code.uint32)
+    if byte != WASM_OP_Code.version_number.to_bytes(
+            WASM_OP_Code.uint32, byteorder=endianness, signed=False):
+        raise Exception("bad version number")
+    else:
+        parsedstruct.version_number = byte
 
-    def testprintall(self):
-        for line in self.wasm_file:
-            print(line)
-        self.wasm_file.seek(0)
-
-    def testprintbyteall(self):
-        byte = self.wasm_file.read(1)
-        print(byte)
-        while byte != b"":
-            byte = self.wasm_file.read(1)
-            print(byte)
-        self.wasm_file.seek(0)
-
-    def ReadWASM(self):
-        # read the magic cookie
-        byte = self.wasm_file.read(WASM_OP_Code.uint32)
-        if byte != WASM_OP_Code.magic_number.to_bytes(
-                WASM_OP_Code.uint32, byteorder=self.endianness, signed=False):
-            raise Exception("bad magic cookie")
-
-        # read the version number
-        byte = self.wasm_file.read(WASM_OP_Code.uint32)
-        if byte != WASM_OP_Code.version_number.to_bytes(
-                WASM_OP_Code.uint32, byteorder=self.endianness, signed=False):
-            raise Exception("bad version number")
-        else:
-            self.parsedstruct.version_number = byte
-
-        while self.ReadSection():
-            pass
-
-    def ReadSection(self):
+    not_end_of_the_line = True
+    while not_end_of_the_line:
+        pass
         section_id_int = int()
         payload_length_int = int()
         name_len_int = int()
         name = str()
         payload_data = bytearray()
         is_custom_section = False
-        not_end_of_the_line = True
-        section_id = self.wasm_file.read(WASM_OP_Code.varuint7)
+        section_id = wasm_file.read(WASM_OP_Code.varuint7)
 
         if section_id == b"":
             not_end_of_the_line = False
         else:
             section_id_int = LEB128UnsignedDecode(section_id)
 
-            payload_length = self.wasm_file.read(WASM_OP_Code.varuint32)
+            payload_length = wasm_file.read(WASM_OP_Code.varuint32)
             payload_length_int = LEB128UnsignedDecode(payload_length) + 1
-            # print(payload_length_int)
 
             if section_id is not WASM_OP_Code.section_code_dict['custom']:
-                payload_data = self.wasm_file.read(payload_length_int)
-                # print(payload_data)
+                payload_data = wasm_file.read(payload_length_int)
             else:
                 is_custom_section = True
-                name_len = self.wasm_file.read(WASM_OP_Code.varuint32)
-                name_len_int = Conver2Int(self.endianness,
-                                          WASM_OP_Code.varuint32,
-                                          name_len)
-                # print(name_len)
-                name = self.wasm_file.read(name_len)
-                payload_data = self.wasm_file.read(
+                name_len = wasm_file.read(WASM_OP_Code.varuint32)
+                name_len_int = Conver2Int(endianness,
+                                        WASM_OP_Code.varuint32,
+                                        name_len)
+                name = wasm_file.read(name_len)
+                payload_data = wasm_file.read(
                     payload_length_int - name_len_int - WASM_OP_Code.varuint32)
 
-        self.parsedstruct.section_list.append([section_id_int, 'jojo',
-                                               payload_length_int,
-                                               is_custom_section,
-                                               name_len_int, name,
-                                               payload_data])
+        parsedstruct.section_list.append([section_id_int, 'jojo',
+                                            payload_length_int,
+                                            is_custom_section,
+                                            name_len_int, name,
+                                            payload_data])
 
-        return(not_end_of_the_line)
+    for section in parsedstruct.section_list:
+        print(section)
+    wasm_file.close()
+    return(parsedstruct)
 
-    def PrintAllSection(self):
-        for section in self.parsedstruct.section_list:
-            print(section)
 
-    def DisassembleDebug(self, byte, offset):
-        matched = False
-        if WASM_OP_Code.control_flow_ops_dict_rev.get(byte):
-            print(Colors.green +
-                  WASM_OP_Code.control_flow_ops_dict_rev[byte] + Colors.ENDC)
-            matched = True
-        elif WASM_OP_Code.type_ops_dict_rev.get(byte):
-            print(Colors.green +
-                  WASM_OP_Code.type_ops_dict_rev[byte] + Colors.ENDC)
-            matched = True
-        elif WASM_OP_Code.num_ops_dict_rev.get(byte):
-            print(Colors.green +
-                  WASM_OP_Code.num_ops_dict_rev[byte] + Colors.ENDC)
-            matched = True
-        elif WASM_OP_Code.call_ops_dict_rev.get(byte):
-            print(Colors.green +
-                  WASM_OP_Code.call_ops_dict_rev[byte] + Colors.ENDC)
-            matched = True
-        elif WASM_OP_Code.mem_ops_dict_rev.get(byte):
-            print(Colors.green +
-                  WASM_OP_Code.mem_ops_dict_rev[byte] + Colors.ENDC)
-            matched = True
-        elif WASM_OP_Code.consts_dict_rev.get(byte):
-            print(Colors.green +
-                  WASM_OP_Code.consts_dict_rev[byte] + Colors.ENDC)
-            matched = True
-        elif WASM_OP_Code.conversion_dict_rev.get(byte):
-            print(Colors.green +
-                  WASM_OP_Code.conversion_dict_rev[byte] + Colors.ENDC)
-            matched = True
-        elif WASM_OP_Code.var_access_dict_rev.get(byte):
-            print(Colors.green +
-                  WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
-            matched = True
-        elif WASM_OP_Code.var_access_dict_rev.get(byte):
-            print(Colors.green +
-                  WASM_OP_Code.var_access_dict_rev[byte] + Colors.ENDC)
-            matched = True
-        elif WASM_OP_Code.param_ops_dict_rev.get(byte):
-            print(Colors.green +
-                  WASM_OP_Code.param_ops_dict_rev[byte] + Colors.ENDC)
-            matched = True
-
-        offset += 1
-        return offset, matched
+class ObjReader(object):
+    def __init__(self, parsedstruct):
+        self.parsedstruct = parsedstruct
 
     def Disassemble(self, section_byte, offset):
         matched = False
@@ -1139,6 +1050,15 @@ class ObjReader(object):
     def getCursorLocation(self):
         return(self.wasm_file.tell())
 
+    def parse(self):
+        #self.parsedstruct.section_list = []
+        return(Module(self.ReadSectionType(), self.ReadImportSection(),
+                      self.ReadSectionFunction(), self.ReadSectionTable(),
+                      self.ReadMemorySection(), self.ReadSectionGlobal(),
+                      self.ReadSectionExport(), self.ReadStartSection(),
+                      self.ReadSectionElement(), self.ReadCodeSection(),
+                      self.ReadDataSection()))
+
 
 class ParserV1(object):
     def run(self):
@@ -1176,136 +1096,148 @@ class ParserV1(object):
 
 
 class PythonInterpreter(object):
-    modules = []
+    def __init__(self):
+        self.modules = []
+
+    def appendmodule(self, module):
+        self.modules.append(module)
+
+    def getmodules(self):
+        return(self.modules)
 
     def parse(self, file_path):
-        wasmobj = ObjReader(file_path, 'little', False, True)
-        wasmobj.ReadWASM()
-        return(Module(wasmobj.ReadSectionType(), wasmobj.ReadImportSection(),
-                      wasmobj.ReadSectionFunction(), wasmobj.ReadSectionTable(),
-                      wasmobj.ReadMemorySection(), wasmobj.ReadSectionGlobal(),
-                      wasmobj.ReadSectionExport(), wasmobj.ReadStartSection(),
-                      wasmobj.ReadSectionElement(), wasmobj.ReadCodeSection(),
-                      wasmobj.ReadDataSection()))
+        parser = ObjReader(ReadWASM(file_path, 'little', False, True))
+        return(parser.parse())
 
     def dump_sections(self, module):
         print(Colors.blue + Colors.BOLD +
                 'BEGENNING OF MODULE' + Colors.ENDC)
 
         # type_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Type Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('count: ' + repr(module.type_section.count))
-        for iter in module.type_section.func_types:
-            print(Colors.cyan + 'form: ' + repr(iter.form) + Colors.ENDC)
-            print(Colors.green + 'param count: ' + repr(iter.param_cnt) + Colors.ENDC)
-            print(Colors.red + 'param types: ' + repr(iter.param_types) + Colors.ENDC)
-            print(Colors.purple + 'return count: ' + repr(iter.return_cnt) + Colors.ENDC)
-            print(Colors.yellow + 'return type: ' + repr(iter.return_type) + Colors.ENDC)
+        if module.type_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Type Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.type_section.count))
+            for iter in module.type_section.func_types:
+                print(Colors.cyan + 'form: ' + repr(iter.form) + Colors.ENDC)
+                print(Colors.green + 'param count: ' + repr(iter.param_cnt) + Colors.ENDC)
+                print(Colors.red + 'param types: ' + repr(iter.param_types) + Colors.ENDC)
+                print(Colors.purple + 'return count: ' + repr(iter.return_cnt) + Colors.ENDC)
+                print(Colors.yellow + 'return type: ' + repr(iter.return_type) + Colors.ENDC)
 
         # import_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Import Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('count: ' + repr(module.import_section.count))
-        for iter in module.import_section.import_entry:
-            print(Colors.cyan + 'module length: ' + repr(iter.module_len) + Colors.ENDC)
-            print(Colors.green + 'module str: ' + repr(iter.module_str) + Colors.ENDC)
-            print(Colors.red + 'field length: ' + repr(iter.field_len) + Colors.ENDC)
-            print(Colors.purple + 'field str: ' + repr(iter.field_str) + Colors.ENDC)
-            print(Colors.yellow + 'kind: ' + repr(iter.kind) + Colors.ENDC)
-            print(Colors.grey + 'type: ' + repr(iter.type) + Colors.ENDC)
+        if module.import_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Import Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.import_section.count))
+            for iter in module.import_section.import_entry:
+                print(Colors.cyan + 'module length: ' + repr(iter.module_len) + Colors.ENDC)
+                print(Colors.green + 'module str: ' + repr(iter.module_str) + Colors.ENDC)
+                print(Colors.red + 'field length: ' + repr(iter.field_len) + Colors.ENDC)
+                print(Colors.purple + 'field str: ' + repr(iter.field_str) + Colors.ENDC)
+                print(Colors.yellow + 'kind: ' + repr(iter.kind) + Colors.ENDC)
+                print(Colors.grey + 'type: ' + repr(iter.type) + Colors.ENDC)
 
         # function_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Function Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('count: ' + repr(module.function_section.count))
-        for iter in module.function_section.type_section_index:
-            print(Colors.cyan + 'type section index: ' + repr(iter) + Colors.ENDC)
+        if module.function_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Function Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.function_section.count))
+            for iter in module.function_section.type_section_index:
+                print(Colors.cyan + 'type section index: ' + repr(iter) + Colors.ENDC)
 
         # table_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Table Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('count: ' + repr(module.table_section.count))
-        for iter in module.table_section.table_types:
-            print(Colors.cyan + 'element type: ' + repr(iter.element_type) + Colors.ENDC)
-            print(Colors.green + 'Resizable_Limits:flags: ' + repr(iter.limit.flags) + Colors.ENDC)
-            print(Colors.red + 'Resizable_Limits:initial: ' + repr(iter.limit.initial) + Colors.ENDC)
-            print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.limit.maximum) + Colors.ENDC)
+        if module.table_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Table Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.table_section.count))
+            for iter in module.table_section.table_types:
+                print(Colors.cyan + 'element type: ' + repr(iter.element_type) + Colors.ENDC)
+                print(Colors.green + 'Resizable_Limits:flags: ' + repr(iter.limit.flags) + Colors.ENDC)
+                print(Colors.red + 'Resizable_Limits:initial: ' + repr(iter.limit.initial) + Colors.ENDC)
+                print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.limit.maximum) + Colors.ENDC)
 
         # memory_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Memory Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('count: ' + repr(module.memory_section.count))
-        for iter in module.memory_section.memory_types:
-            print(Colors.green + 'Resizable_Limits:flags: ' + repr(iter.flags) + Colors.ENDC)
-            print(Colors.red + 'Resizable_Limits:initial: ' + repr(iter.initial) + Colors.ENDC)
-            print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.maximum) + Colors.ENDC)
+        if module.memory_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Memory Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.memory_section.count))
+            for iter in module.memory_section.memory_types:
+                print(Colors.green + 'Resizable_Limits:flags: ' + repr(iter.flags) + Colors.ENDC)
+                print(Colors.red + 'Resizable_Limits:initial: ' + repr(iter.initial) + Colors.ENDC)
+                print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.maximum) + Colors.ENDC)
 
         # global_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Global Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('count: ' + repr(module.global_section.count))
-        for iter in module.global_section.global_variables:
-            print(Colors.green + 'global type: ' + repr(iter.global_type) + Colors.ENDC)
-            print(Colors.red + 'init expr: ' + repr(iter.init_expr) + Colors.ENDC)
+        if module.global_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Global Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.global_section.count))
+            for iter in module.global_section.global_variables:
+                print(Colors.green + 'global type: ' + repr(iter.global_type) + Colors.ENDC)
+                print(Colors.red + 'init expr: ' + repr(iter.init_expr) + Colors.ENDC)
 
         # export_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Export Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('count: ' + repr(module.export_section.count))
-        for iter in module.export_section.export_entries:
-            print(Colors.green + 'field length: ' + repr(iter.field_len) + Colors.ENDC)
-            print(Colors.red + 'field str: ' + repr(iter.field_str) + Colors.ENDC)
-            print(Colors.purple + 'kind: ' + repr(iter.kind) + Colors.ENDC)
-            print(Colors.cyan + 'index: ' + repr(iter.index) + Colors.ENDC)
+        if module.export_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Export Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.export_section.count))
+            for iter in module.export_section.export_entries:
+                print(Colors.green + 'field length: ' + repr(iter.field_len) + Colors.ENDC)
+                print(Colors.red + 'field str: ' + repr(iter.field_str) + Colors.ENDC)
+                print(Colors.purple + 'kind: ' + repr(iter.kind) + Colors.ENDC)
+                print(Colors.cyan + 'index: ' + repr(iter.index) + Colors.ENDC)
 
         # start_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Start Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('start function index: ' + repr(module.start_section.function_section_index))
+        if module.start_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Start Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('start function index: ' + repr(module.start_section.function_section_index))
 
         # element_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Element Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('count: ' + repr(module.element_section.count))
-        for iter in module.element_section.elem_segments:
-            print(Colors.green + 'index: ' + repr(iter.index) + Colors.ENDC)
-            print(Colors.red + 'offset: ' + repr(iter.offset) + Colors.ENDC)
-            print(Colors.purple + 'num_elem: ' + repr(iter.num_elem) + Colors.ENDC)
-            print(Colors.cyan + 'elemes:' + repr(iter.elems) + Colors.ENDC)
+        if module.element_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Element Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.element_section.count))
+            for iter in module.element_section.elem_segments:
+                print(Colors.green + 'index: ' + repr(iter.index) + Colors.ENDC)
+                print(Colors.red + 'offset: ' + repr(iter.offset) + Colors.ENDC)
+                print(Colors.purple + 'num_elem: ' + repr(iter.num_elem) + Colors.ENDC)
+                print(Colors.cyan + 'elemes:' + repr(iter.elems) + Colors.ENDC)
 
         # code_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Code Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('count: ' + repr(module.code_section.count))
-        for iter in module.code_section.func_bodies:
-            print(Colors.green + 'body_size: ' + repr(iter.body_size) + Colors.ENDC)
-            print(Colors.red + 'local_count: ' + repr(iter.local_count) + Colors.ENDC)
-            print(Colors.purple + 'locals: ' + repr(iter.locals) + Colors.ENDC)
-            for iterer in iter.code:
-                print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
-                print(Colors.grey + 'code: ' + repr(iterer.operands) + Colors.ENDC)
+        if module.code_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Code Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.code_section.count))
+            for iter in module.code_section.func_bodies:
+                print(Colors.green + 'body_size: ' + repr(iter.body_size) + Colors.ENDC)
+                print(Colors.red + 'local_count: ' + repr(iter.local_count) + Colors.ENDC)
+                print(Colors.purple + 'locals: ' + repr(iter.locals) + Colors.ENDC)
+                for iterer in iter.code:
+                    print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
+                    print(Colors.grey + 'code: ' + repr(iterer.operands) + Colors.ENDC)
 
         # data_section
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print(Colors.blue + 'Data Section:' + Colors.ENDC)
-        print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-        print('count: ' + repr(module.data_section.count))
-        for iter in module.data_section.data_segments:
-            print(Colors.green + 'index: ' + repr(iter.index) + Colors.ENDC)
-            print(Colors.red + 'offset: ' + repr(iter.offset) + Colors.ENDC)
-            print(Colors.purple + 'size: ' + repr(iter.size) + Colors.ENDC)
-            print(Colors.cyan + 'data:' + repr(iter.data) + Colors.ENDC)
+        if module.data_section is not None:
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print(Colors.blue + 'Data Section:' + Colors.ENDC)
+            print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
+            print('count: ' + repr(module.data_section.count))
+            for iter in module.data_section.data_segments:
+                print(Colors.green + 'index: ' + repr(iter.index) + Colors.ENDC)
+                print(Colors.red + 'offset: ' + repr(iter.offset) + Colors.ENDC)
+                print(Colors.purple + 'size: ' + repr(iter.size) + Colors.ENDC)
+                print(Colors.cyan + 'data:' + repr(iter.data) + Colors.ENDC)
 
     def runValidations(self):
         pass
@@ -1318,7 +1250,7 @@ def main():
         interpreter = PythonInterpreter()
         for file_path in argparser.getWASMPath():
             module = interpreter.parse(file_path)
-            interpreter.modules.append(module)
+            interpreter.appendmodule(module)
             interpreter.runValidations()
             if argparser.getDBG():
                 interpreter.dump_sections(module)
