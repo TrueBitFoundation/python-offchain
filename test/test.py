@@ -5,9 +5,10 @@ import sys
 import os
 from test_LEB128 import test_signed_LEB128
 from test_LEB128 import test_unsigned_LEB128
+from abc import ABCMeta, abstractmethod
 sys.path.append('../')
 from utils import Colors
-from argparser import ObjReader
+from argparser import PythonInterpreter
 
 total_test_cnt = int()
 expected_pass_cnt = int()
@@ -15,6 +16,35 @@ expected_fail_cnt = int()
 
 success = Colors.green + "SUCCESS: " + Colors.ENDC
 fail = Colors.red + "FAIL: " + Colors.ENDC
+
+
+class Void_Spwner():
+    __metaclass__ = ABCMeta
+
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def Legacy(self):
+        pass
+
+    def Spwn(self):
+        pid = os.fork()
+
+        # I don't have a bellybutton
+        if pid == 0:
+            self.Legacy()
+            sys.exit()
+        elif pid > 0:
+            cpid, status = os.waitpid(pid, 0)
+            if status == 0:
+                print(success + 'test spwned without problems')
+            else:
+                print(fail + 'test spwn had problems')
+        else:
+            # basically we couldnt fork a child
+            print(fail + 'return code:' + pid)
+            raise Exception("could not fork child")
 
 
 def ObjectList():
@@ -27,11 +57,17 @@ def ObjectList():
     return(obj_list)
 
 
+class LEB128EncodeTest(Void_Spwner):
+    def Legacy(self):
+        test_unsigned_LEB128()
+        test_signed_LEB128()
+
+
 def main():
     return_list = []
     # LEB128 tests
-    test_unsigned_LEB128()
-    test_signed_LEB128()
+    leb128encodetest = LEB128EncodeTest()
+    leb128encodetest.Spwn()
     # parser test on the WASM testsuite
     obj_list = ObjectList()
     for testfile in obj_list:
@@ -43,19 +79,9 @@ def main():
             sys.stdout = open('/dev/null', 'w')
             sys.stderr = open('/dev/null', 'w')
 
-            wasmobj = ObjReader(testfile, 'little', False, False)
-            wasmobj.ReadWASM()
-            wasmobj.ReadCodeSection()
-            wasmobj.ReadDataSection()
-            wasmobj.ReadImportSection()
-            wasmobj.ReadSectionExport()
-            wasmobj.ReadSectionType()
-            wasmobj.ReadSectionFunction()
-            wasmobj.ReadSectionElement()
-            wasmobj.ReadMemorySection()
-            wasmobj.ReadSectionTable()
-            wasmobj.ReadSectionGlobal()
-            wasmobj.ReadStartSection()
+            interpreter = PythonInterpreter()
+            module = interpreter.parse(testfile)
+            # interpreter.dump_sections(module)
             sys.exit()
         # the parent process
         elif pid > 0:
@@ -67,7 +93,7 @@ def main():
             else:
                 print(fail + testfile)
         else:
-            # badically we couldnt fork a child
+            # basically we couldnt fork a child
             print(fail + 'return code:' + pid)
             raise Exception("could not fork child")
 
