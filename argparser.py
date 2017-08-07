@@ -532,8 +532,8 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
                                             name_len_int, name,
                                             payload_data])
 
-    for section in parsedstruct.section_list:
-        print(section)
+    # for section in parsedstruct.section_list:
+        # print(section)
     wasm_file.close()
     return(parsedstruct)
 
@@ -628,6 +628,9 @@ class ObjReader(object):
 
                 if not matched:
                     print(Colors.red + 'did not match anything' + Colors.ENDC)
+                    print(Colors.red + 'code section offset: ' + repr(offset) + Colors.ENDC)
+                    print(Colors.red + 'read bytes: ' + repr(read_bytes) + Colors.ENDC)
+                    sys.exit(1)
                 else:
                     pass
                 matched = False
