@@ -18,8 +18,8 @@ TypeKS = [['uint8', 8, TypeType.none], ['uint16', 16, TypeType.none],
 
 
 class WASM_OP_Code:
-    magic_number = 0x6d736100
     version_number = 0x01
+    magic_number = 0x6d736100
     uint8 = 1
     uint16 = 2
     uint32 = 4
