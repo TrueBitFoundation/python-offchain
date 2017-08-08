@@ -1,5 +1,8 @@
 #!/bin/python3.5
 
+# @DEVI-if you wanna pipe the output, run with python -u. buffered output
+# screws up the output
+
 # call it the regression testing file
 import sys
 import os
@@ -28,6 +31,10 @@ class Void_Spwner():
     def Legacy(self):
         pass
 
+    @abstractmethod
+    def GetName(self):
+        return(str())
+
     def Spwn(self):
         pid = os.fork()
 
@@ -38,9 +45,9 @@ class Void_Spwner():
         elif pid > 0:
             cpid, status = os.waitpid(pid, 0)
             if status == 0:
-                print(success + 'test spwned without problems')
+                print(success + ': ' + self.GetName())
             else:
-                print(fail + 'test spwn had problems')
+                print(fail + ': ' + self.GetName())
         else:
             # basically we couldnt fork a child
             print(fail + 'return code:' + pid)
@@ -61,6 +68,9 @@ class LEB128EncodeTest(Void_Spwner):
     def Legacy(self):
         test_unsigned_LEB128()
         test_signed_LEB128()
+
+    def GetName(self):
+        return('leb128encodetest')
 
 
 def main():
