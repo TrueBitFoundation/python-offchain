@@ -41,8 +41,6 @@ def Conver2Int(little_endian, size, bytelist):
 
 
 def Read(section_byte, offset, kind):
-    seen_padding = False
-    byte_count = 0
     operand = []
     return_list = []
     read_bytes = 0
@@ -50,32 +48,20 @@ def Read(section_byte, offset, kind):
         while True:
             # print(Colors.red + repr(section_byte) + Colors.ENDC)
             byte = int(section_byte[6][offset])
-            byte_count += 1
             read_bytes += 1
             offset += 1
-            if not seen_padding:
-                operand.append(byte)
 
-                if byte == 0x80:
-                    # we have seen a padding byte so we should read 4 bytes in
-                    # total
-                    seen_padding = True
-                elif byte & 0x80 != 0:
-                    # we havent reached the last byre of the operand yet
-                    pass
-                else:
-                    # we are reading the last byte of the operand
-                    break
+            operand.append(byte)
 
-            if seen_padding:
-                # if seen_padding:
-                if seen_padding and byte_count == TypeDic[kind]:
-                    break
-                elif seen_padding and not byte_count == TypeDic[kind]:
-                    operand.append(byte)
+            if byte == 0x80:
+                pass
+            elif byte & 0x80 != 0:
+                pass
+            else:
+                # we have read the last byte of the operand
+                break
 
-        seen_padding = False
-        return_list.append(operand)
+        return_list.append(LEB128UnsignedDecode(operand))
         operand = []
     elif kind == 'uint8' or kind == 'uint16' or kind == 'uint32' or kind == 'uint64':
         byte = section_byte[6][offset: offset + TypeDic[kind]]
@@ -83,6 +69,7 @@ def Read(section_byte, offset, kind):
         offset += TypeDic[kind]
         operand.append(byte)
         return_list.append(operand)
+        # print(repr(int.to_bytes(operand, byteorder='big', signed=False)))
         operand = []
 
     return return_list, offset, read_bytes
@@ -593,13 +580,16 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        function_cnt = code_section[6][offset]
+        fn_cn, offset, dummy = Read(code_section, offset, 'varuint32')
+        function_cnt = fn_cn[0]
         CS.count.append(function_cnt)
-        offset += 1
 
         while function_cnt > 0:
             function_body_length = LEB128UnsignedDecode(
                 code_section[6][offset:offset + 4])
+            #fbl = Read(code_section, offset, 'varuint32')
+            #print(fbl[0][0])
+            #print(int.from_bytes(fbl[0][0], byteorder='big', signed=False))
             temp_func_bodies.body_size = function_body_length
             offset += 4
 
