@@ -40,13 +40,13 @@ def Conver2Int(little_endian, size, bytelist):
         return(sum)
 
 
-def ReadLEB128OperandsU(section_byte, offset, operand_count):
+def Read(section_byte, offset, kind):
     seen_padding = False
     byte_count = 0
     operand = []
     return_list = []
     read_bytes = 0
-    for i in range(0, operand_count):
+    if kind == 'varuint1' or kind == 'varuint7' or kind == 'varuint32' or kind == 'varuint64' or kind == 'varint1' or kind == 'varint7' or kind == 'varint32' or kind == 'varint64':
         while True:
             # print(Colors.red + repr(section_byte) + Colors.ENDC)
             byte = int(section_byte[6][offset])
@@ -69,20 +69,23 @@ def ReadLEB128OperandsU(section_byte, offset, operand_count):
 
             if seen_padding:
                 # if seen_padding:
-                if seen_padding and byte_count == 4:
+                if seen_padding and byte_count == TypeDic[kind]:
                     break
-                elif seen_padding and not byte_count == 4:
+                elif seen_padding and not byte_count == TypeDic[kind]:
                     operand.append(byte)
 
         seen_padding = False
-        byte_count = 0
         return_list.append(operand)
         operand = []
+    elif kind == 'uint8' or kind == 'uint16' or kind == 'uint32' or kind == 'uint64':
+        byte = section_byte[6][offset: offset + TypeDic[kind]]
+        read_bytes += TypeDic[kind]
+        offset += TypeDic[kind]
+        operand.append(byte)
+        return_list.append(operand)
+        operand = []
+
     return return_list, offset, read_bytes
-
-
-def ReadLEB128OperandsS(section_byte, offset, operand_count):
-    pass
 
 
 class CLIArgParser(object):
@@ -546,6 +549,7 @@ class ObjReader(object):
         matched = False
         read_bytes = 0
         read_bytes_temp = 0
+        read_bytes_temp_iter = 0
         instruction = str()
         temp_wasm_ins = WASM_Ins()
         byte = format(section_byte[6][offset], '02x')
@@ -557,14 +561,15 @@ class ObjReader(object):
 
                 if op_code[2]:
                     if isinstance(op_code[3], tuple):
-                        temp, offset, read_bytes_temp = ReadLEB128OperandsU(
-                            section_byte, offset, len(op_code[3]))
-                        for i in range(0, len(op_code[3])):
-                            instruction += repr(temp[i]) + ' '
+                        for i in range(0, len(op_code [3])):
+                            temp, offset, read_bytes_temp_iter = Read(
+                                section_byte, offset, op_code[3][i])
+                            read_bytes_temp += read_bytes_temp_iter
+                            instruction += repr(temp) + ' '
                     else:
-                        temp, offset, read_bytes_temp = ReadLEB128OperandsU(
-                            section_byte, offset, 1)
-                        instruction += repr(temp[0])
+                        temp, offset, read_bytes_temp = Read(
+                            section_byte, offset, op_code[3])
+                        instruction += repr(temp)
 
                 temp_wasm_ins.opcode = op_code[0]
                 temp_wasm_ins.operands = instruction
@@ -630,6 +635,7 @@ class ObjReader(object):
                     print(Colors.red + 'did not match anything' + Colors.ENDC)
                     print(Colors.red + 'code section offset: ' + repr(offset) + Colors.ENDC)
                     print(Colors.red + 'read bytes: ' + repr(read_bytes) + Colors.ENDC)
+                    print(Colors.red + 'wasm ins: ' + repr(temp_wasm_ins.opcode) + Colors.ENDC)
                     sys.exit(1)
                 else:
                     pass
