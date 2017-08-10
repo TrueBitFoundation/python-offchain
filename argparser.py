@@ -42,8 +42,9 @@ def Conver2Int(little_endian, size, bytelist):
 
 def Read(section_byte, offset, kind):
     operand = []
-    return_list = []
+    return_list = int()
     read_bytes = 0
+
     if kind == 'varuint1' or kind == 'varuint7' or kind == 'varuint32' or kind == 'varuint64':
         while True:
             byte = int(section_byte[6][offset])
@@ -60,34 +61,33 @@ def Read(section_byte, offset, kind):
                 # we have read the last byte of the operand
                 break
 
-        return_list.append(LEB128UnsignedDecode(operand))
+        return_list = LEB128UnsignedDecode(operand)
         operand = []
     elif kind == 'uint8' or kind == 'uint16' or kind == 'uint32' or kind == 'uint64':
         byte = section_byte[6][offset: offset + TypeDic[kind]]
         read_bytes += TypeDic[kind]
         offset += TypeDic[kind]
         operand.append(byte)
-        return_list.append(operand)
-        # print(repr(int.to_bytes(operand, byteorder='small', signed=False)))
+        return_list = int.from_bytes(operand[0], byteorder='little', signed=False)
         operand = []
     elif kind == 'varint1' or kind == 'varint7' or kind == 'varint32' or kind == 'varint64':
         while True:
             byte = int(section_byte[6][offset])
-            # print(byte)
             read_bytes += 1
             offset += 1
 
             operand.append(byte)
 
+            # @DEVI-what happens when we decode a 56-bit value?
             if byte == 0x80 or byte == 0xff:
                 pass
             elif byte & 0x80 != 0:
                 pass
             else:
+                # we have read the lasy byte of the operand
                 break
 
-            return_list.append(LEB128SignedDecode(operand))
-            # print(LEB128SignedDecode(operand))
+            return_list = LEB128SignedDecode(operand)
             operand = []
 
     return return_list, offset, read_bytes
@@ -557,21 +557,30 @@ class ObjReader(object):
         read_bytes_temp_iter = 0
         instruction = str()
         temp_wasm_ins = WASM_Ins()
+
+        # @DEVI-FIXME-for v1.0 opcodes. needs to get fixed for extended
+        # op-codes. ideally the mosule should hold its version number so we can
+        # check it here.
         byte = format(section_byte[6][offset], '02x')
         offset += 1
         read_bytes += 1
+
         for op_code in WASM_OP_Code.all_ops:
             if op_code[1] == byte:
                 matched = True
 
                 # br_table has special immediates
+                # @DEVI-FIXME-this is costing us quite dearly for every opcode
+                # we read(at least two ticks per opcode). I could have the
+                # br_table opcode done separayely but kinda hurts the codes
+                # uniformity. anyways.
                 if op_code[1] == '0e':
                     matched = True
                     temp, offset, read_bytes_temp_iter = Read(
                         section_byte, offset, op_code[3][0])
                     instruction += repr(temp) + ' '
                     read_bytes_temp += read_bytes_temp_iter
-                    for target_table in range(0, temp[0]):
+                    for target_table in range(0, temp):
                         temp, offset, read_bytes_temp_iter = Read(section_byte, offset, op_code[3][1])
                         read_bytes_temp += read_bytes_temp_iter
                         instruction += repr(temp) + ' '
@@ -603,6 +612,7 @@ class ObjReader(object):
         offset = 1
         CS = Code_Section()
         temp_func_bodies = Func_Body()
+        temp_local_entry = Local_Entry()
         section_exists = False
         for whatever in self.parsedstruct.section_list:
             # 10 is the code section
@@ -614,42 +624,34 @@ class ObjReader(object):
             return None
 
         fn_cn, offset, dummy = Read(code_section, offset, 'varuint32')
-        function_cnt = fn_cn[0]
+        function_cnt = fn_cn
         CS.count.append(function_cnt)
 
         while function_cnt > 0:
-            function_body_length = LEB128UnsignedDecode(
-                code_section[6][offset:offset + 4])
-            #fbl = Read(code_section, offset, 'varuint32')
-            #print(fbl[0][0])
-            #print(int.from_bytes(fbl[0][0], byteorder='big', signed=False))
+            function_body_length, offset, dummy = Read(code_section, offset, 'varuint32')
             temp_func_bodies.body_size = function_body_length
-            offset += 4
 
-            # yolo
-            offset += 1
-
-            local_count = Conver2Int(True, 1,
-                                     code_section[6][offset:offset + 1])
+            local_count, offset, dummy = Read(code_section, offset, 'varuint32')
             temp_func_bodies.local_count = local_count
-            offset += 1
 
-            local_count_size = 1 + local_count
+            # local_count_size will eventually hold how many bytes we will read
+            # in total because of the local section
+            local_count_size = dummy
             if local_count != 0:
                 for i in range(0, local_count):
-                    partial_local_count = Conver2Int(
-                        True, 1, code_section[6][offset:offset + 1])
-                    temp_func_bodies.locals.append(deepcopy(partial_local_count))
-                    offset += 1
-                    offset += 1
+                    partial_local_count, offset, dummy = Read(code_section, offset, 'varuint32')
+                    local_count_size += dummy
+                    partial_local_type, offset, dummy = Read(code_section, offset, 'uint8')
+                    local_count_size += dummy
+                    temp_local_entry.count = partial_local_count
+                    temp_local_entry.type = partial_local_type
+                    temp_func_bodies.locals.append(deepcopy(temp_local_entry))
                     local_count -= partial_local_count
-                    local_count_size += 1
             else:
                 pass
 
             read_bytes_so_far = local_count_size
             for i in range(0, function_body_length - local_count_size):
-
                 offset, matched, read_bytes, temp_wasm_ins = self.Disassemble(
                     code_section, offset)
                 temp_func_bodies.code.append(deepcopy(temp_wasm_ins))
@@ -692,26 +694,25 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        data_entry_count = data_section[6][offset]
-        DS.count.append(data_entry_count)
-        offset += 1
+        data_entry_count, offset, dummy = Read(data_section, offset, 'varuint32')
+        DS.count = data_entry_count
 
         while data_entry_count != 0:
-            linear_memory_index = data_section[6][offset]
+            linear_memory_index, offset, dummy = Read(data_section, offset, 'varuint32')
             temp_data_segment.index = linear_memory_index
-            offset += 1
 
+            # reading in the init-expr
             while loop:
+                # @DEVI-FIXME-this only works for none extended opcodes
                 if data_section[6][offset] == 0x0b:
                     loop = False
-                init_expr.append(data_section[6][offset])
-                offset += 1
+                data_char, offset, dummy = Read(data_section, offset, 'uint8')
+                init_expr.append(data_char)
 
             temp_data_segment.offset = init_expr
 
-            data_entry_length = data_section[6][offset]
+            data_entry_length, offset, dummy = Read(data_section, offset, 'varuint32')
             temp_data_segment.size = data_entry_length
-            offset += 1
 
             data_itself = data_section[6][offset:offset + data_entry_length]
             temp_data_segment.data = data_itself
@@ -739,35 +740,57 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        import_cnt = import_section[6][offset]
-        IS.count.append(import_cnt)
-        offset += 1
+        import_cnt, offset, dummy = Read(import_section, offset, 'varuint32')
+        IS.count = import_cnt
 
         while import_cnt != 0:
-            module_length = import_section[6][offset]
+            module_length, offset, dummy = Read(import_section, offset, 'varuint32')
             temp_import_entry.module_len = module_length
-            offset += 1
 
             for i in range(0, module_length):
                 module_name.append(import_section[6][offset + i])
             temp_import_entry.module_str = module_name
             offset += module_length
 
-            field_length = import_section[6][offset]
+            field_length, offset, dummy = Read(import_section, offset, 'varuint32')
             temp_import_entry.field_len = field_length
-            offset += 1
             for i in range(0, field_length):
                 field_name.append(import_section[6][offset + i])
             temp_import_entry.field_str = field_name
             offset += field_length
 
-            kind = import_section[6][offset]
+            kind, offset, dummy = Read(import_section, offset, 'uint8')
             temp_import_entry.kind = kind
-            offset += 1
 
-            yolo_byte = import_section[6][offset:offset + 1]
-            temp_import_entry.type = yolo_byte
-            offset += 1
+            # function type
+            if kind == 0:
+                import_type, offset, dummy = Read(import_section, offset, 'varuint32')
+                temp_import_entry.type = import_type
+            # table type
+            elif kind == 1:
+                table_type = Table_Type()
+                table_type.elemet_type, offset, dummy = Read(import_section, offset, 'varint7')
+                rsz_limits = Resizable_Limits()
+                rsz_limits.flags, offset, dummy = Read(import_section, offset, 'varuint1')
+                rsz_limits.initial, offset, dummy = Read(import_section, offset, 'varuint32')
+                if rsz_limits.flags:
+                    rsz_limits.maximum, offset, dummy = Read(import_section, offset, 'varuint32')
+                table_type.limit = rsz_limits
+                temp_import_entry.type = table_type
+            elif kind == 2:
+                memory_type = Memory_Type()
+                rsz_limits = Resizable_Limits()
+                rsz_limits.flags, offset, dummy = Read(import_section, offset, 'varuint1')
+                rsz_limits.initial, offset, dummy = Read(import_section, offset, 'varuint32')
+                if rsz_limits.flags:
+                    rsz_limits.maximum, offset, dummy = Read(import_section, offset, 'varuint32')
+                memory_type.limits = rsz_limits
+                temp_import_entry.type = memory_type
+            elif kind == 3:
+                global_type = Global_Type()
+                global_type.content_type, offset, dummy = Read(import_section, offset, 'uint8')
+                global_type.mutability, offset, dummy = Read(import_section, offset, 'varuint1')
+                temp_import_entry.type = global_type
 
             IS.import_entry.append(deepcopy(temp_import_entry))
 
@@ -790,27 +813,23 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        export_entry_cnt = export_section[6][offset]
-        ES.count.append(export_entry_cnt)
-        offset += 1
+        export_entry_cnt, offset, dummy = Read(export_section, offset, 'varuint32')
+        ES.count = export_entry_cnt
 
         while export_entry_cnt != 0:
-            field_length = export_section[6][offset]
+            field_length, offset, dummy = Read(export_section, offset, 'varuint32')
             temp_export_entry.field_len = field_length
-            offset += 1
 
             for i in range(0, field_length):
                 field_name.append(export_section[6][offset + i])
             temp_export_entry.fiels_str = field_name
             offset += field_length
 
-            kind = export_section[6][offset]
+            kind, offset, dummy = Read(export_section, offset, 'uint8')
             temp_export_entry.kind = kind
-            offset += 1
 
-            index = export_section[6][offset]
+            index, offset, dummy = Read(export_section, offset, 'varuint32')
             temp_export_entry.index = index
-            offset += 1
 
             ES.export_entries.append(deepcopy(temp_export_entry))
 
@@ -833,26 +852,24 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        type_entry_count = type_section[6][offset]
-        TS.count.append(type_entry_count)
-        offset += 1
+        type_entry_count, offset, dummy = Read(type_section, offset, 'varuint32')
+        TS.count = type_entry_count
 
         while type_entry_count != 0:
-            form = type_section[6][offset]
+            form, offset, dummy = Read(type_section, offset, 'varint7')
             temp_func_type.form = form
-            offset += 1
-            param_count = type_section[6][offset]
+
+            param_count, offset, dummy = Read(type_section, offset, 'varuint32')
             temp_func_type.param_cnt = param_count
-            offset += 1
 
             for i in range(0, param_count):
                 param_list.append(type_section[6][offset + i])
             temp_func_type.param_types = param_list
             offset += param_count
 
-            return_count = type_section[6][offset]
+            # @DEVI-FIXME- only works for MVP || single return value
+            return_count, offset, dummy = Read(type_section, offset, 'varuint1')
             temp_func_type.return_cnt = return_count
-            offset += 1
 
             for i in range(0, return_count):
                 return_list.append(type_section[6][offset + i])
@@ -879,12 +896,12 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        function_entry_count = function_section[6][offset]
-        FS.count.append(function_entry_count)
-        offset += 1
+        function_entry_count, offset, dummy = Read(function_section, offset, 'varuint32')
+        FS.count = function_entry_count
 
         for i in range(0, function_entry_count):
-            index_to_type.append(function_section[6][offset + i])
+            index, offset, dummy = Read(function_section, offset, 'varuint32')
+            index_to_type.append(index)
         FS.type_section_index = index_to_type
         offset += function_entry_count
         return(FS)
@@ -906,15 +923,14 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        element_entry_count = element_section[6][offset]
-        ES.count.append(element_entry_count)
-        offset += 1
+        element_entry_count, offset, dummy = Read(element_section, offset, 'varuint32')
+        ES.count = element_entry_count
 
         while element_entry_count != 0:
-            table_index = element_section[6][offset]
+            table_index, offset, dummy = Read(element_section, offset, 'varuint32')
             temp_elem_segment.index = table_index
-            offset += 1
 
+            # @DEVI-FIXME-only works for non-extneded opcodes
             while loop:
                 if element_section[6][offset] == 0x0b:
                     loop = False
@@ -922,11 +938,12 @@ class ObjReader(object):
                 offset += 1
             temp_elem_segment.offset = init_expr
 
-            num_elements = element_section[6][offset]
+            num_elements, offset, dummy = Read(element_section, offset, 'varuint32')
             temp_elem_segment.num_elem = num_elements
 
             for i in range(0, num_elements):
-                function_indices.append(element_section[6][offset + i])
+                index, offset, dummy = Read(element_section, offset, 'varuint32')
+                function_indices.append(index)
             temp_elem_segment.elems = function_indices
             offset += num_elements
 
@@ -952,24 +969,19 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        num_linear_mems = memory_section[6][offset]
-        MS.count.append(num_linear_mems)
-        offset += 1
+        num_linear_mems, offset, dummy = Read(memory_section, offset, 'varuint32')
+        MS.count = num_linear_mems
 
         while num_linear_mems != 0:
-            flag = memory_section[6][offset]
+            flag, offset, dummy = Read(memory_section, offset, 'varuint1')
             temp_rsz_limits.flags = flag
-            offset += 1
 
-            initial = LEB128UnsignedDecode(memory_section[6][offset:offset + 2])
+            initial,offset, dummy = Read(memory_section, offset, 'varuint32')
             temp_rsz_limits.initial = initial
-            offset += 2
 
-            if flag == 1:
-                maximum = LEB128UnsignedDecode(
-                    memory_section[6][offset:offset + 2])
+            if flag:
+                maximum, offset, dummy = Read(memory_section, offset, 'varuint32')
                 temp_rsz_limits.maximum = maximum
-                offset += 2
 
             MS.memory_types.append(deepcopy(temp_rsz_limits))
             num_linear_mems -= 1
@@ -990,28 +1002,22 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        table_count = table_section[6][offset]
-        TS.count.append(table_count)
-        offset += 1
+        table_count, offset, dummy = Read(table_section, offset, 'varuint32')
+        TS.count = table_count
 
         while table_count != 0:
-            element_type = table_section[6][offset]
+            element_type, offset, dummy = Read(table_section, offset, 'varint7')
             temp_table_type.element_type = element_type
-            offset += 1
 
-            flag = table_section[6][offset]
+            flag, offset, dummy = Read(table_section, offset, 'varuint1')
             temp_rsz_limits.flags = flag
-            offset += 1
 
-            initial = LEB128UnsignedDecode(table_section[6][offset:offset + 2])
+            initial, offset, dummy = Read(table_section, offset, 'varuint32')
             temp_rsz_limits.initial = initial
-            offset += 2
 
-            if flag == 1:
-                maximum = LEB128UnsignedDecode(
-                    table_section[6][offset:offset + 2])
+            if flag:
+                maximum, offset, dummy = Read(table_section, offset, 'varuint32')
                 temp_rsz_limits.maximum = maximum
-                offset += 2
 
             temp_table_type.limit = temp_rsz_limits
             TS.table_types.append(deepcopy(temp_table_type))
@@ -1036,19 +1042,17 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        count = global_section[6][offset]
-        GS.count.append(count)
-        offset += 1
+        count, offset, dummy = Read(global_section, offset, 'varuint32')
+        GS.count = count
 
         while count != 0:
-            content_type = global_section[6][offset]
+            content_type, offset, dummy = Read(global_section, offset, 'uint8')
             temp_gl_type.content_type = content_type
-            offset += 1
 
-            mutability = global_section[6][offset]
+            mutability, offset, dummy = Read(global_section, offset, 'varuint1')
             temp_gl_type.mutability = mutability
-            offset += 1
 
+            # @DEVI-FIXME-only works for non-extended opcodes
             while loop:
                 if global_section[6][offset] == 0x0b:
                     loop = False
@@ -1078,9 +1082,8 @@ class ObjReader(object):
         if not section_exists:
             return None
 
-        function_index = start_section[6][offset]
+        function_index, offset, dummy = Read(start_section, offset, 'varuint32')
         SS.function_section_index.append(function_index)
-        offset += 1
         return(SS)
 
     def getCursorLocation(self):
@@ -1256,9 +1259,11 @@ class PythonInterpreter(object):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.code_section.count))
             for iter in module.code_section.func_bodies:
-                print(Colors.green + 'body_size: ' + repr(iter.body_size) + Colors.ENDC)
-                print(Colors.red + 'local_count: ' + repr(iter.local_count) + Colors.ENDC)
-                print(Colors.purple + 'locals: ' + repr(iter.locals) + Colors.ENDC)
+                print(Colors.green + 'body size: ' + repr(iter.body_size) + Colors.ENDC)
+                print(Colors.red + 'local enrty count: ' + repr(iter.local_count) + Colors.ENDC)
+                for iterer in iter.locals:
+                    print(Colors.blue + 'local count: ' + repr(iterer.count) + Colors.ENDC)
+                    print(Colors.blue + 'local type: ' + repr(iterer.type) + Colors.ENDC)
                 for iterer in iter.code:
                     print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
                     print(Colors.grey + 'code: ' + repr(iterer.operands) + Colors.ENDC)
