@@ -44,9 +44,8 @@ def Read(section_byte, offset, kind):
     operand = []
     return_list = []
     read_bytes = 0
-    if kind == 'varuint1' or kind == 'varuint7' or kind == 'varuint32' or kind == 'varuint64' or kind == 'varint1' or kind == 'varint7' or kind == 'varint32' or kind == 'varint64':
+    if kind == 'varuint1' or kind == 'varuint7' or kind == 'varuint32' or kind == 'varuint64':
         while True:
-            # print(Colors.red + repr(section_byte) + Colors.ENDC)
             byte = int(section_byte[6][offset])
             read_bytes += 1
             offset += 1
@@ -69,8 +68,27 @@ def Read(section_byte, offset, kind):
         offset += TypeDic[kind]
         operand.append(byte)
         return_list.append(operand)
-        # print(repr(int.to_bytes(operand, byteorder='big', signed=False)))
+        # print(repr(int.to_bytes(operand, byteorder='small', signed=False)))
         operand = []
+    elif kind == 'varint1' or kind == 'varint7' or kind == 'varint32' or kind == 'varint64':
+        while True:
+            byte = int(section_byte[6][offset])
+            # print(byte)
+            read_bytes += 1
+            offset += 1
+
+            operand.append(byte)
+
+            if byte == 0x80 or byte == 0xff:
+                pass
+            elif byte & 0x80 != 0:
+                pass
+            else:
+                break
+
+            return_list.append(LEB128SignedDecode(operand))
+            # print(LEB128SignedDecode(operand))
+            operand = []
 
     return return_list, offset, read_bytes
 
@@ -546,7 +564,22 @@ class ObjReader(object):
             if op_code[1] == byte:
                 matched = True
 
-                if op_code[2]:
+                # br_table has special immediates
+                if op_code[1] == '0e':
+                    matched = True
+                    temp, offset, read_bytes_temp_iter = Read(
+                        section_byte, offset, op_code[3][0])
+                    instruction += repr(temp) + ' '
+                    read_bytes_temp += read_bytes_temp_iter
+                    for target_table in range(0, temp[0]):
+                        temp, offset, read_bytes_temp_iter = Read(section_byte, offset, op_code[3][1])
+                        read_bytes_temp += read_bytes_temp_iter
+                        instruction += repr(temp) + ' '
+                    temp, offset, read_bytes_temp_iter = Read(
+                        section_byte, offset, op_code[3][2])
+                    instruction += repr(temp) + ' '
+                    read_bytes_temp += read_bytes_temp_iter
+                elif op_code[2]:
                     if isinstance(op_code[3], tuple):
                         for i in range(0, len(op_code [3])):
                             temp, offset, read_bytes_temp_iter = Read(
@@ -626,6 +659,10 @@ class ObjReader(object):
                     print(Colors.red + 'code section offset: ' + repr(offset) + Colors.ENDC)
                     print(Colors.red + 'read bytes: ' + repr(read_bytes) + Colors.ENDC)
                     print(Colors.red + 'wasm ins: ' + repr(temp_wasm_ins.opcode) + Colors.ENDC)
+
+                    for iter in temp_func_bodies.code:
+                        print(iter.opcode)
+                        print(iter.operands)
                     sys.exit(1)
                 else:
                     pass
