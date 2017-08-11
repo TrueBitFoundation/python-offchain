@@ -8,6 +8,8 @@ import sys
 import os
 from test_LEB128 import test_signed_LEB128
 from test_LEB128 import test_unsigned_LEB128
+from leb128s import leb128sencodedecodeexhaustive
+from leb128s import leb128uencodedecodeexhaustive
 from abc import ABCMeta, abstractmethod
 sys.path.append('../')
 from utils import Colors
@@ -63,7 +65,7 @@ def ObjectList():
 
     return(obj_list)
 
-
+################################################################################
 class LEB128EncodeTest(Void_Spwner):
     def Legacy(self):
         test_unsigned_LEB128()
@@ -72,12 +74,23 @@ class LEB128EncodeTest(Void_Spwner):
     def GetName(self):
         return('leb128encodetest')
 
+class LEB128Exhaustive(Void_Spwner):
+    def Legacy(self):
+        leb128sencodedecodeexhaustive()
+        leb128uencodedecodeexhaustive()
 
+    def GetName(self):
+        return('leb128exhaustive')
+
+################################################################################
 def main():
     return_list = []
     # LEB128 tests
     leb128encodetest = LEB128EncodeTest()
     leb128encodetest.Spwn()
+    # leb128s exhaustive
+    leb128sex = LEB128Exhaustive()
+    leb128sex.Spwn()
     # parser test on the WASM testsuite
     obj_list = ObjectList()
     for testfile in obj_list:
