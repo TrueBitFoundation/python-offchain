@@ -6,6 +6,7 @@ from section_structs import *
 from utils import *
 from OpCodes import *
 from copy import deepcopy
+from TBInit import ModuleValidation
 
 _DBG_ = True
 
@@ -572,7 +573,7 @@ class ObjReader(object):
                 # br_table has special immediates
                 # @DEVI-FIXME-this is costing us quite dearly for every opcode
                 # we read(at least two ticks per opcode). I could have the
-                # br_table opcode done separayely but kinda hurts the codes
+                # br_table opcode done separately but kinda hurts the codes
                 # uniformity. anyways.
                 if op_code[1] == '0e':
                     matched = True
@@ -625,7 +626,7 @@ class ObjReader(object):
 
         fn_cn, offset, dummy = Read(code_section, offset, 'varuint32')
         function_cnt = fn_cn
-        CS.count.append(function_cnt)
+        CS.count = function_cnt
 
         while function_cnt > 0:
             function_body_length, offset, dummy = Read(code_section, offset, 'varuint32')
@@ -1105,19 +1106,17 @@ class ParserV1(object):
         wasmtobj = WASMText(argparser.getWASTPath())
         # wasmtobj.test_print()
         wasmtobj.RegExSearch()
-        if __DBG__:
-            wasmtobj.PrintTypeDict()
-            wasmtobj.PrintImportDict()
-            wasmtobj.PrintTableDict()
-            wasmtobj.PrintElemDict()
-            wasmtobj.PrintMemoryDict()
-            wasmtobj.PrintDataDict()
-            wasmtobj.PrintExportDict()
-            wasmtobj.PrintFuncDict()
-            wasmtobj.PrintElemDict()
+        wasmtobj.PrintTypeDict()
+        wasmtobj.PrintImportDict()
+        wasmtobj.PrintTableDict()
+        wasmtobj.PrintElemDict()
+        wasmtobj.PrintMemoryDict()
+        wasmtobj.PrintDataDict()
+        wasmtobj.PrintExportDict()
+        wasmtobj.PrintFuncDict()
+        wasmtobj.PrintElemDict()
         wasmtobj.FuncParser()
-        if __DBG__:
-            wasmtobj.FuncParserTest()
+        wasmtobj.FuncParserTest()
 
         funcbodyparser = FuncBodyParser(wasmtobj.getFuncBodies())
         headerparser = FuncBodyParser(wasmtobj.getTypeHeader())
@@ -1265,8 +1264,10 @@ class PythonInterpreter(object):
                     print(Colors.blue + 'local count: ' + repr(iterer.count) + Colors.ENDC)
                     print(Colors.blue + 'local type: ' + repr(iterer.type) + Colors.ENDC)
                 for iterer in iter.code:
+                    instruction = iterer.opcode + ' ' + iterer.operands
                     print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
                     print(Colors.grey + 'code: ' + repr(iterer.operands) + Colors.ENDC)
+                    print(Colors.yellow + instruction + Colors.ENDC)
 
         # data_section
         if module.data_section is not None:
@@ -1281,7 +1282,9 @@ class PythonInterpreter(object):
                 print(Colors.cyan + 'data:' + repr(iter.data) + Colors.ENDC)
 
     def runValidations(self):
-        pass
+        modulevalidation = ModuleValidation()
+        return(modulevalidation.ValidateAll())
+
 
 
 def main():
@@ -1292,9 +1295,11 @@ def main():
         for file_path in argparser.getWASMPath():
             module = interpreter.parse(file_path)
             interpreter.appendmodule(module)
-            interpreter.runValidations()
             if argparser.getDBG():
                 interpreter.dump_sections(module)
+            if interpreter.runValidations():
+                #run the interpreter
+                pass
 
     if argparser.getWASTPath() is not None:
         print(argparser.getWASTPath())
