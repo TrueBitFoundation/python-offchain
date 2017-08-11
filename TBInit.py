@@ -42,42 +42,54 @@ class RTE(object):
         Current_Position = int()
 
 
-class ValidateModule(object):
-    def __init__(self, section_list):
-        self.section_list = section_list
+class ModuleValidation():
+    def __init__(self, module):
+        self.module = module
 
-    def run(self):
+    def TypeSection(self):
         pass
 
-    def validateTypeSection(self):
+    def ImportSection(self):
         pass
 
-    def validateImportSection(self):
+    def FunctionSection(self):
         pass
 
-    def validateFunctionSection(self):
+    def TableSection(self):
         pass
 
-    def validateTableSection(self):
+    def MemorySection(self):
         pass
 
-    def validateMemorySection(self):
+    def GlobalSection(self):
         pass
 
-    def validateGlobalSection(self):
+    def ExportSection(self):
         pass
 
-    def validateExportSection(self):
+    def StartSection(self):
         pass
 
-    def validateStartSection(self):
+    def ElementSection(self):
         pass
 
-    def validateElementSection(self):
+    def CodeSection(self):
         pass
 
-    def validateCodeSection(self):
+    def DataSection(self):
         pass
 
-    def validateDataSection(self):
-        pass
+    def ValidateAll(self):
+        self.TypeSection()
+        self.ImportSection()
+        self.FunctionSection()
+        self.TableSection()
+        self.MemorySection()
+        self.GlobalSection()
+        self.ExportSection()
+        self.StartSection()
+        self.ElementSection()
+        self.CodeSection()
+        self.DataSection()
+
+        return(True)
