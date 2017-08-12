@@ -1,6 +1,6 @@
 from OpCodes import WASM_OP_Code
 from utils import Colors
-from argparser import *
+from argparser import Read
 
 
 # @DEVI-FIXME-MVP-only
