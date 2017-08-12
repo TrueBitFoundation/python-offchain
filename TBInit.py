@@ -1,4 +1,4 @@
-import argparser as agp
+from utils import Colors
 
 
 class CSection():
@@ -6,7 +6,7 @@ class CSection():
 
 
 class TBMachine():
-    def __init__(self, module):
+    def __init__(self):
         self.Linear_Memory = bytearray()
         self.Stack_Control_Flow = list()
         self.Stack_Call = list()
@@ -16,30 +16,92 @@ class TBMachine():
         self.Index_Space_Global = list()
         self.Index_Space_Linear = list()
         self.Index_Space_Table = list()
-        self.module = module
 
 
 class TBInit():
-    def __init__(self, module):
-        pass
+    def __init__(self, module, machinestate):
+        self.module = module
+        self.machinestate = machinestate
 
-    def run(self, module):
+    def run(self):
         self.InitFuncIndexSpace()
         self.InitGlobalIndexSpace()
         self.InitLinearMemoryIndexSpace()
         self.InitTableIndexSpace()
 
     def InitFuncIndexSpace(self):
-        pass
+        if self.module.import_section is not None:
+            for iter in self.module.import_section.import_entry:
+                if iter.kind == 0:
+                    name = str()
+                    for i in iter.field_str:
+                        name += str(chr(i))
+                    self.machinestate.Index_Space_Function.append(name)
+
+        if self.module.function_section is not None:
+            for iter in self.module.function_section.type_section_index:
+                self.machinestate.Index_Space_Function.append(iter)
 
     def InitGlobalIndexSpace(self):
-        pass
+        if self.module.import_section is not None:
+            for iter in self.module.import_section.import_entry:
+                if iter.kind == 3:
+                    name = str()
+                    for i in iter.field_str:
+                        name += str(chr(i))
+                    self.machinestate.Index_Space_Global.append(name)
+
+        if self.module.global_section is not None:
+            for iter in self.module.global_section.global_variables:
+                self.machinestate.Index_Space_Global.append(iter.init_expr)
 
     def InitLinearMemoryIndexSpace(self):
-        pass
+        if self.module.import_section is not None:
+            for iter in self.module.import_section.import_entry:
+                if iter.kind == 2:
+                    name = str()
+                    for i in iter.field_str:
+                        name += str(chr(i))
+                    self.machinestate.Index_Space_Linear.append(name)
+
+        if self.module.memory_section is not None:
+            for iter in self.module.memory_section.memory_types:
+                self.machinestate.Index_Space_Linear.append(iter.initial)
 
     def InitTableIndexSpace(self):
-        pass
+        if self.module.import_section is not None:
+            for iter in self.module.import_section.import_entry:
+                if iter.kind == 1:
+                    name = str()
+                    for i in iter.field_str:
+                        name += str(chr(i))
+                    self.machinestate.Index_Space_Table.append(name)
+
+        if self.module.table_section is not None:
+            for iter in self.module.table_section.table_types:
+                self.machinestate.Index_Space_Table.append(iter.element_type)
+
+    def DumpStates(self):
+        print('-----------------------------------------')
+        print(Colors.green + 'Function Index Space: ' + Colors.ENDC)
+        for iter in self.machinestate.Index_Space_Function:
+            print(Colors.blue + repr(iter) + Colors.ENDC)
+
+        print('-----------------------------------------')
+        print(Colors.green + 'Globa Index Space: ' + Colors.ENDC)
+        for iter in self.machinestate.Index_Space_Global:
+            print(Colors.blue + repr(iter) + Colors.ENDC)
+
+        print('-----------------------------------------')
+        print(Colors.green + 'Linear Memory Index Space: ' + Colors.ENDC)
+        for iter in self.machinestate.Index_Space_Linear:
+            print(Colors.blue + repr(iter) + Colors.ENDC)
+
+        print('-----------------------------------------')
+        print(Colors.green + 'Table Index Space: ' + Colors.ENDC)
+        for iter in self.machinestate.Index_Space_Table:
+            print(Colors.blue + repr(iter) + Colors.ENDC)
+        print('-----------------------------------------')
 
 
 class RTE():
