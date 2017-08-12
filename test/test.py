@@ -14,6 +14,7 @@ from abc import ABCMeta, abstractmethod
 sys.path.append('../')
 from utils import Colors
 from argparser import PythonInterpreter
+from TBInit import *
 
 total_test_cnt = int()
 expected_pass_cnt = int()
@@ -104,6 +105,9 @@ def main():
 
             interpreter = PythonInterpreter()
             module = interpreter.parse(testfile)
+            state = TBMachine()
+            init = TBInit(module, state)
+            init.run()
             # interpreter.dump_sections(module)
             sys.exit()
         # the parent process
