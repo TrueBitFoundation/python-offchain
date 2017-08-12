@@ -6,7 +6,7 @@ from section_structs import *
 from utils import *
 from OpCodes import *
 from copy import deepcopy
-from TBInit import ModuleValidation
+from TBInit import *
 
 _DBG_ = True
 
@@ -107,6 +107,7 @@ class CLIArgParser(object):
                             help="path to the wasm file to disassemble")
         parser.add_argument("-o", type=str, help="the path to the output file")
         parser.add_argument("--dbg", action='store_true', help="print debug info", default=False)
+        parser.add_argument("--unval", action='store_true', help="skips validation tests", default=False)
 
         self.args = parser.parse_args()
 
@@ -131,6 +132,9 @@ class CLIArgParser(object):
 
     def getDBG(self):
         return self.args.dbg
+
+    def getUNVAL(self):
+        return self.args.unval
 
 
 class WASMText(object):
@@ -1282,7 +1286,7 @@ class PythonInterpreter(object):
                 print(Colors.cyan + 'data:' + repr(iter.data) + Colors.ENDC)
 
     def runValidations(self):
-        modulevalidation = ModuleValidation()
+        modulevalidation = ModuleValidation(self.modules[0])
         return(modulevalidation.ValidateAll())
 
 
