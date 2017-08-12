@@ -9,6 +9,7 @@ class TypeType(Enum):
     dobl = 5
 
 
+
 TypeKS = [['uint8', 8, TypeType.none], ['uint16', 16, TypeType.none],
           ['uint32', 32, TypeType.none], ['uint64', 64, TypeType.none],
           ['varuint1', 1, TypeType.lebu], ['varuint7', 7, TypeType.lebu],
@@ -24,6 +25,7 @@ TypeDic = {'uint8': 1, 'uint16': 2, 'uint32': 4, 'uint64': 8,
 class WASM_OP_Code:
     version_number = 0x01
     magic_number = 0x6d736100
+    PAGE_SIZE = 65536
     uint8 = 1
     uint16 = 2
     uint32 = 4
