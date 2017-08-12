@@ -1158,7 +1158,7 @@ class PythonInterpreter(object):
         # type_section
         if module.type_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Type Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Type Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.type_section.count))
             for iter in module.type_section.func_types:
@@ -1171,7 +1171,7 @@ class PythonInterpreter(object):
         # import_section
         if module.import_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Import Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Import Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.import_section.count))
             for iter in module.import_section.import_entry:
@@ -1185,7 +1185,7 @@ class PythonInterpreter(object):
         # function_section
         if module.function_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Function Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Function Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.function_section.count))
             for iter in module.function_section.type_section_index:
@@ -1194,7 +1194,7 @@ class PythonInterpreter(object):
         # table_section
         if module.table_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Table Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Table Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.table_section.count))
             for iter in module.table_section.table_types:
@@ -1206,7 +1206,7 @@ class PythonInterpreter(object):
         # memory_section
         if module.memory_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Memory Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Memory Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.memory_section.count))
             for iter in module.memory_section.memory_types:
@@ -1217,7 +1217,7 @@ class PythonInterpreter(object):
         # global_section
         if module.global_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Global Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Global Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.global_section.count))
             for iter in module.global_section.global_variables:
@@ -1227,7 +1227,7 @@ class PythonInterpreter(object):
         # export_section
         if module.export_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Export Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Export Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.export_section.count))
             for iter in module.export_section.export_entries:
@@ -1239,14 +1239,14 @@ class PythonInterpreter(object):
         # start_section
         if module.start_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Start Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Start Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('start function index: ' + repr(module.start_section.function_section_index))
 
         # element_section
         if module.element_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Element Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Element Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.element_section.count))
             for iter in module.element_section.elem_segments:
@@ -1258,7 +1258,7 @@ class PythonInterpreter(object):
         # code_section
         if module.code_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Code Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Code Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.code_section.count))
             for iter in module.code_section.func_bodies:
@@ -1276,7 +1276,7 @@ class PythonInterpreter(object):
         # data_section
         if module.data_section is not None:
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
-            print(Colors.blue + 'Data Section:' + Colors.ENDC)
+            print(Colors.blue + Colors.BOLD + 'Data Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('count: ' + repr(module.data_section.count))
             for iter in module.data_section.data_segments:
@@ -1304,6 +1304,12 @@ def main():
             if interpreter.runValidations():
                 #run the interpreter
                 pass
+            else:
+                print(Colors.red + 'failed validation tests' + Colors.ENDC)
+        state = TBMachine()
+        init = TBInit(module, state)
+        init.run()
+        init.DumpStates()
 
     if argparser.getWASTPath() is not None:
         print(argparser.getWASTPath())
