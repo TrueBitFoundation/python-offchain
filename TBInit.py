@@ -1,40 +1,48 @@
 import argparser as agp
 
 
-class CSection(object):
+class CSection():
     pass
 
 
-class TBMachine(object):
-    def __init__(self):
-        Linear_Memory = bytearray()
-        Stack_Control_Flow = list()
-        Stack_Call = list()
-        Stack_Value = list()
-        Vector_Globals = list()
-        Index_Space_Function = list()
-        Index_Space_Global = list()
-        Index_Space_Linear = list()
-        Index_Space_Table = list()
+class TBMachine():
+    def __init__(self, module):
+        self.Linear_Memory = bytearray()
+        self.Stack_Control_Flow = list()
+        self.Stack_Call = list()
+        self.Stack_Value = list()
+        self.Vector_Globals = list()
+        self.Index_Space_Function = list()
+        self.Index_Space_Global = list()
+        self.Index_Space_Linear = list()
+        self.Index_Space_Table = list()
+        self.module = module
 
 
-class TBInit(object):
-    def __init__(self):
+class TBInit():
+    def __init__(self, module):
         pass
 
-    def run(self):
-        self.ValidateModule()
-        self.InitLinearMemory()
-        self.InitTables()
+    def run(self, module):
+        self.InitFuncIndexSpace()
+        self.InitGlobalIndexSpace()
+        self.InitLinearMemoryIndexSpace()
+        self.InitTableIndexSpace()
 
-    def InitLinearMemory(self):
+    def InitFuncIndexSpace(self):
         pass
 
-    def InitTables(self):
+    def InitGlobalIndexSpace(self):
+        pass
+
+    def InitLinearMemoryIndexSpace(self):
+        pass
+
+    def InitTableIndexSpace(self):
         pass
 
 
-class RTE(object):
+class RTE():
     def __init__(self):
         Stack_Control_Flow = list()
         Stack_Value = list()
@@ -93,3 +101,11 @@ class ModuleValidation():
         self.DataSection()
 
         return(True)
+
+
+class VM():
+    def __init__(self, modules):
+        self.modules = modules
+        self.machinestate = TBMachine()
+        # @DEVI-FIXME- the primary implementation is single-module only
+        self.init = TBInit(self.modules[0])
