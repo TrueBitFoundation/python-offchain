@@ -1,10 +1,5 @@
-from utils import Colors
+from utils import Colors, init_interpret
 from OpCodes import WASM_OP_Code
-from vm import init_interpret
-
-
-class CSection():
-    pass
 
 
 class TBMachine():

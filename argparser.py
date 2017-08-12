@@ -41,59 +41,6 @@ def Conver2Int(little_endian, size, bytelist):
         return(sum)
 
 
-def Read(section_byte, offset, kind):
-    operand = []
-    return_list = int()
-    read_bytes = 0
-
-    if kind == 'varuint1' or kind == 'varuint7' or kind == 'varuint32' or kind == 'varuint64':
-        while True:
-            byte = int(section_byte[offset])
-            read_bytes += 1
-            offset += 1
-
-            operand.append(byte)
-
-            if byte == 0x80:
-                pass
-            elif byte & 0x80 != 0:
-                pass
-            else:
-                # we have read the last byte of the operand
-                break
-
-        return_list = LEB128UnsignedDecode(operand)
-        operand = []
-    elif kind == 'uint8' or kind == 'uint16' or kind == 'uint32' or kind == 'uint64':
-        byte = section_byte[offset: offset + TypeDic[kind]]
-        read_bytes += TypeDic[kind]
-        offset += TypeDic[kind]
-        operand.append(byte)
-        return_list = int.from_bytes(operand[0], byteorder='little', signed=False)
-        operand = []
-    elif kind == 'varint1' or kind == 'varint7' or kind == 'varint32' or kind == 'varint64':
-        while True:
-            byte = int(section_byte[offset])
-            read_bytes += 1
-            offset += 1
-
-            operand.append(byte)
-
-            # @DEVI-what happens when we decode a 56-bit value?
-            if byte == 0x80 or byte == 0xff:
-                pass
-            elif byte & 0x80 != 0:
-                pass
-            else:
-                # we have read the lasy byte of the operand
-                break
-
-            return_list = LEB128SignedDecode(operand)
-            operand = []
-
-    return return_list, offset, read_bytes
-
-
 class CLIArgParser(object):
     def __init__(self):
         parser = argparse.ArgumentParser()

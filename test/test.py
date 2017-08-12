@@ -13,8 +13,8 @@ from leb128s import leb128uencodedecodeexhaustive
 from abc import ABCMeta, abstractmethod
 sys.path.append('../')
 from utils import Colors
-from argparser import PythonInterpreter
-from TBInit import TBMachine, TBInit
+from argparser import *
+from TBInit import *
 
 total_test_cnt = int()
 expected_pass_cnt = int()
