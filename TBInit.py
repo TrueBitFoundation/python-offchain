@@ -1,4 +1,6 @@
 from utils import Colors
+from OpCodes import WASM_OP_Code
+from vm import init_interpret
 
 
 class CSection():
@@ -7,7 +9,8 @@ class CSection():
 
 class TBMachine():
     def __init__(self):
-        self.Linear_Memory = bytearray()
+        # bytearray of size PAGE_SIZE
+        self.Linear_Memory = []
         self.Stack_Control_Flow = list()
         self.Stack_Call = list()
         self.Stack_Value = list()
@@ -28,6 +31,7 @@ class TBInit():
         self.InitGlobalIndexSpace()
         self.InitLinearMemoryIndexSpace()
         self.InitTableIndexSpace()
+        self.InitializeLinearMemory()
 
     def InitFuncIndexSpace(self):
         if self.module.import_section is not None:
@@ -80,6 +84,18 @@ class TBInit():
         if self.module.table_section is not None:
             for iter in self.module.table_section.table_types:
                 self.machinestate.Index_Space_Table.append(iter.element_type)
+
+    def InitializeLinearMemory(self):
+        if self.module.memory_section is not None:
+            for iter in self.module.memory_section.memory_types:
+                self.machinestate.Linear_Memory.append(bytearray(
+                    WASM_OP_Code.PAGE_SIZE))
+            if self.module.data_section is not None:
+                for iter in self.module.data_section.data_segments:
+                    count = int()
+                    for byte in iter.data:
+                        self.machinestate.Linear_Memory[iter.index][init_interpret(iter.offset) + count] = byte
+                        count += 1
 
     def DumpStates(self):
         print('-----------------------------------------')
