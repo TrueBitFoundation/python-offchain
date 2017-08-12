@@ -14,7 +14,7 @@ from abc import ABCMeta, abstractmethod
 sys.path.append('../')
 from utils import Colors
 from argparser import PythonInterpreter
-from TBInit import *
+from TBInit import TBMachine, TBInit
 
 total_test_cnt = int()
 expected_pass_cnt = int()
@@ -100,8 +100,8 @@ def main():
         if pid == 0:
             # @DEVI-FIXME- the dbg option in argparser is not working yet
             # if you want to pipe this, run with python -u
-            sys.stdout = open('/dev/null', 'w')
-            sys.stderr = open('/dev/null', 'w')
+            #sys.stdout = open('/dev/null', 'w')
+            #sys.stderr = open('/dev/null', 'w')
 
             interpreter = PythonInterpreter()
             module = interpreter.parse(testfile)
