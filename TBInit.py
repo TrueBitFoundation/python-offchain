@@ -2,6 +2,59 @@ from utils import Colors, init_interpret
 from OpCodes import WASM_OP_Code
 
 
+def DumpLinearMems(linear_memories, threshold):
+    count = int()
+    strrep = []
+    linmem_cnt = int()
+    for lin_mem in linear_memories:
+        print('-----------------------------------------')
+        print(Colors.blue + Colors.BOLD +
+                'Linear Memory '+ repr(linmem_cnt)+ ' :' + Colors.ENDC)
+        for byte in lin_mem:
+            if count >= threshold:
+                break
+            if count%16 == 0:
+                for ch in strrep:
+                    # @DEVI-line feed messes the pretty format up
+                    if ord(ch) != 10:
+                        print(Colors.green + ' ' + ch + Colors.ENDC, end = '')
+                    else:
+                        pass
+                print()
+                strrep = []
+                print(Colors.cyan + hex(count), ':\t' + Colors.ENDC, end='')
+                strrep.append(str(chr(byte)))
+                print(Colors.blue + format(byte, '02x') + ' ' + Colors.ENDC, end='')
+            else:
+                strrep += str(chr(byte))
+                print(Colors.blue + format(byte, '02x') + ' ' + Colors.ENDC, end='')
+            count += 1
+        count = 0
+
+
+def DumpIndexSpaces(machinestate):
+    print('-----------------------------------------')
+    print(Colors.green + 'Function Index Space: ' + Colors.ENDC)
+    for iter in machinestate.Index_Space_Function:
+        print(Colors.blue + repr(iter) + Colors.ENDC)
+
+    print('-----------------------------------------')
+    print(Colors.green + 'Globa Index Space: ' + Colors.ENDC)
+    for iter in machinestate.Index_Space_Global:
+        print(Colors.blue + repr(iter) + Colors.ENDC)
+
+    print('-----------------------------------------')
+    print(Colors.green + 'Linear Memory Index Space: ' + Colors.ENDC)
+    for iter in machinestate.Index_Space_Linear:
+        print(Colors.blue + repr(iter) + Colors.ENDC)
+
+    print('-----------------------------------------')
+    print(Colors.green + 'Table Index Space: ' + Colors.ENDC)
+    for iter in machinestate.Index_Space_Table:
+        print(Colors.blue + repr(iter) + Colors.ENDC)
+    print('-----------------------------------------')
+
+
 class TBMachine():
     def __init__(self):
         # bytearray of size PAGE_SIZE
@@ -92,27 +145,11 @@ class TBInit():
                         self.machinestate.Linear_Memory[iter.index][init_interpret(iter.offset) + count] = byte
                         count += 1
 
-    def DumpStates(self):
-        print('-----------------------------------------')
-        print(Colors.green + 'Function Index Space: ' + Colors.ENDC)
-        for iter in self.machinestate.Index_Space_Function:
-            print(Colors.blue + repr(iter) + Colors.ENDC)
 
-        print('-----------------------------------------')
-        print(Colors.green + 'Globa Index Space: ' + Colors.ENDC)
-        for iter in self.machinestate.Index_Space_Global:
-            print(Colors.blue + repr(iter) + Colors.ENDC)
 
-        print('-----------------------------------------')
-        print(Colors.green + 'Linear Memory Index Space: ' + Colors.ENDC)
-        for iter in self.machinestate.Index_Space_Linear:
-            print(Colors.blue + repr(iter) + Colors.ENDC)
+    def getInits(self):
+        return(self.machinestate)
 
-        print('-----------------------------------------')
-        print(Colors.green + 'Table Index Space: ' + Colors.ENDC)
-        for iter in self.machinestate.Index_Space_Table:
-            print(Colors.blue + repr(iter) + Colors.ENDC)
-        print('-----------------------------------------')
 
 
 class RTE():
@@ -121,6 +158,10 @@ class RTE():
         Stack_Value = list()
         Vector_Locals = list()
         Current_Position = int()
+        Local_Stacks = list()
+
+    def genFuncLocalStack(func_body):
+        pass
 
 
 class ModuleValidation():
