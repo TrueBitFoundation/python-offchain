@@ -55,6 +55,8 @@ class CLIArgParser(object):
         parser.add_argument("-o", type=str, help="the path to the output file")
         parser.add_argument("--dbg", action='store_true', help="print debug info", default=False)
         parser.add_argument("--unval", action='store_true', help="skips validation tests", default=False)
+        parser.add_argument("--memdump", action='store_true', help="dumps the linear memory", default=False)
+        parser.add_argument("--idxspc", action='store_true', help="print index space data", default=False)
 
         self.args = parser.parse_args()
 
@@ -82,6 +84,12 @@ class CLIArgParser(object):
 
     def getUNVAL(self):
         return self.args.unval
+
+    def getMEMDUMP(self):
+        return self.args.memdump
+
+    def getIDXSPC(self):
+        return self.args.idxspc
 
 
 class WASMText(object):
@@ -1256,7 +1264,11 @@ def main():
         state = TBMachine()
         init = TBInit(module, state)
         init.run()
-        init.DumpStates()
+        ms = init.getInits()
+        if argparser.getIDXSPC():
+            DumpIndexSpaces(ms)
+        if argparser.getMEMDUMP():
+            DumpLinearMems(ms.Linear_Memory, 500)
 
     if argparser.getWASTPath() is not None:
         print(argparser.getWASTPath())
