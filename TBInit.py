@@ -135,6 +135,8 @@ class TBInit():
                 self.machinestate.Index_Space_Table.append(iter.element_type)
 
     def InitializeLinearMemory(self):
+        # @DEVI-we could try to pack the data in the linear memory ourselve to
+        # decrease the machinestate size
         if self.module.memory_section is not None:
             for iter in self.module.memory_section.memory_types:
                 self.machinestate.Linear_Memory.append(bytearray(
