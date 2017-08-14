@@ -72,13 +72,15 @@ def LEB128SignedEncode(int_val):
     return(byte_array)
 
 
-# @DEVI-FIXME-MVP-only
+# @DEVI-FIXME-MVP-only-we currently inly support consts and get_global
 def init_interpret(expr):
     offset = 0
     byte, offset, dummy = Read(expr, offset, 'uint8')
     const = int()
 
     if byte == 65:
+        # @DEVI-FIXME-the spec says varint32, obviously we are not doing that
+        # since it will return neg values which are meningless and break things
         const, offset, dummy = Read(expr, offset, 'varuint32')
     elif byte == 66:
         const, offset, dummy = Read(expr, offset, 'varint64')
