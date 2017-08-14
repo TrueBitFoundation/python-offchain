@@ -62,6 +62,7 @@ class TBMachine():
         self.Stack_Control_Flow = list()
         self.Stack_Call = list()
         self.Stack_Value = list()
+        self.Stack_Omni = list()
         self.Vector_Globals = list()
         self.Index_Space_Function = list()
         self.Index_Space_Global = list()
