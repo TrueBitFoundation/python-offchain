@@ -3,18 +3,26 @@ from math import log, floor
 
 
 def Flatten(machinestate):
-    flat_machinestate = []
-    temp_branch = []
+    flat_ms = []
+    for iter in machinestate.Linear_Memory:
+        for iterer in iter:
+            flat_ms.append(iterer)
 
-    if isinstance_of(machinestate, list):
-        for elem in machinestate:
-            if isinstance_of(elem, list):
-                temp_branch = elem
-                Flatten(temp_branch)
-            else:
-                flat_machinestate.append(elem)
-    else:
-        raise Exception("machinestate passed to Flatten is not a list instance")
+    for iter in machinestate.Stack_Omni:
+        flat_ms.append(iter)
+
+    for iter in machinestate.Index_Space_Function:
+        flat_ms.append(iter)
+
+    for iter in machinestate.Index_Space_Table:
+        flat_ms.append(iter)
+
+    for iter in machinestate.Index_Space_Global:
+        flat_ms.append(iter)
+
+    for iter in machinestate.Index_Space_Linear:
+        flat_ms.append(iter)
+
 
 
 # @DEVI-expects a flattened machinestate
