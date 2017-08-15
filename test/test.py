@@ -1,9 +1,9 @@
 #!/bin/python3.5
 
+# call it the regression testing file
 # @DEVI-if you wanna pipe the output, run with python -u. buffered output
 # screws up the output
 
-# call it the regression testing file
 import sys
 import os
 from test_LEB128 import test_signed_LEB128
@@ -24,16 +24,21 @@ success = Colors.green + "SUCCESS: " + Colors.ENDC
 fail = Colors.red + "FAIL: " + Colors.ENDC
 
 
+# in order to keep the regression test script clean, the tests will need to
+# inherit from this test class, implement the two virtual methods and then call
+# it inside the main.
 class Void_Spwner():
     __metaclass__ = ABCMeta
 
     def __init__(self):
         pass
 
+    # this is the method that runs your tests
     @abstractmethod
     def Legacy(self):
         pass
 
+    # this tells the class what name to use to display your test results
     @abstractmethod
     def GetName(self):
         return(str())
@@ -98,10 +103,10 @@ def main():
         pid = os.fork()
         # I dont have a bellybutton
         if pid == 0:
-            # @DEVI-FIXME- the dbg option in argparser is not working yet
-            # if you want to pipe this, run with python -u
-            #sys.stdout = open('/dev/null', 'w')
-            #sys.stderr = open('/dev/null', 'w')
+            # @DEVI-FIXME-pipe stdout and stderr to a file instead of the
+            # bitbucket
+            sys.stdout = open('/dev/null', 'w')
+            sys.stderr = open('/dev/null', 'w')
 
             interpreter = PythonInterpreter()
             module = interpreter.parse(testfile)
@@ -112,9 +117,10 @@ def main():
             sys.exit()
         # the parent process
         elif pid > 0:
+            # @DEVI-FIXME-we are intentionally blocking. later i will fix this
+            # so we can use multicores to run our reg tests faster.
             cpid, status = os.waitpid(pid, 0)
             return_list.append(status)
-            # @DEVI-FIXME- if you pipe it its broken
             if status == 0:
                 print(success + testfile)
             else:
