@@ -2,6 +2,7 @@ from utils import Colors, init_interpret
 from OpCodes import WASM_OP_Code
 
 
+# handles the debug option --memdump. dumps the contents of linear memories.
 def DumpLinearMems(linear_memories, threshold):
     count = int()
     strrep = []
@@ -32,6 +33,7 @@ def DumpLinearMems(linear_memories, threshold):
         count = 0
 
 
+# handles the debug options --idxspc. dumps the index spaces.
 def DumpIndexSpaces(machinestate):
     print('-----------------------------------------')
     print(Colors.green + 'Function Index Space: ' + Colors.ENDC)
@@ -55,6 +57,7 @@ def DumpIndexSpaces(machinestate):
     print('-----------------------------------------')
 
 
+# WIP-the Truebit Machine class
 class TBMachine():
     def __init__(self):
         # bytearray of size PAGE_SIZE
@@ -70,11 +73,14 @@ class TBMachine():
         self.Index_Space_Table = list()
 
 
+# handles the initialization of the WASM machine
 class TBInit():
     def __init__(self, module, machinestate):
         self.module = module
         self.machinestate = machinestate
 
+    # a convenience function that runs the methods of the class. all methods
+    # can be called separately manually as well.
     def run(self):
         self.InitFuncIndexSpace()
         self.InitGlobalIndexSpace()
@@ -150,11 +156,12 @@ class TBInit():
 
 
 
+    # returns the machinestate
     def getInits(self):
         return(self.machinestate)
 
 
-
+# WIP-holds the run-rime data structures for a wasm machine
 class RTE():
     def __init__(self):
         Stack_Control_Flow = list()
@@ -167,6 +174,7 @@ class RTE():
         pass
 
 
+# palceholder for the class that holds the validation functions
 class ModuleValidation():
     def __init__(self, module):
         self.module = module
@@ -220,6 +228,8 @@ class ModuleValidation():
         return(True)
 
 
+# a convinience class that handles the initialization of the wasm machine and
+# interpretation of the code.
 class VM():
     def __init__(self, modules):
         self.modules = modules

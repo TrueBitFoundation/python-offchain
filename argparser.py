@@ -11,18 +11,21 @@ from TBInit import *
 _DBG_ = True
 
 
+# we first read the object file and put all the sections in this class
 class ParsedStruct:
     def __init__(self):
         self.version_number = int()
         self.section_list = []
 
 
+# like the above. currently unused
 class ParsedStructV2:
     def __init__(self, version_number, section_list):
         self.version_number = version_number
         self.section_list = section_list
 
 
+# @DEVI-Deprecated-convert a bytearray to int
 def Conver2Int(little_endian, size, bytelist):
     modifier = size - 1
     sum = 0
@@ -41,6 +44,7 @@ def Conver2Int(little_endian, size, bytelist):
         return(sum)
 
 
+# the argparser
 class CLIArgParser(object):
     def __init__(self):
         parser = argparse.ArgumentParser()
@@ -92,6 +96,8 @@ class CLIArgParser(object):
         return self.args.idxspc
 
 
+# this class is responsible for reading the wasm text file- the first part of
+# our assembler
 class WASMText(object):
     wast_header_type = dict()
     wast_header_import = dict()
@@ -281,7 +287,8 @@ class WASMText(object):
         self.wasmt_file.close()
 
 
-# i know the name is off-putting but this is technically our lexer.
+# this class essentially holds our s-expr lexer. the current implementation
+# only uses the lexer to read the function bodies.
 class FuncBodyParser(object):
     wast_obj_func = dict()
 
@@ -367,6 +374,7 @@ class FuncBodyParser(object):
         return(full)
 
 
+# the code emitter for the assembler. incomplete.
 class WASM_CodeEmitter(object):
     Obj_file = []
     Obj_Header = []
@@ -446,6 +454,8 @@ class WASM_CodeEmitter(object):
             print(bytecode)
 
 
+# reads a wasm-obj file, returns a parsedstruct that holds all the sections'
+# bytecode, their section type and their length
 def ReadWASM(file_path, endianness, is_extended_isa, dbg):
     wasm_file = open(file_path, "rb")
     parsedstruct = ParsedStruct()
@@ -506,10 +516,15 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
     return(parsedstruct)
 
 
+# Receives a parsedstruct returned from ReadWASM, parses all the sections and
+# fills up a module class. the parse method, then can return the module.
+# the returned class objects are all defined in section_structs.py.
 class ObjReader(object):
     def __init__(self, parsedstruct):
         self.parsedstruct = parsedstruct
 
+    # we use this method to read the operands of instructions. it's only
+    # called by ReadCodeSection
     def Disassemble(self, section_byte, offset):
         matched = False
         read_bytes = 0
@@ -568,6 +583,7 @@ class ObjReader(object):
         read_bytes += read_bytes_temp
         return offset, matched, read_bytes, temp_wasm_ins
 
+    # parses the code section. returns a Code_Section class
     def ReadCodeSection(self):
         offset = 1
         CS = Code_Section()
@@ -639,6 +655,7 @@ class ObjReader(object):
             function_cnt -= 1
         return(CS)
 
+    # parsed the data section. returns a Data_Section class
     def ReadDataSection(self):
         loop = True
         section_exists = False
@@ -685,6 +702,7 @@ class ObjReader(object):
             loop = True
         return(DS)
 
+    # parses the import section. returns an Import_Section class
     def ReadImportSection(self):
         offset = 1
         section_exists = False
@@ -759,7 +777,8 @@ class ObjReader(object):
             field_name = []
         return(IS)
 
-    def ReadSectionExport(self):
+    # parses the export section, returns an Export_Section class
+    def ReadExportSection(self):
         offset = 1
         section_exists = False
         field_name = []
@@ -797,7 +816,8 @@ class ObjReader(object):
             field_name = []
         return(ES)
 
-    def ReadSectionType(self):
+    # parses the type section, returns a Type_Section class
+    def ReadTypeSection(self):
         offset = 1
         section_exists = False
         param_list = []
@@ -843,7 +863,8 @@ class ObjReader(object):
             return_list = []
         return(TS)
 
-    def ReadSectionFunction(self):
+    # parses the function section, returns a Function_section class
+    def ReadFunctionSection(self):
         offset = 1
         section_exists = False
         index_to_type = []
@@ -866,7 +887,8 @@ class ObjReader(object):
         offset += function_entry_count
         return(FS)
 
-    def ReadSectionElement(self):
+    # parses the element secction, returns an Element_Section class
+    def ReadElementSection(self):
         offset = 1
         section_exists = False
         init_expr = []
@@ -915,6 +937,7 @@ class ObjReader(object):
             element_entry_count -= 1
         return(ES)
 
+    # parses the memory section, returns a Memory_Section class
     def ReadMemorySection(self):
         offset = 1
         section_exists = False
@@ -947,7 +970,8 @@ class ObjReader(object):
             num_linear_mems -= 1
         return(MS)
 
-    def ReadSectionTable(self):
+    # parses the table section, returns a Table_Section class
+    def ReadTableSection(self):
         offset = 1
         section_exists = False
         TS = Table_Section()
@@ -985,7 +1009,8 @@ class ObjReader(object):
             table_count -= 1
         return(TS)
 
-    def ReadSectionGlobal(self):
+    # parses the global section, returns a Global_Section class
+    def ReadGlobalSection(self):
         offset = 1
         loop = True
         section_exists = False
@@ -1029,6 +1054,7 @@ class ObjReader(object):
             init_expr = []
         return(GS)
 
+    # parses the start section, returns a Start_Section
     def ReadStartSection(self):
         offset = 1
         section_exists = False
@@ -1046,19 +1072,21 @@ class ObjReader(object):
         SS.function_section_index.append(function_index)
         return(SS)
 
+    # unused-returns the cursor location in the object file
     def getCursorLocation(self):
         return(self.wasm_file.tell())
 
+    # a convinience method-builds a module class and returns it
     def parse(self):
-        #self.parsedstruct.section_list = []
-        return(Module(self.ReadSectionType(), self.ReadImportSection(),
-                      self.ReadSectionFunction(), self.ReadSectionTable(),
-                      self.ReadMemorySection(), self.ReadSectionGlobal(),
-                      self.ReadSectionExport(), self.ReadStartSection(),
-                      self.ReadSectionElement(), self.ReadCodeSection(),
+        return(Module(self.ReadTypeSection(), self.ReadImportSection(),
+                      self.ReadFunctionSection(), self.ReadTableSection(),
+                      self.ReadMemorySection(), self.ReadGlobalSection(),
+                      self.ReadExportSection(), self.ReadStartSection(),
+                      self.ReadElementSection(), self.ReadCodeSection(),
                       self.ReadDataSection()))
 
 
+# WIP-basically how the assembler is constructed
 class ParserV1(object):
     def run(self):
         argparser = CLIArgParser()
@@ -1092,20 +1120,26 @@ class ParserV1(object):
         wasm_codeemitter.PrintTypeHeaderObj()
 
 
+# our interpreter class
 class PythonInterpreter(object):
     def __init__(self):
         self.modules = []
 
+    # appends a module to the module list that PythonInterpreter has
     def appendmodule(self, module):
         self.modules.append(module)
 
+    # returns the list of modules that we have parsed so far
     def getmodules(self):
         return(self.modules)
 
+    # convinience method.calls the ObjReader to parse a wasm obj file.
+    # returns a module class.
     def parse(self, file_path):
         parser = ObjReader(ReadWASM(file_path, 'little', False, True))
         return(parser.parse())
 
+    # dumps the object sections' info to stdout. pretty print.
     def dump_sections(self, module):
         print(Colors.blue + Colors.BOLD +
                 'BEGENNING OF MODULE' + Colors.ENDC)
@@ -1240,6 +1274,7 @@ class PythonInterpreter(object):
                 print(Colors.purple + 'size: ' + repr(iter.size) + Colors.ENDC)
                 print(Colors.cyan + 'data:' + repr(iter.data) + Colors.ENDC)
 
+    # palceholder for the validation tests
     def runValidations(self):
         modulevalidation = ModuleValidation(self.modules[0])
         return(modulevalidation.ValidateAll())
@@ -1249,6 +1284,9 @@ class PythonInterpreter(object):
 def main():
     argparser = CLIArgParser()
 
+    # this is essentially how we use our current interpreter. it reads in wasm
+    # obj files and holds keeps the parses modules. Theb we run the validation
+    # tests and initialize the WASM machine
     if argparser.getWASMPath() is not None:
         interpreter = PythonInterpreter()
         for file_path in argparser.getWASMPath():
@@ -1268,16 +1306,18 @@ def main():
         if argparser.getIDXSPC():
             DumpIndexSpaces(ms)
         if argparser.getMEMDUMP():
-            DumpLinearMems(ms.Linear_Memory, 500)
+            DumpLinearMems(ms.Linear_Memory, 700)
 
     if argparser.getWASTPath() is not None:
         print(argparser.getWASTPath())
         parser = ParserV1()
         parser.run()
 
+    # WIP-the assmebler
     if argparser.getASPath() is not None:
         print("not implemented yet")
 
+    # WIP-the disassmebler
     if argparser.getDISASPath() is not None:
         print("not implemented yet")
 

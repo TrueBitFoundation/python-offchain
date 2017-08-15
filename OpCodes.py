@@ -22,6 +22,7 @@ TypeDic = {'uint8': 1, 'uint16': 2, 'uint32': 4, 'uint64': 8,
            'varint1': 1, 'varint7': 1, 'varint32': 4, 'varint64': 8}
 
 
+# holds the version 1.0 wasm opcodes and immediates
 class WASM_OP_Code:
     version_number = 0x01
     magic_number = 0x6d736100

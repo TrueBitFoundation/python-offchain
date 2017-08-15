@@ -1,3 +1,4 @@
+# contains the data classes we use to hold the information of a module
 class Func_Type():
     def __init__(self):
         self.form = int()
@@ -217,6 +218,7 @@ class Name_Map(object):
         self.naming = naming
 
 
+# the module class
 class Module():
     def __init__(self, type_section, import_section, function_section,
                  table_section, memory_section, global_section, export_section,

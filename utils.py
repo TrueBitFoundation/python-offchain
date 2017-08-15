@@ -1,6 +1,7 @@
 from OpCodes import *
 
 
+# pretty print
 class Colors:
     purple = '\033[95m'
     blue = '\033[94m'
@@ -73,6 +74,7 @@ def LEB128SignedEncode(int_val):
 
 
 # @DEVI-FIXME-MVP-only-we currently inly support consts and get_global
+# interprets the init-exprs
 def init_interpret(expr):
     offset = 0
     byte, offset, dummy = Read(expr, offset, 'uint8')
@@ -100,6 +102,10 @@ def init_interpret(expr):
     return(const)
 
 
+# reads different-typed values from a byte array, takes in the bytearray, the
+# current offset the read should be performed from and the kind of value that
+# should be read. returns the read value as a decimal number, the updated
+# offset and the number of bytes read
 def Read(section_byte, offset, kind):
     operand = []
     return_list = int()
