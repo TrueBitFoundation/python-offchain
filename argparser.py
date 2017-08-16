@@ -7,6 +7,7 @@ from utils import *
 from OpCodes import *
 from copy import deepcopy
 from TBInit import *
+from merklize import *
 
 _DBG_ = True
 
@@ -1299,14 +1300,17 @@ def main():
                 pass
             else:
                 print(Colors.red + 'failed validation tests' + Colors.ENDC)
-        state = TBMachine()
-        init = TBInit(module, state)
-        init.run()
-        ms = init.getInits()
-        if argparser.getIDXSPC():
-            DumpIndexSpaces(ms)
-        if argparser.getMEMDUMP():
-            DumpLinearMems(ms.Linear_Memory, 700)
+            state = TBMachine()
+            init = TBInit(module, state)
+            init.run()
+            ms = init.getInits()
+            if argparser.getIDXSPC():
+                DumpIndexSpaces(ms)
+            if argparser.getMEMDUMP():
+                DumpLinearMems(ms.Linear_Memory, 700)
+            # merklizer = Merklizer(ms.Linear_Memory[0][0:512], module)
+            # treelength, hashtree = merklizer.run()
+
 
     if argparser.getWASTPath() is not None:
         print(argparser.getWASTPath())
