@@ -1,5 +1,6 @@
 from utils import Colors, init_interpret
 from OpCodes import WASM_OP_Code
+from section_structs import Code_Section, Func_Body
 
 
 # handles the debug option --memdump. dumps the contents of linear memories.
@@ -231,8 +232,43 @@ class ModuleValidation():
 # a convinience class that handles the initialization of the wasm machine and
 # interpretation of the code.
 class VM():
-    def __init__(self, modules):
-        self.modules = modules
+    def __init__(self, module):
+        self.module = module
         self.machinestate = TBMachine()
-        # @DEVI-FIXME- the primary implementation is single-module only
-        self.init = TBInit(self.modules[0])
+        # @DEVI-FIXME- the first implementation is single-module only
+        self.init = TBInit(self.module, self.machinestate)
+        self.init.run()
+        self.machinestate = self.init.getInits()
+        self.start_function = Func_Body()
+
+    def getState(self):
+        return(self.machinestate)
+
+    def getStartFunctionIndex(self):
+        if self.module.start_section is None:
+            raise Exception(Colors.red + "module does not have a start section. quitting..." + Colors.ENDC)
+        else:
+            print(Colors.green + "found start section: " + Colors.ENDC, end = '')
+            start_index = self.module.start_section.function_section_index
+
+        print(start_index)
+        return(start_index)
+
+    def getStartFunctionBody(self):
+        start_index = self.getStartFunctionIndex()
+        if isinstance(start_index, int):
+            self.start_function = self.code_section.func_body[self.getStartFunctionIndex()]
+        elif isinstance(start_index, str):
+            # we have to import the function from another module/library. we
+            # assume sys calls are not present.:w
+            pass
+        else:
+            raise Exception(Colors.red + "invalid entry for start function index" + Colors.ENDC)
+
+    def execute(self):
+        pass
+
+    # a convinience method
+    def run(self):
+        self.getStartFunctionBody()
+        self.execute()
