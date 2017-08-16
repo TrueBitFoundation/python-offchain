@@ -13,25 +13,12 @@ def Flatten(machinestate):
     for iter in machinestate.Stack_Omni:
         flat_ms.append(iter)
 
-    '''
-    for iter in machinestate.Index_Space_Function:
-        flat_ms.append(iter)
-
-    for iter in machinestate.Index_Space_Table:
-        flat_ms.append(iter)
-
-    for iter in machinestate.Index_Space_Global:
-        flat_ms.append(iter)
-
-    for iter in machinestate.Index_Space_Linear:
-        flat_ms.append(iter)
-    '''
-
 
 # expects to receive a flat list, creates a merkle tree for it.
 class Merklizer():
-    def __init__ (self, machinestate):
+    def __init__ (self, machinestate, module):
         self.machinestate = machinestate
+        self.module = module
         self.temp_level = machinestate
         self.double_temp = []
         self.treeindex = int()
@@ -66,42 +53,52 @@ class Merklizer():
     # we are allocating the tree as a flat list. the root hash will be the last
     # element in the tree.
     def allocateTree(self):
-        self.merkletree = ['\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'] * self.calcTreeLength()
+        self.merkletree = ['\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'] * self.calcTreeLength()
 
     # create the first level hashes
     def hashallleaves(self):
-        for leaf in self.machinestate:
-            current_hash = hashlib.sha256(leaf)
+        for index in range(0, self.module.data_section.count):
+            current_hash = hashlib.sha256(self.module.data_section.data_segments[index].data)
+            #print(current_hash.hexdigest())
+            #print(hashlib.sha256(b"Nobody inspects the spammish repetition").hexdigest())
             self.merkletree[self.treeindex] = current_hash.hexdigest()
             self.treeindex += 1
+            #self.double_temp.append(current_hash.hexdigest())
             self.double_temp.append(current_hash.hexdigest())
 
-        self.temp_level = deepcopy(self.double_temp)
+        self.temp_level = self.double_temp
         self.double_temp = []
 
-    # creates the parent hashes
+    # creates the higher-level hashes
     def merklize(self):
+        print('----------------------------------------------------------------')
+        for member in self.temp_level:
+            print(member)
+        print('----------------------------------------------------------------')
         for index in range(0, len(self.temp_level), 2):
-            current_leaf = self.temp_level[index]
-            current_hash = hashlib.sha256(current_leaf)
+            current_hash = self.temp_level[index]
+            print(current_hash)
 
             if index + 1 > len(self.temp_level) - 1:
-                new_parent = hashlib.sha256(current_hash)
+                new_parent = hashlib.sha256(bytearray(current_hash.encode('utf-8')))
+                #print(new_parent.hexdigest())
                 self.merkletree[self.treeindex] = new_parent.hexdigest()
                 self.treeindex += 1
-                self.double_temp.append(new_parent)
+                self.double_temp.append(new_parent.hexdigest())
             else:
-                leaf_right = self.temp_level[index + 1]
-                hash_right = hashlib.sha256(leaf_right)
-                new_parent = hashlib.sha256(current_hash + hash_right)
+                hash_right = self.temp_level[index + 1]
+                new_parent = hashlib.sha256(bytearray(current_hash.encode('utf-8') + hash_right.encode('utf-8')))
+                print(new_parent.hexdigest())
                 self.merkletree[self.treeindex] = new_parent.hexdigest()
                 self.treeindex += 1
-                self.double_temp.append(new_parent)
+                self.double_temp.append(new_parent.hexdigest())
 
-            if len(self.temp_level) != 1:
-                self.temp_level = deepcopy(self.double_temp)
-                self.double_temp = []
-                self.merklize(self.temp_level)
+        if len(self.temp_level) != 1:
+            self.temp_level = self.double_temp
+            self.double_temp = []
+            self.merklize()
+        else:
+            return
 
 
     # returns the tree length along with the tree itself
@@ -112,4 +109,4 @@ class Merklizer():
         self.allocateTree()
         self.hashallleaves()
         self.merklize()
-        return(self.getTree)
+        return(self.getTree())
