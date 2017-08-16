@@ -1300,14 +1300,13 @@ def main():
                 pass
             else:
                 print(Colors.red + 'failed validation tests' + Colors.ENDC)
-            state = TBMachine()
-            init = TBInit(module, state)
-            init.run()
-            ms = init.getInits()
+            vm = VM(module)
+            ms = vm.getState()
             if argparser.getIDXSPC():
                 DumpIndexSpaces(ms)
             if argparser.getMEMDUMP():
                 DumpLinearMems(ms.Linear_Memory, 700)
+            vm.run()
             # merklizer = Merklizer(ms.Linear_Memory[0][0:512], module)
             # treelength, hashtree = merklizer.run()
 
@@ -1320,10 +1319,12 @@ def main():
     # WIP-the assmebler
     if argparser.getASPath() is not None:
         print("not implemented yet")
+        sys.exit(1)
 
     # WIP-the disassmebler
     if argparser.getDISASPath() is not None:
         print("not implemented yet")
+        sys.exit(1)
 
 
 if __name__ == '__main__':
