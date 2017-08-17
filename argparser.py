@@ -458,6 +458,7 @@ class WASM_CodeEmitter(object):
 # reads a wasm-obj file, returns a parsedstruct that holds all the sections'
 # bytecode, their section type and their length
 def ReadWASM(file_path, endianness, is_extended_isa, dbg):
+    temp_obj_file = []
     wasm_file = open(file_path, "rb")
     parsedstruct = ParsedStruct()
     # read the magic cookie
@@ -474,43 +475,46 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
     else:
         parsedstruct.version_number = byte
 
-    not_end_of_the_line = True
-    while not_end_of_the_line:
-        pass
-        section_id_int = int()
-        payload_length_int = int()
-        name_len_int = int()
-        name = str()
-        payload_data = bytearray()
-        is_custom_section = False
-        section_id = wasm_file.read(WASM_OP_Code.varuint7)
-
-        if section_id == b"":
-            not_end_of_the_line = False
+    while True:
+        byte = wasm_file.read(1)
+        if byte != b'':
+            temp_obj_file.append(int.from_bytes(byte, byteorder='big', signed=False))
         else:
-            section_id_int = LEB128UnsignedDecode(section_id)
+            break
 
-            payload_length = wasm_file.read(WASM_OP_Code.varuint32)
-            payload_length_int = LEB128UnsignedDecode(payload_length) + 1
+    offset = 0
+    loop = True
+    while loop:
+        try:
+            section_id, offset, dummy = Read(temp_obj_file, offset, 'varuint7')
+        except IndexError:
+            break
 
-            if section_id is not WASM_OP_Code.section_code_dict['custom']:
-                payload_data = wasm_file.read(payload_length_int)
-            else:
-                is_custom_section = True
-                name_len = wasm_file.read(WASM_OP_Code.varuint32)
-                name_len_int = Conver2Int(endianness,
-                                        WASM_OP_Code.varuint32,
-                                        name_len)
-                name = wasm_file.read(name_len)
-                payload_data = wasm_file.read(
-                    payload_length_int - name_len_int - WASM_OP_Code.varuint32)
+        payload_length, offset, dummy = Read(temp_obj_file, offset, 'varuint32')
 
-        parsedstruct.section_list.append([section_id_int, 'jojo',
-                                            payload_length_int,
+        if section_id == 0:
+            is_custom_section = True
+            name_len, offset, dummy = Read(temp_obj_file, offset, 'varuint32')
+            name = temp_obj_file[offset : offset + name_len]
+            offset += name_len
+        else:
+            is_custom_section = False
+            name_len = 0
+            name = ''
+            dummy = 0
+
+        payload_data = temp_obj_file[offset:offset + payload_length - name_len - dummy]
+        offset += payload_length - name_len - dummy
+
+        # @DEVI-the second field is for general use. it is unused right
+        # now so we are filling it with jojo.
+        parsedstruct.section_list.append([section_id, 'jojo',
+                                            payload_length,
                                             is_custom_section,
-                                            name_len_int, name,
+                                            name_len, name,
                                             payload_data])
 
+    # prints out the sections in the wasm object
     # for section in parsedstruct.section_list:
         # print(section)
     wasm_file.close()
@@ -586,7 +590,7 @@ class ObjReader(object):
 
     # parses the code section. returns a Code_Section class
     def ReadCodeSection(self):
-        offset = 1
+        offset = 0
         CS = Code_Section()
         temp_func_bodies = Func_Body()
         temp_local_entry = Local_Entry()
@@ -660,7 +664,7 @@ class ObjReader(object):
     def ReadDataSection(self):
         loop = True
         section_exists = False
-        offset = 1
+        offset = 0
         DS = Data_Section()
         temp_data_segment = Data_Segment()
         init_expr = []
@@ -705,7 +709,7 @@ class ObjReader(object):
 
     # parses the import section. returns an Import_Section class
     def ReadImportSection(self):
-        offset = 1
+        offset = 0
         section_exists = False
         module_name = []
         field_name = []
@@ -780,7 +784,7 @@ class ObjReader(object):
 
     # parses the export section, returns an Export_Section class
     def ReadExportSection(self):
-        offset = 1
+        offset = 0
         section_exists = False
         field_name = []
         ES = Export_Section()
@@ -819,7 +823,7 @@ class ObjReader(object):
 
     # parses the type section, returns a Type_Section class
     def ReadTypeSection(self):
-        offset = 1
+        offset = 0
         section_exists = False
         param_list = []
         return_list = []
@@ -866,7 +870,7 @@ class ObjReader(object):
 
     # parses the function section, returns a Function_section class
     def ReadFunctionSection(self):
-        offset = 1
+        offset = 0
         section_exists = False
         index_to_type = []
         FS = Function_Section()
@@ -890,7 +894,7 @@ class ObjReader(object):
 
     # parses the element secction, returns an Element_Section class
     def ReadElementSection(self):
-        offset = 1
+        offset = 0
         section_exists = False
         init_expr = []
         loop = True
@@ -940,7 +944,7 @@ class ObjReader(object):
 
     # parses the memory section, returns a Memory_Section class
     def ReadMemorySection(self):
-        offset = 1
+        offset = 0
         section_exists = False
         MS = Memory_Section()
         temp_rsz_limits = Resizable_Limits()
@@ -973,7 +977,7 @@ class ObjReader(object):
 
     # parses the table section, returns a Table_Section class
     def ReadTableSection(self):
-        offset = 1
+        offset = 0
         section_exists = False
         TS = Table_Section()
         temp_table_type = Table_Type()
@@ -1012,7 +1016,7 @@ class ObjReader(object):
 
     # parses the global section, returns a Global_Section class
     def ReadGlobalSection(self):
-        offset = 1
+        offset = 0
         loop = True
         section_exists = False
         init_expr = []
@@ -1057,7 +1061,7 @@ class ObjReader(object):
 
     # parses the start section, returns a Start_Section
     def ReadStartSection(self):
-        offset = 1
+        offset = 0
         section_exists = False
         SS = Start_Section()
 
@@ -1070,7 +1074,7 @@ class ObjReader(object):
             return None
 
         function_index, offset, dummy = Read(start_section[6], offset, 'varuint32')
-        SS.function_section_index.append(function_index)
+        SS.function_section_index = function_index
         return(SS)
 
     # unused-returns the cursor location in the object file
@@ -1260,7 +1264,7 @@ class PythonInterpreter(object):
                 for iterer in iter.code:
                     instruction = iterer.opcode + ' ' + iterer.operands
                     print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
-                    print(Colors.grey + 'code: ' + repr(iterer.operands) + Colors.ENDC)
+                    print(Colors.grey + 'immediate: ' + repr(iterer.operands) + Colors.ENDC)
                     print(Colors.yellow + instruction + Colors.ENDC)
 
         # data_section
@@ -1300,7 +1304,7 @@ def main():
                 pass
             else:
                 print(Colors.red + 'failed validation tests' + Colors.ENDC)
-            vm = VM(module)
+            vm = VM(interpreter.getmodules())
             ms = vm.getState()
             if argparser.getIDXSPC():
                 DumpIndexSpaces(ms)
