@@ -232,11 +232,11 @@ class ModuleValidation():
 # a convinience class that handles the initialization of the wasm machine and
 # interpretation of the code.
 class VM():
-    def __init__(self, module):
-        self.module = module
+    def __init__(self, modules):
+        self.modules = modules
         self.machinestate = TBMachine()
         # @DEVI-FIXME- the first implementation is single-module only
-        self.init = TBInit(self.module, self.machinestate)
+        self.init = TBInit(self.modules[0], self.machinestate)
         self.init.run()
         self.machinestate = self.init.getInits()
         self.start_function = Func_Body()
@@ -245,11 +245,11 @@ class VM():
         return(self.machinestate)
 
     def getStartFunctionIndex(self):
-        if self.module.start_section is None:
+        if self.modules[0].start_section is None:
             raise Exception(Colors.red + "module does not have a start section. quitting..." + Colors.ENDC)
         else:
             print(Colors.green + "found start section: " + Colors.ENDC, end = '')
-            start_index = self.module.start_section.function_section_index
+            start_index = self.modules[0].start_section.function_section_index
 
         print(start_index)
         return(start_index)
@@ -257,7 +257,7 @@ class VM():
     def getStartFunctionBody(self):
         start_index = self.getStartFunctionIndex()
         if isinstance(start_index, int):
-            self.start_function = self.code_section.func_body[self.getStartFunctionIndex()]
+            self.start_function = self.modules[0].code_section.func_bodies[start_index]
         elif isinstance(start_index, str):
             # we have to import the function from another module/library. we
             # assume sys calls are not present.:w
@@ -266,7 +266,9 @@ class VM():
             raise Exception(Colors.red + "invalid entry for start function index" + Colors.ENDC)
 
     def execute(self):
-        pass
+        for ins in self.start_function.code:
+            print(ins.opcode + ' ' + ins.operands)
+        print(Colors.blue + 'running module...' + Colors.ENDC)
 
     # a convinience method
     def run(self):
