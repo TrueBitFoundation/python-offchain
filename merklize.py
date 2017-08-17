@@ -3,8 +3,8 @@ from math import log, floor
 from copy import deepcopy
 
 
-# falttens the machinestate-unused
-def Flatten(machinestate):
+# serializes the machinestate-unused
+def Serialize(machinestate):
     flat_ms = []
     for iter in machinestate.Linear_Memory:
         for iterer in iter:
@@ -29,6 +29,7 @@ class Merklizer():
         else:
             self.height = int(height)
 
+    # @DEVI-FIXME
     def calcTreeLength(self):
         length = len(self.machinestate)
         total_length = length
