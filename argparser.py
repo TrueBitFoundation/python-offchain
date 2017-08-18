@@ -60,7 +60,7 @@ class CLIArgParser(object):
         parser.add_argument("-o", type=str, help="the path to the output file")
         parser.add_argument("--dbg", action='store_true', help="print debug info", default=False)
         parser.add_argument("--unval", action='store_true', help="skips validation tests", default=False)
-        parser.add_argument("--memdump", action='store_true', help="dumps the linear memory", default=False)
+        parser.add_argument("--memdump", type=int, help="dumps the linear memory")
         parser.add_argument("--idxspc", action='store_true', help="print index space data", default=False)
         parser.add_argument("--run", action='store_true', help="runs the start function", default=False)
 
@@ -1313,7 +1313,7 @@ def main():
             if argparser.getIDXSPC():
                 DumpIndexSpaces(ms)
             if argparser.getMEMDUMP():
-                DumpLinearMems(ms.Linear_Memory, 700)
+                DumpLinearMems(ms.Linear_Memory, argparser.getMEMDUMP())
             if argparser.getRun():
                 vm.run()
             # merklizer = Merklizer(ms.Linear_Memory[0][0:512], module)
