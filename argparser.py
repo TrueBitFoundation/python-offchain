@@ -62,6 +62,7 @@ class CLIArgParser(object):
         parser.add_argument("--unval", action='store_true', help="skips validation tests", default=False)
         parser.add_argument("--memdump", action='store_true', help="dumps the linear memory", default=False)
         parser.add_argument("--idxspc", action='store_true', help="print index space data", default=False)
+        parser.add_argument("--run", action='store_true', help="runs the start function", default=False)
 
         self.args = parser.parse_args()
 
@@ -95,6 +96,9 @@ class CLIArgParser(object):
 
     def getIDXSPC(self):
         return self.args.idxspc
+
+    def getRun(self):
+        return self.args.run
 
 
 # this class is responsible for reading the wasm text file- the first part of
@@ -1310,7 +1314,8 @@ def main():
                 DumpIndexSpaces(ms)
             if argparser.getMEMDUMP():
                 DumpLinearMems(ms.Linear_Memory, 700)
-            vm.run()
+            if argparser.getRun():
+                vm.run()
             # merklizer = Merklizer(ms.Linear_Memory[0][0:512], module)
             # treelength, hashtree = merklizer.run()
 
