@@ -32,6 +32,7 @@ def DumpLinearMems(linear_memories, threshold):
                 print(Colors.blue + format(byte, '02x') + ' ' + Colors.ENDC, end='')
             count += 1
         count = 0
+    print()
 
 
 # handles the debug options --idxspc. dumps the index spaces.
@@ -213,6 +214,9 @@ class ModuleValidation():
     def DataSection(self):
         pass
 
+    def TBCustom(self):
+        pass
+
     def ValidateAll(self):
         self.TypeSection()
         self.ImportSection()
@@ -225,6 +229,7 @@ class ModuleValidation():
         self.ElementSection()
         self.CodeSection()
         self.DataSection()
+        self.TBCustom()
 
         return(True)
 
