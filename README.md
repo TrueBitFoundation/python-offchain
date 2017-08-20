@@ -49,3 +49,5 @@ To run the interpreter you should call:<br/>
 python3 argparser.py --wasm ./injected.wasm
 
 ```
+
+To see the other options available run help.<br/>
