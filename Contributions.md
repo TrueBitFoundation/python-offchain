@@ -21,3 +21,4 @@ Below you will find requirements for adding a pull request. Submissions that don
 * PEP-8: use it. In case a PEP-8 guideline is irrational in a certain case, use your judgement.<br/>
 * Your pull request must be accompanied by a test file. Your test file must be able to run on its own and by another python module. Inherit from `Void_Spwner`. Your test script should not break the regression test script.<br/>
 * Python 2 compatibility is not a requirement.<br/>
+* Don't forget to add your name to `CONTRIBUTERS.txt`. The list is kept in a chronological order.<br/>
