@@ -1,6 +1,7 @@
 from utils import Colors, init_interpret
 from OpCodes import WASM_OP_Code
 from section_structs import Code_Section, Func_Body
+from execute import *
 
 
 # handles the debug option --memdump. dumps the contents of linear memories.
@@ -245,6 +246,7 @@ class VM():
         self.init.run()
         self.machinestate = self.init.getInits()
         self.start_function = Func_Body()
+        self.executewasm = Execute()
 
     def getState(self):
         return(self.machinestate)
