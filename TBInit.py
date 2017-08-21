@@ -273,9 +273,15 @@ class VM():
             raise Exception(Colors.red + "invalid entry for start function index" + Colors.ENDC)
 
     def execute(self):
+        print(Colors.blue + 'running module...' + Colors.ENDC)
+        '''
         for ins in self.start_function.code:
             print(ins.opcode + ' ' + ins.operands)
-        print(Colors.blue + 'running module...' + Colors.ENDC)
+        '''
+        for ins in self.start_function.code:
+            self.executewasm.getInstruction(ins.opcodeint, ins.operands)
+            self.executewasm.callExecuteMethod()
+            self.getState()
 
     # a convinience method
     def run(self):
