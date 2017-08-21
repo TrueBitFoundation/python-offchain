@@ -585,6 +585,7 @@ class ObjReader(object):
                         instruction += repr(temp)
 
                 temp_wasm_ins.opcode = op_code[0]
+                temp_wasm_ins.opcodeint = int(byte, 16)
                 temp_wasm_ins.operands = instruction
                 instruction = str()
                 break
