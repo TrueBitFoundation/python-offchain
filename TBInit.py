@@ -246,7 +246,7 @@ class VM():
         self.init.run()
         self.machinestate = self.init.getInits()
         self.start_function = Func_Body()
-        self.executewasm = Execute()
+        self.executewasm = Execute(self.machinestate)
 
     def getState(self):
         return(self.machinestate)
