@@ -142,7 +142,8 @@ class Local_Entry():
 
 class WASM_Ins():
     def __init__(self):
-        self.opcode = int()
+        self.opcode = str()
+        self.opcodeint = int()
         self.operands = []
 
 
