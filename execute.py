@@ -12,17 +12,204 @@ class Execute():
         self.opcodeint = opcodeint
         self.immediates = immediates
 
-    # @DEVI-FIXME-string comparisons are more expensive than int comparisons
-    def instructionUnwinder(self, opcodeint, immediates, machinestate):
-        if opcodeint == 16:
-            return self.run_call
-        elif opcodeint == 11:
-            return self.run_end
-
     def callExecuteMethod(self):
         runmethod = self.instructionUnwinder(self.opcodeint, self.immediates, self.machinestate)
         #print (self.opcodeint + ' ' + self.immediates)
         runmethod(self.opcodeint, self.immediates)
+
+    # @DEVI-FIXME-string comparisons are more expensive than int comparisons
+    def instructionUnwinder(self, opcodeint, immediates, machinestate):
+        if opcodeint == 0:
+            return(self.run_unreachable)
+        elif opcodeint == 1:
+            return(self.run_nop)
+        elif opcodeint == 2:
+            return(self.run_block)
+        elif opcodeint == 3:
+            return(self.run_loop)
+        elif opcodeint == 4:
+            return(self.run_if)
+        elif opcodeint == 5:
+            return(self.run_else)
+        elif opcodeint == 11:
+            return(self.run_end)
+        elif opcodeint == 12:
+            return(self.run_br)
+        elif opcodeint == 13:
+            return(self.run_br_if)
+        elif opcodeint == 14:
+            return(self.run_br_table)
+        elif opcodeint == 15:
+            return(self.run_return)
+        elif opcodeint == 16:
+            return(self.run_call)
+        elif opcodeint == 17:
+            return(self.run_call_indirect)
+        elif opcodeint == 26:
+            return(self.run_drop)
+        elif opcodeint == 27:
+            return(self.run_select)
+        elif opcodeint == 32:
+            return(self.run_getlocal)
+        elif opcodeint == 33:
+            return(self.run_setlocal)
+        elif opcodeint == 34:
+            return(self.run_teelocal)
+        elif opcodeint == 35:
+            return(self.run_getglobal)
+        elif opcodeint == 36:
+            return(self.run_setglobal)
+        elif opcodeint >= 40 and opcodeint <= 53:
+            return(self.run_load)
+        elif opcodeint >= 54 and opcodeint <= 62:
+            return(self.run_store)
+        elif opcodeint == 63:
+            return(self.run_current_memory)
+        elif opcodeint == 64:
+            return(self.run_grow_memory)
+        elif opcodeint >= 65 and opcodeint <= 68:
+            return(self.run_const)
+        elif opcodeint == 69 or opcodeint == 80:
+            return(self.run_eqz)
+        elif opcodeint == 70 or opcodeint == 81 or opcodeint == 91 or opcodeint == 97:
+            return(self.run_eq)
+        elif opcodeint == 71 or opcodeint == 82 or opcodeint == 92 or opcodeint == 98:
+            return(self.run_ne)
+        elif opcodeint == 72 or opcodeint == 83:
+            return(self.run_lt_s)
+        elif opcodeint == 73 or opcodeint == 84:
+            return(self.run_lt_u)
+        elif opcodeint == 74 or opcodeint == 85:
+            return(self.run_gt_s)
+        elif opcodeint == 75 or opcodeint == 86:
+            return(self.run_gt_u)
+        elif opcodeint == 76 or opcodeint == 87:
+            return(self.run_le_s)
+        elif opcodeint == 77 or opcodeint == 88:
+            return(self.run_le_u)
+        elif opcodeint == 78 or opcodeint == 89:
+            return(self.run_ge_s)
+        elif opcodeint == 79 or opcodeint == 90:
+            return(self.run_ge_u)
+        elif opcodeint == 93 or opcodeint == 99:
+            return(self.run_lt)
+        elif opcodeint == 94 or opcodeint == 100:
+            return(self.run_gt)
+        elif opcodeint == 95 or opcodeint == 101:
+            return(self.run_le)
+        elif opcodeint == 96 or opcodeint == 102:
+            return(self.run_ge)
+        elif opcodeint == 103 or opcodeint == 121:
+            return(self.run_clz)
+        elif opcodeint == 104 or opcodeint == 122:
+            return(self.run_ctz)
+        elif opcodeint == 105 or opcodeint == 123:
+            return(self.run_popcnt)
+        elif opcodeint == 106 or opcodeint == 124 or opcodeint == 146 or opcodeint == 160:
+            return(self.run_add)
+        elif opcodeint == 107 or opcodeint == 125 or opcodeint == 147 or opcodeint == 161:
+            return(self.run_sub)
+        elif opcodeint == 108 or opcodeint == 126 or opcodeint == 148 or opcodeint == 162:
+            return(self.run_mul)
+        elif opcodeint == 109 or opcodeint == 127:
+            return(self.run_div_s)
+        elif opcodeint == 110 or opcodeint == 128:
+            return(self.run_div_u)
+        elif opcodeint == 111 or opcodeint == 129:
+            return(self.run_rem_s)
+        elif opcodeint == 112 or opcodeint == 130:
+            return(self.run_rem_u)
+        elif opcodeint == 113 or opcodeint == 131:
+            return(self.run_and)
+        elif opcodeint == 114 or opcodeint == 132:
+            return(self.run_or)
+        elif opcodeint == 115 or opcodeint == 133:
+            return(self.run_xor)
+        elif opcodeint == 116 or opcodeint == 134:
+            return(self.run_shl)
+        elif opcodeint == 117 or opcodeint == 135:
+            return(self.run_shr_s)
+        elif opcodeint == 118 or opcodeint == 136:
+            return(self.run_shr_u)
+        elif opcodeint == 119 or opcodeint == 137:
+            return(self.run_rotl)
+        elif opcodeint == 120 or opcodeint == 138:
+            return(self.run_rotr)
+        elif opcodeint == 139 or opcodeint == 153:
+            return(self.run_abs)
+        elif opcodeint == 140 or opcodeint == 154:
+            return(self.run_neg)
+        elif opcodeint == 141 or opcodeint == 155:
+            return(self.run_ceil)
+        elif opcodeint == 142 or opcodeint == 156:
+            return(self.run_floor)
+        elif opcodeint == 143 or opcodeint == 157:
+            return(self.run_trunc)
+        elif opcodeint == 144 or opcodeint == 158:
+            return(self.run_nearest)
+        elif opcodeint == 145 or opcodeint == 159:
+            return(self.run_sqrt)
+        elif opcodeint == 149 or opcodeint == 163:
+            return(self.run_div)
+        elif opcodeint == 150 or opcodeint == 164:
+            return(self.run_min)
+        elif opcodeint == 151 or opcodeint == 165:
+            return(self.run_max)
+        elif opcodeint == 152 or opcodeint == 166:
+            return(self.run_copysign)
+        elif opcodeint == 167:
+            return(self.run_i32wrapi64)
+        elif opcodeint == 168:
+            return(self.run_i32trunc_sf32)
+        elif opcodeint == 169:
+            return(self.run_i32trunc_uf32)
+        elif opcodeint == 170:
+            return(self.run_i32trunc_sf64)
+        elif opcodeint == 171:
+            return(self.run_i32trunc_uf64)
+        elif opcodeint == 172:
+            return(self.run_i64extend_si32)
+        elif opcodeint == 173:
+            return(self.run_i64extend_ui3o)
+        elif opcodeint == 174:
+            return(self.run_i64trunc_sf32)
+        elif opcodeint == 175:
+            return(self.run_i64trunc_uf32)
+        elif opcodeint == 176:
+            return(self.run_i64trunc_sf64)
+        elif opcodeint == 177:
+            return(self.run_i64trunc_uf64)
+        elif opcodeint == 178:
+            return(self.run_f32convert_si32)
+        elif opcodeint == 179:
+            return(self.run_f32convert_ui32)
+        elif opcodeint == 180:
+            return(self.run_f32convert_si64)
+        elif opcodeint == 181:
+            return(self.run_f32convert_ui64)
+        elif opcodeint == 182:
+            return(self.run_f32demotef64)
+        elif opcodeint == 183:
+            return(self.run_f64convert_si32)
+        elif opcodeint == 184:
+            return(self.run_f64convert_ui32)
+        elif opcodeint == 185:
+            return(self.run_f64convert_si64)
+        elif opcodeint == 186:
+            return(self.run_f64convert_ui64)
+        elif opcodeint == 187:
+            return(self.run_f64promotef32)
+        elif opcodeint == 188:
+            return(self.run_i32reinterpretf32)
+        elif opcodeint == 189:
+            return(self.run_i64reinterpretf64)
+        elif opcodeint == 190:
+            return(self.run_f32reinterpreti32)
+        elif opcodeint == 191:
+            return(self.run_f64reinterpreti64)
+        else:
+            raise Exception(Colors.red + 'unknown opcode' + Colors.ENDC)
+
 
     def run_unreachable(self, opcodeint, immediates):
         raise Exception(Colors.red + "running an unreachable function..." + Colors.ENDC)
