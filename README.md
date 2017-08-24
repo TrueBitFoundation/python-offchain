@@ -1,4 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://travis-ci.org/TrueBitFoundation/tb-wasm-machine-poc.svg?branch=master)](https://travis-ci.org/TrueBitFoundation/tb-wasm-machine-poc)
 
 # tb-wasm-machine-poc
 PoC for process virtual machine to interpret WASM binaries within the context of the TB verification game and it's particular constraints
