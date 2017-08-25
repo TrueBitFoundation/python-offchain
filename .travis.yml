@@ -11,12 +11,6 @@ matrix:
     - os: linux
       dist: trusty
       python: 3.4
-    - os: linux
-      dist: trusty
-      python: 3.3
-    - os: linux
-      dist: trusty
-      python: 3.2
     - os: osx
       osx_image: xcode7.2
       language: generic
@@ -30,3 +24,6 @@ before_script:
 
 script:
   - python3 ./argparser.py --wasm ./test/injected.wasm
+
+after_success:
+  - echo
