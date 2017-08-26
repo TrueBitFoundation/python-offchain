@@ -40,5 +40,5 @@ after_success:
 - ./testsuiteobjectify.sh ../../wabt/bin/wast2wasm
 - cp test.py test_all.py
 - pytest
-- coverage rrun test_all.py
+- coverage run test_all.py
 - coveralls
