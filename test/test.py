@@ -110,9 +110,10 @@ def main():
 
             interpreter = PythonInterpreter()
             module = interpreter.parse(testfile)
-            state = TBMachine()
-            init = TBInit(module, state)
-            init.run()
+            interpreter.appendmodule(module)
+            interpreter.dump_sections(module)
+            vm = VM(interpreter.getmodules())
+            ms = vm.getState()
             # interpreter.dump_sections(module)
             sys.exit()
         # the parent process
