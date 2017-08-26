@@ -31,6 +31,8 @@ after_success:
 - chmod +x testsuiteobjectify.sh
 - git clone https://github.com/WebAssembly/wabt
 - cd wabt
+- git submodule init
+- git submodule update
 - make
 - cd ..
 - ./tsuiteobjectify.sh ./wabt/bin/wast2wasm
