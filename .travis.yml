@@ -33,8 +33,9 @@ after_success:
 - cd wabt
 - git submodule init
 - git submodule update
-- make
+- make clang-release
 - cd ..
+- pwd
 - ./testsuiteobjectify.sh ./wabt/bin/wast2wasm
 - pytest
 - coveralls
