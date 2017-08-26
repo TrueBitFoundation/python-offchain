@@ -112,9 +112,12 @@ def main():
             module = interpreter.parse(testfile)
             interpreter.appendmodule(module)
             interpreter.dump_sections(module)
+            interpreter.runValidations()
             vm = VM(interpreter.getmodules())
             ms = vm.getState()
             # interpreter.dump_sections(module)
+            DumpIndexSpaces(ms)
+            DumpLinearMems(ms.Linear_Memory, 1000)
             sys.exit()
         # the parent process
         elif pid > 0:
