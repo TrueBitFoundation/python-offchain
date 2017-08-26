@@ -29,13 +29,14 @@ after_success:
 - pwd
 - cd test
 - chmod +x testsuiteobjectify.sh
+- cd ../..
 - time git clone https://github.com/WebAssembly/wabt
 - cd wabt
 - time git submodule init
 - time git submodule update
 - time make clang-release
-- cd ..
+- cd TrueBitFoundation/tb-wasm-machine-poc/test
 - pwd
-- ./testsuiteobjectify.sh ./wabt/bin/wast2wasm
+- ./testsuiteobjectify.sh ../../wabt/bin/wast2wasm
 - pytest
 - coveralls
