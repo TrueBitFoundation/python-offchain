@@ -26,8 +26,13 @@ before_script:
 script:
 - python3 ./argparser.py --wasm ./test/injected.wasm
 after_success:
-- echo
+- pwd
 - cd test
 - chmod +x testsuiteobjectify.sh
-- git clone
+- git clone https://github.com/WebAssembly/wabt
+- cd wabt
+- make
+- cd ..
+- ./tsuiteobjectify.sh ./wabt/bin/wast2wasm
+- pytest
 - coveralls
