@@ -29,11 +29,11 @@ after_success:
 - pwd
 - cd test
 - chmod +x testsuiteobjectify.sh
-- git clone https://github.com/WebAssembly/wabt
+- time git clone https://github.com/WebAssembly/wabt
 - cd wabt
-- git submodule init
-- git submodule update
-- make clang-release
+- time git submodule init
+- time git submodule update
+- time make clang-release
 - cd ..
 - pwd
 - ./testsuiteobjectify.sh ./wabt/bin/wast2wasm
