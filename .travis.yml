@@ -24,7 +24,7 @@ before_script:
 - pip install pytest pytest-cov
 - pip install coveralls
 script:
-- python3 ./argparser.py --wasm ./test/injected.wasm --idxspc --memdump 100 --dbg
+- python3 ./argparser.py --wasm ./test/injected.wasm
 after_success:
 - pwd
 - cd test
