@@ -35,6 +35,6 @@ after_success:
 - git submodule update
 - make
 - cd ..
-- ./tsuiteobjectify.sh ./wabt/bin/wast2wasm
+- ./testsuiteobjectify.sh ./wabt/bin/wast2wasm
 - pytest
 - coveralls
