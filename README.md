@@ -1,7 +1,7 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://travis-ci.org/TrueBitFoundation/tb-wasm-machine-poc.svg?branch=master)](https://travis-ci.org/TrueBitFoundation/tb-wasm-machine-poc)
-[![Coverage Status](https://coveralls.io/repos/github/TrueBitFoundation/tb-wasm-machine-poc/badge.svg?branch=master)](https://coveralls.io/github/TrueBitFoundation/tb-wasm-machine-poc?branch=master)
 [![build status](https://ci.appveyor.com/api/projects/status/m47yxdfd60n5pcvb/branch/master?svg=true)](https://ci.appveyor.com/project/TruebitFoundation/tb-wasm-machine-poc/branch/master)
+[![Coverage Status](https://coveralls.io/repos/github/TrueBitFoundation/tb-wasm-machine-poc/badge.svg?branch=master)](https://coveralls.io/github/TrueBitFoundation/tb-wasm-machine-poc?branch=master)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # tb-wasm-machine-poc
 PoC for process virtual machine to interpret WASM binaries within the context of the TB verification game and it's particular constraints
