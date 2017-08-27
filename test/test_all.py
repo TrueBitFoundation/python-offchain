@@ -102,8 +102,8 @@ def main():
     for testfile in obj_list:
         # @DEVI-FIXME-pipe stdout and stderr to a file instead of the
         # bitbucket
-        #sys.stdout = open('/dev/null', 'w')
-        #sys.stderr = open('/dev/null', 'w')
+        sys.stdout = open('/dev/null', 'w')
+        sys.stderr = open('/dev/null', 'w')
 
         interpreter = PythonInterpreter()
         module = interpreter.parse(testfile)
@@ -112,12 +112,11 @@ def main():
         interpreter.runValidations()
         vm = VM(interpreter.getmodules())
         ms = vm.getState()
-        # interpreter.dump_sections(module)
         DumpIndexSpaces(ms)
         DumpLinearMems(ms.Linear_Memory, 1000)
-        # interpreter.dump_sections(module)
-        # @DEVI-FIXME-we are intentionally blocking. later i will fix this
-        # so we can use multicores to run our reg tests faster.
+    # extra
+    disas = ParserV1("./injected.wast")
+    disas.run()
 
 
 if __name__ == '__main__':
