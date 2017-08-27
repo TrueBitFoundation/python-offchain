@@ -2,6 +2,7 @@ from OpCodes import *
 from utils import Colors
 
 
+# takes the machinestate, opcode and operand to run. updates the machinestate
 class Execute():
     def __init__(self, machinestate):
         self.machinestate = machinestate
@@ -15,9 +16,12 @@ class Execute():
     def callExecuteMethod(self):
         runmethod = self.instructionUnwinder(self.opcodeint, self.immediates, self.machinestate)
         #print (self.opcodeint + ' ' + self.immediates)
-        runmethod(self.opcodeint, self.immediates)
+        try:
+            runmethod(self.opcodeint, self.immediates)
+        except IndexError:
+            # trap
+            print(Colors.red + 'bad stack access.' + Colors.ENDC)
 
-    # @DEVI-FIXME-string comparisons are more expensive than int comparisons
     def instructionUnwinder(self, opcodeint, immediates, machinestate):
         if opcodeint == 0:
             return(self.run_unreachable)
@@ -212,6 +216,7 @@ class Execute():
 
 
     def run_unreachable(self, opcodeint, immediates):
+        # trap
         raise Exception(Colors.red + "running an unreachable function..." + Colors.ENDC)
 
     def run_nop(self, opcodeint, immediates):
