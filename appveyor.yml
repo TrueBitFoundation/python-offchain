@@ -22,4 +22,4 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
 test_script:
-  python3 argparser.py --wasm ./test/injected.wasm
+  python argparser.py --wasm ./test/injected.wasm
