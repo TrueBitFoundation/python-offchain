@@ -1098,9 +1098,11 @@ class ObjReader(object):
 
 # WIP-basically how the assembler is constructed
 class ParserV1(object):
+    def __init__(self, path):
+        self.path = path
+
     def run(self):
-        argparser = CLIArgParser()
-        wasmtobj = WASMText(argparser.getWASTPath())
+        wasmtobj = WASMText(self.path)
         # wasmtobj.test_print()
         wasmtobj.RegExSearch()
         wasmtobj.PrintTypeDict()
@@ -1323,7 +1325,7 @@ def main():
 
     if argparser.getWASTPath() is not None:
         print(argparser.getWASTPath())
-        parser = ParserV1()
+        parser = ParserV1(argparser.getWASTPath())
         parser.run()
 
     # WIP-the assmebler
