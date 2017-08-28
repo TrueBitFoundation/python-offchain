@@ -15,7 +15,7 @@ class Execute():
 
     def callExecuteMethod(self):
         runmethod = self.instructionUnwinder(self.opcodeint, self.immediates, self.machinestate)
-        #print (self.opcodeint + ' ' + self.immediates)
+        print (repr(self.opcodeint) + ' ' + repr(self.immediates))
         try:
             runmethod(self.opcodeint, self.immediates)
         except IndexError:
@@ -220,6 +220,7 @@ class Execute():
         raise Exception(Colors.red + "running an unreachable function..." + Colors.ENDC)
 
     def run_nop(self, opcodeint, immediates):
+        # literally do nothing
         pass
 
     def run_block(self, opcodeint, immediates):
@@ -262,19 +263,24 @@ class Execute():
         pass
 
     def run_getlocal(self, opcodeint, immediates):
-        pass
+        self.machinestate.Stack_Omni.append(immediates[0])
 
     def run_setlocal(self, opcodeint, immediates):
-        pass
+        return self.machinestate.Stack_Omni.pop()
 
-    def run_teelocal(self, opcodeint, immediates):
-        pass
+    def run_teelocal(self, dummy, immediates):
+        val = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(val)
+        self.machinestate.Stack_Omni.append(val)
+        self.run_setlocal(dummy, val)
 
     def run_getglobal(self, opcodeint, immediates):
-        pass
+        val = self.machinestate.Index_Space_Global[immediates[0]]
+        self.machinestate.Stack_Omni.append(val)
 
     def run_setglobal(self, opcodeint, immediates):
-        pass
+        val = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Index_Space_Global = val
 
     def run_load(self, opcodeint, immediates):
         if opcodeint == 40:
