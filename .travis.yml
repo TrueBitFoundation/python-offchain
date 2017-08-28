@@ -18,6 +18,8 @@ matrix:
     language: generic
     before_install:
     - brew install python3
+    - pip3 install pytest
+    - pip3 install pytest-coverage
 before_script:
 - git submodule init
 - git submodule update
