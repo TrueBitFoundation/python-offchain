@@ -25,6 +25,7 @@ before_script:
 - git submodule update
 - pip install pytest pytest-cov
 - pip install coveralls
+- pip install numpy
 script:
 - python3 ./argparser.py --wasm ./test/injected.wasm
 after_success:
