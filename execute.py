@@ -483,26 +483,50 @@ class Execute():
             raise Exception(Colors.red + 'invalid le_s instruction' + Colors.ENDC)
 
     def run_le_u(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 77:
-            pass
+            if np.uint32(val1) <= np.uint32(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 88:
-            pass
+            if np.uint64(val1) <= np.uint64(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid le_u instruction' + Colors.ENDC)
 
     def run_ge_s(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 78:
-            pass
+            if np.int32(val1) >= np.int32(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 89:
-            pass
+            if np.int64(val1) >= np.int64(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid ge_s instruction' + Colors.ENDC)
 
     def run_ge_u(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 79:
-            pass
+            if np.uint32(val1) >= np.uint32(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 90:
-            pass
+            if np.uint64(val1) >= np.uint64(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid ge_u instruction' + Colors.ENDC)
 
