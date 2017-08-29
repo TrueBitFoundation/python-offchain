@@ -1,5 +1,17 @@
 from OpCodes import *
 from utils import Colors
+import numpy as np
+
+class Label():
+    def __init__(self, arity, name):
+        self.arity = arity
+        self.name = name
+
+class Frame():
+    def __init__(self, arity, local_indices, self_ref):
+        self.arity = arity
+        self.local_indices = local_indices
+        self.self_ref = self_ref
 
 
 # takes the machinestate, opcode and operand to run. updates the machinestate
@@ -242,7 +254,11 @@ class Execute():
         pass
 
     def run_br_if(self, opcodeint, immediates):
-        pass
+        val = self.machinestate.Stack_Omni.pop()
+        if val:
+            pass
+        else:
+            self.run_br(dummy, immediates[0])
 
     def run_br_table(self, opcodeint, immediates):
         pass
@@ -257,7 +273,7 @@ class Execute():
         pass
 
     def run_drop(self, opcodeint, immediates):
-        pass
+        self.machinestate.Stack_Omni.pop()
 
     def run_select(self, opcodeint, immediates):
         pass
@@ -344,85 +360,125 @@ class Execute():
 
     def run_const(self, opcodeint, immediates):
         if opcodeint == 65:
-            pass
+            self.machinestate.Stack_Omni.append(immediates[0])
         elif opcodeint == 66:
-            pass
+            self.machinestate.Stack_Omni.append(immediates[0])
         elif opcodeint == 67:
-            pass
+            self.machinestate.Stack_Omni.append(immediates[0])
         elif opcodeint == 68:
-            pass
+            self.machinestate.Stack_Omni.append(immediates[0])
         else:
             raise Exception(Colors.red + 'invalid const instruction' + Colors.ENDC)
 
     def run_eqz(self, opcodeint, immediates):
-        if opcodeint == 69:
-            pass
-        elif opcodeint == 80:
-            pass
+        if opcodeint == 69 or opcodeint == 80:
+            val = self.machinestate.Stack_Omni.pop()
+            if val == 0:
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid eqz instruction' + Colors.ENDC)
 
     def run_eq(self, opcodeint, immediates):
-        if opcodeint == 70:
-            pass
-        elif opcodeint == 81:
-            pass
-        elif opcodeint == 91:
-            pass
-        elif opcodeint == 97:
-            pass
+        if opcodeint == 70 or opcodeint == 81 or opcodeint == 91 or opcodeint == 97:
+            val2 = self.machinestate.Stack_Omni.pop()
+            val1 = self.machinestate.Stack_Omni.pop()
+            if val1 == val2:
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid eq instruction' + Colors.ENDC)
 
     def run_ne(self, opcodeint, immediates):
-        if opcodeint == 71:
-            pass
-        elif opcodeint == 82:
-            pass
-        elif opcodeint == 92:
-            pass
-        elif opcodeint == 98:
-            pass
+        if opcodeint == 71 or opcodeint == 82 or opcodeint == 92 or opcodeint == 98:
+            val2 = self.machinestate.Stack_Omni.pop()
+            val1 = self.machinestate.Stack_Omni.pop()
+            if val1 != val2:
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid ne instruction' + Colors.ENDC)
 
     def run_lt_s(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 72:
-            pass
+            if np.int32(val1) < np.int32(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 83:
-            pass
+            if np.int64(val1) < np.int64(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid lt_s instruction' + Colors.ENDC)
 
     def run_lt_u(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 73:
-            pass
+            if np.uint32(val1) < np.uint32(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 84:
-            pass
+            if np.uint64(val1) < np.uint64(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid lt_u instruction' + Colors.ENDC)
 
     def run_gt_s(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 74:
-            pass
+            if np.int32(val1) > np.int32(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 85:
-            pass
+            if np.int64(val1) > np.int64(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid gt_s instruction' + Colors.ENDC)
 
     def run_gt_u(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 75:
-            pass
+            if np.uint32(val1) > np.uint32(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 86:
-            pass
+            if np.uint64(val1) > np.uint64(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid gt_u instruction' + Colors.ENDC)
 
     def run_le_s(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 76:
-            pass
+            if np.int32(val1) <= np.int32(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 87:
-            pass
+            if np.int64(val1) <= np.int64(val2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid le_s instruction' + Colors.ENDC)
 
