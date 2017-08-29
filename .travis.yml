@@ -20,6 +20,7 @@ matrix:
     - brew install python3
     - pip3 install pytest
     - pip3 install pytest-coverage
+    - pip3 install numpy
 before_script:
 - git submodule init
 - git submodule update
