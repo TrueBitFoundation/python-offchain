@@ -158,3 +158,21 @@ def Read(section_byte, offset, kind):
 
     return return_list, offset, read_bytes
 
+
+def ror(val, type_length, rot_size):
+    rot_size_rem = rot_size % type_length
+    print('mask: ', end='')
+    print(bin((val & (pow(2, rot_size_rem) - 1))))
+    print(bin(((val & (pow(2, rot_size_rem) - 1)) << (type_length - rot_size_rem))))
+    return ((val >> rot_size_rem) | ((val & (pow(2, rot_size_rem) - 1)) << (type_length - rot_size_rem)))
+
+
+def rol(val, type_length, rot_size):
+    rot_size_rem = rot_size % type_length
+    print(len(bin(val)))
+    print(rot_size_rem)
+    print('mask: ', end='')
+    print(bin(((pow(2,  type_length) - 1) - (pow(2, type_length - rot_size_rem) - 1))))
+    print(bin(val & ((pow(2,  type_length) - 1) - (pow(2, type_length - rot_size_rem) - 1))))
+    print(bin(((val & ((pow(2,  type_length) - 1) - (pow(2, type_length - rot_size_rem) - 1))) >> (type_length - rot_size_rem))))
+    return (val << rot_size_rem | ((val & ((pow(2,  type_length) - 1) - (pow(2, type_length - rot_size_rem) - 1))) >> (type_length - rot_size_rem)))
