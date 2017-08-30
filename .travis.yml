@@ -43,6 +43,6 @@ after_success:
 - pwd
 - ./testsuiteobjectify.sh ../../wabt/bin/wast2wasm
 - pytest test_all.py --cov-append
-- python3 -m coverage run test_all.py
+- python3 -m coverage run test_all.py --source ./,../
 - cat .coverage
 - coveralls
