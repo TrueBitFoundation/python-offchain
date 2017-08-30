@@ -1,5 +1,5 @@
 from OpCodes import *
-from utils import Colors
+from utils import Colors, ror, rol
 import numpy as np
 
 class Label():
@@ -15,7 +15,7 @@ class Frame():
 
 
 # takes the machinestate, opcode and operand to run. updates the machinestate
-class Execute():
+class Execute(): # pragma: no cover
     def __init__(self, machinestate):
         self.machinestate = machinestate
         self.opcodeint = ''
