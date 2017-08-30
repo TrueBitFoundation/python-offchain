@@ -4,7 +4,7 @@ from copy import deepcopy
 
 
 # serializes the machinestate-unused
-def Serialize(machinestate):
+def Serialize(machinestate): # pragma: no cover
     flat_ms = []
     for iter in machinestate.Linear_Memory:
         for iterer in iter:
@@ -15,7 +15,7 @@ def Serialize(machinestate):
 
 
 # expects to receive a flat list, creates a merkle tree for it.
-class Merklizer():
+class Merklizer(): # pragma: no cover
     def __init__ (self, machinestate, module):
         self.machinestate = machinestate
         self.module = module
