@@ -531,34 +531,66 @@ class Execute():
             raise Exception(Colors.red + 'invalid ge_u instruction' + Colors.ENDC)
 
     def run_lt(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 93:
-            pass
+            if np.float32(v1) < np.float32(v2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 99:
-            pass
+            if np.float64(v1) < np.float64(v2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid lt instruction' + Colors.ENDC)
 
     def run_gt(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 94:
-            pass
+            if np.float32(v1) > np.float32(v2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 100:
-            pass
+            if np.float64(v1) > np.float64(v2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid gt instruction' + Colors.ENDC)
 
     def run_le(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 95:
-            pass
+            if np.float32(v1) <= np.float32(v2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 101:
-            pass
+            if np.float64(v1) <= np.float64(v2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid le instruction' + Colors.ENDC)
 
     def run_ge(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 96:
-            pass
+            if np.float32(v1) >= np.float32(v2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         elif opcodeint == 102:
-            pass
+            if np.float64(v1) >= np.float64(v2):
+                self.machinestate.Stack_Omni.append(1)
+            else:
+                self.machinestate.Stack_Omni.append(0)
         else:
             raise Exception(Colors.red + 'invalid ge instruction' + Colors.ENDC)
 
@@ -587,118 +619,144 @@ class Execute():
             raise Exception(Colors.red + 'invalid popcnt instruction' + Colors.ENDC)
 
     def run_add(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 106:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint32(val1 + val2))
         elif opcodeint == 124:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint64(val1 + val2))
         elif opcodeint == 146:
-            pass
+            self.machinestate.Stack_Omni.append(np.float32(val1 + val2))
         elif opcodeint == 160:
-            pass
+            self.machinestate.Stack_Omni.append(np.float64(val1 + val2))
         else:
             raise Exception(Colors.red + 'invalid add instruction' + Colors.ENDC)
 
     def run_sub(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 107:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint32(val1 - val2))
         elif opcodeint == 125:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint64(val1 - val2))
         elif opcodeint == 147:
-            pass
+            self.machinestate.Stack_Omni.append(np.float32(val1 - val2))
         elif opcodeint == 161:
-            pass
+            self.machinestate.Stack_Omni.append(np.float64(val1 - val2))
         else:
             raise Exception(Colors.red + 'invalid sub instruction' + Colors.ENDC)
 
     def run_mul(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 108:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint32(val1 * val2))
         elif opcodeint == 126:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint64(val1 * val2))
         elif opcodeint == 148:
-            pass
+            self.machinestate.Stack_Omni.append(np.float32(val1 * val2))
         elif opcodeint == 162:
-            pass
+            self.machinestate.Stack_Omni.append(np.float64(val1 * val2))
         else:
             raise Exception(Colors.red + 'invalid mul instruction' + Colors.ENDC)
 
     def run_div_s(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 109:
-            pass
+            self.machinestate.Stack_Omni.append(np.int32(np.int32(val1) / np.int32(val2)))
         elif opcodeint == 127:
-            pass
+            self.machinestate.Stack_Omni.append(np.int64(np.int64(val1) / np.int64(val2)))
         else:
             raise Exception(Colors.red + 'invalid div_s instruction' + Colors.ENDC)
 
     def run_div_u(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 110:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint32(np.uint32(val1) / np.uint32(val2)))
         elif opcodeint == 128:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint64(np.uint64(val1) / np.uint64(val2)))
         else:
             raise Exception(Colors.red + 'invalid div_u instruction' + Colors.ENDC)
 
     def run_rem_s(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 111:
-            pass
+            self.machinestate.Stack_Omni.append(np.int32(np.int32(val1) % np.int32(val2)))
         elif opcodeint == 129:
-            pass
+            self.machinestate.Stack_Omni.append(np.int64(np.int64(val1) % np.int64(val2)))
         else:
             raise Exception(Colors.red + 'invalid rem_s instruction' + Colors.ENDC)
 
     def run_rem_u(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 112:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint32(np.uint32(val1) % np.uint32(val2)))
         elif opcodeint == 130:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint64(np.uint64(val1) % np.uint64(val2)))
         else:
             raise Exception(Colors.red + 'invalid rem_u instruction' + Colors.ENDC)
 
     def run_and(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 113:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint32(np.uint32(val1) & np.uint32(val2)))
         elif opcodeint == 131:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint64(np.uint64(val1) & np.uint64(val2)))
         else:
             raise Exception(Colors.red + 'invalid and instruction' + Colors.ENDC)
 
     def run_or(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 114:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint32(np.uint32(val1) | np.uint32(val2)))
         elif opcodeint == 132:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint64(np.uint64(val1) | np.uint64(val2)))
         else:
             raise Exception(Colors.red + 'invalid or instruction' + Colors.ENDC)
 
     def run_xor(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 115:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint32(np.uint32(val1) ^ np.uint32(val2)))
         elif opcodeint == 133:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint64(np.uint64(val1) ^ np.uint64(val2)))
         else:
             raise Exception(Colors.red + 'invalid xor instruction' + Colors.ENDC)
 
     def run_shl(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 116:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint32(np.uint32(val1) << (np.uint32(val2))))
         elif opcodeint == 134:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint64(np.uint64(val1) << (np.uint64(val2))))
         else:
             raise Exception(Colors.red + 'invalid shl instruction' + Colors.ENDC)
 
     def run_shr_s(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 117:
-            pass
+            self.machinestate.Stack_Omni.append(np.int32(np.int32(val1) >> (np.int32(val2))))
         elif opcodeint == 135:
-            pass
+            self.machinestate.Stack_Omni.append(np.int64(np.int64(val1) >> (np.int64(val2))))
         else:
             raise Exception(Colors.red + 'invalid shr_s instruction' + Colors.ENDC)
 
     def run_shr_u(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 118:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint32(np.uint32(val1) >> (np.uint32(val2))))
         elif opcodeint == 136:
-            pass
+            self.machinestate.Stack_Omni.append(np.uint64(np.uint64(val1) >> (np.uint64(val2))))
         else:
             raise Exception(Colors.red + 'invalid shr_u instruction' + Colors.ENDC)
 
