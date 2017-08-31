@@ -761,22 +761,27 @@ class Execute(): # pragma: no cover
             raise Exception(Colors.red + 'invalid shr_u instruction' + Colors.ENDC)
 
     def run_rotl(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 119:
-            pass
+            self.machinestate.Stack_Omni.append(rol(val1, 32, val2))
         elif opcodeint == 137:
-            pass
+            self.machinestate.Stack_Omni.append(rol(val1, 64, val2))
         else:
             raise Exception(Colors.red + 'invalid rotl instruction' + Colors.ENDC)
 
     def run_rotr(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 120:
-            pass
+            self.machinestate.Stack_Omni.append(ror(val1, 32, val2))
         elif opcodeint == 138:
-            pass
+            self.machinestate.Stack_Omni.append(ror(val1, 32, val2))
         else:
             raise Exception(Colors.red + 'invalid rotl instruction' + Colors.ENDC)
 
     def run_abs(self, opcodeint, immediates):
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 139:
             pass
         elif opcodeint == 153:
