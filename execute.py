@@ -596,26 +596,29 @@ class Execute(): # pragma: no cover
             raise Exception(Colors.red + 'invalid ge instruction' + Colors.ENDC)
 
     def run_clz(self, opcodeint, immediates):
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 103:
-            pass
+            self.machinestate.Stack_Omni.append(clz(val, 'uint32'))
         elif opcodeint == 121:
-            pass
+            self.machinestate.Stack_Omni.append(clz(val, 'uint64'))
         else:
             raise Exception(Colors.red + 'invalid clz instruction' + Colors.ENDC)
 
     def run_ctz(self, opcodeint, immediates):
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 104:
-            pass
+            self.machinestate.Stack_Omni.append(ctz(val, 'uint32'))
         elif opcodeint == 122:
-            pass
+            self.machinestate.Stack_Omni.append(ctz(val, 'uint64'))
         else:
             raise Exception(Colors.red + 'invalid ctz instruction' + Colors.ENDC)
 
     def run_popcnt(self, opcodeint, immediates):
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 105:
-            pass
+            self.machinestate.Stack_Omni.append(pop_cnt(val, 'uint32'))
         elif opcodeint == 123:
-            pass
+            self.machinestate.Stack_Omni.append(pop_cnt(val, 'uint64'))
         else:
             raise Exception(Colors.red + 'invalid popcnt instruction' + Colors.ENDC)
 
