@@ -171,6 +171,8 @@ def rol(val, type_length, rot_size):
     return (((val << rot_size_rem) & (2**type_length - 1)) | ((val & ((2**type_length - 1) - (2**(type_length - rot_size_rem) - 1))) >> (type_length - rot_size_rem)))
 
 
+# @DEVI-these are here because i wanted to test them to make sure what i thik is
+# happening is really happening
 def reinterpretf32toi32(val):
     return (stc.unpack("i", stc.pack("f" ,val))[0])
 
@@ -185,3 +187,72 @@ def reinterpreti32tof32(val):
 
 def reinterpreti64tof64(val):
     return (stc.unpack("d", stc.pack("Q", val))[0])
+
+
+def clz(val, _type):
+    cnt = int()
+    if _type == 'uint32':
+        bits = np.uint32(val)
+        power = 31
+        while power > -1:
+            if val & 2**power == 0:
+                cnt += 1
+            else:
+                break
+            power -= 1
+    elif _type == 'uint64':
+        bits = bin(np.uint64(val))
+        power = 63
+        while power > -1:
+            if val & 2**power == 0:
+                cnt += 1
+            else:
+                break
+            power -= 1
+    else:
+        raise Exception(Colors.red + "unsupported type passed to clz." + Colors.ENDC)
+    return cnt
+
+
+def ctz(val, _type):
+    cnt = int()
+    power = int()
+    if _type == 'uint32':
+        bits = np.uint32(val)
+        while power < 32:
+            if val & 2**power == 0:
+                cnt += 1
+            else:
+                break
+            power += 1
+    elif _type == 'uint64':
+        bits = bin(np.uint64(val))
+        while power < 64:
+            if val & 2**power == 0:
+                cnt += 1
+            else:
+                break
+            power += 1
+    else:
+        raise Exception(Colors.red + "unsupported type passed to ctz." + Colors.ENDC)
+    return cnt
+
+
+def pop_cnt(val, _type):
+    cnt = int()
+    power = int()
+    if _type == 'uint32':
+        bits = np.uint32(val)
+        while power < 32:
+            if val & 2**power != 0:
+                cnt += 1
+            power += 1
+    elif _type == 'uint64':
+        bits = bin(np.uint64(val))
+        while power < 64:
+            if val & 2**power != 0:
+                cnt += 1
+        power += 1
+    else:
+        raise Exception(Colors.red + "unsupported type passed to pop_cnt." + Colors.ENDC)
+    return cnt
