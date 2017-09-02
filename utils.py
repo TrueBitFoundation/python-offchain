@@ -1,4 +1,6 @@
 from OpCodes import *
+import numpy as np
+import struct as stc
 
 
 # pretty print
@@ -167,3 +169,19 @@ def ror(val, type_length, rot_size):
 def rol(val, type_length, rot_size):
     rot_size_rem = rot_size % type_length
     return (((val << rot_size_rem) & (2**type_length - 1)) | ((val & ((2**type_length - 1) - (2**(type_length - rot_size_rem) - 1))) >> (type_length - rot_size_rem)))
+
+
+def reinterpretf32toi32(val):
+    return (stc.unpack("i", stc.pack("f" ,val))[0])
+
+
+def reinterpretf64toi64(val):
+    return (stc.unpack("Q", stc.pack("d", val))[0])
+
+
+def reinterpreti32tof32(val):
+    return (stc.unpack("f", stc.pack("i", val))[0])
+
+
+def reinterpreti64tof64(val):
+    return (stc.unpack("d", stc.pack("Q", val))[0])
