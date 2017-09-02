@@ -1,6 +1,7 @@
 from OpCodes import *
 from utils import Colors, ror, rol
 import numpy as np
+import math
 
 class Label():
     def __init__(self, arity, name):
@@ -782,164 +783,180 @@ class Execute(): # pragma: no cover
 
     def run_abs(self, opcodeint, immediates):
         val1 = self.machinestate.Stack_Omni.pop()
-        if opcodeint == 139:
-            pass
-        elif opcodeint == 153:
-            pass
+        if opcodeint == 139 or opcodeint == 153:
+            self.machinestate.Stack_Omni.append(abs(val1))
         else:
             raise Exception(Colors.red + 'invalid abs instruction' + Colors.ENDC)
 
     def run_neg(self, opcodeint, immediates):
-        if opcodeint == 140:
-            pass
-        elif opcodeint == 154:
-            pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        if opcodeint == 140 or opcodeint == 154:
+            self.machinestate.Stack_Omni.append(-val1)
         else:
             raise Exception(Colors.red + 'invalid neg instruction' + Colors.ENDC)
 
     def run_ceil(self, opcodeint, immediates):
-        if opcodeint == 141:
-            pass
-        elif opcodeint == 155:
-            pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        if opcodeint == 141 or opcodeint == 155:
+            self.machinestate.Stack_Omni.append(math.ceil(val1))
         else:
             raise Exception(Colors.red + 'invalid ceil instruction' + Colors.ENDC)
 
     def run_floor(self, opcodeint, immediates):
-        if opcodeint == 142:
-            pass
-        elif opcodeint == 156:
-            pass
+        if opcodeint == 142 or opcodeint == 156:
+            self.machinestate.Stack_Omni.append(math.floor(val1))
         else:
             raise Exception(Colors.red + 'invalid floor instruction' + Colors.ENDC)
 
     def run_trunc(self, opcodeint, immediates):
-        if opcodeint == 143:
-            pass
-        elif opcodeint == 157:
-            pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        if opcodeint == 143 or opcodeint == 157:
+            self.machinestate.Stack_Omni.append(math.trunc(val1))
         else:
             raise Exception(Colors.red + 'invalid trunc instruction' + Colors.ENDC)
 
     def run_nearest(self, opcodeint, immediates):
-        if opcodeint == 144:
-            pass
-        elif opcodeint == 158:
-            pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        if opcodeint == 144 or opcodeint == 158:
+            self.machinestate.Stack_Omni.append(round(val1))
         else:
             raise Exception(Colors.red + 'invalid nearest instruction' + Colors.ENDC)
 
     def run_sqrt(self, opcodeint, immediates):
-        if opcodeint == 145:
-            pass
-        elif opcodeint == 159:
-            pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        if opcodeint == 145 or opcodeint == 159:
+            self.machinestate.Stack_Omni.append(math.sqrt(val1))
         else:
             raise Exception(Colors.red + 'invalid sqrt instruction' + Colors.ENDC)
 
     def run_div(self, opcodeint, immediates):
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
         if opcodeint == 149:
-            pass
-        elif opcodeint == 163:
-            pass
+            self.machinestate.Stack_Omni.append(v1 / v2)
         else:
             raise Exception(Colors.red + 'invalid float div instruction' + Colors.ENDC)
 
     def run_min(self, opcodeint, immediates):
-        if opcodeint == 150:
-            pass
-        elif opcodeint == 164:
-            pass
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
+        if opcodeint == 150 or opcodeint == 164:
+            self.machinestate.Stack_Omni.append(min(val1, val2))
         else:
             raise Exception(Colors.red + 'invalid min instruction' + Colors.ENDC)
 
     def run_max(self, opcodeint, immediates):
-        if opcodeint == 151:
-            pass
-        elif opcodeint == 165:
-            pass
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
+        if opcodeint == 151 or opcodeint == 165:
+            self.machinestate.Stack_Omni.append(max(val1, val2))
         else:
             raise Exception(Colors.red + 'invalid max instruction' + Colors.ENDC)
 
     def run_copysign(self, opcodeint, immediates):
-        if opcodeint == 152:
-            pass
-        elif opcodeint == 166:
-            pass
+        val2 = self.machinestate.Stack_Omni.pop()
+        val1 = self.machinestate.Stack_Omni.pop()
+        if opcodeint == 152 or opcodeint == 166:
+            self.machinestate.Stack_Omni.append(math.copysign(val1, val2))
         else:
             raise Exception(Colors.red + 'invalid max instruction' + Colors.ENDC)
 
     def run_i32wrapi64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.int32(np.float64(val1)))
 
     def run_i32trunc_sf32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.int32(np.float32(val1)))
 
     def run_i32trunc_uf32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.uint32(np.float32(val1)))
 
     def run_i32trunc_sf64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.int32(np.float64(val1)))
 
     def run_i32trunc_uf64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.int32(np.float64(val1)))
 
     def run_i64extend_si32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float64(np.int32(val1)))
 
     def run_i64extend_ui32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float64(np.uint32(val1)))
 
     def run_i64trunc_sf32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.int64(np.float32(val1)))
 
     def run_i64trunc_uf32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.uint64(np.float32(val1)))
 
     def run_i64trunc_sf64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.int64(np.float64(val1)))
 
     def run_i64trunc_uf64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.uint64(np.float64(val1)))
 
     def run_f32convert_si32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float32(np.uint32(val1)))
 
     def run_f32convert_ui32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float32(np.int32(val1)))
 
     def run_f32convert_si64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float32(np.int64(val1)))
 
     def run_f32convert_ui64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float32(np.uint64(val1)))
 
     def run_f32demotef64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float32(np.float64(val1)))
 
     def run_f64convert_si32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float64(np.int32(val1)))
 
     def run_f64convert_ui32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float64(np.uint32(val1)))
 
     def run_f64convert_si64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float64(np.int64(val1)))
 
     def run_f64convert_ui64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float64(np.uint64(val1)))
 
     def run_f64promotef32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        self.machinestate.Stack_Omni.append(np.float64(np.float32(val1)))
 
     def run_i32reinterpretf32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        sel.machinestate.Stack_Omni.append(reinterpretf32toi32(val1))
 
     def run_i64reinterpretf64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        sel.machinestate.Stack_Omni.append(reinterpretf64toi64(val1))
 
     def run_f32reinterpreti32(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        sel.machinestate.Stack_Omni.append(reinterpreti32tof32(val1))
 
     def run_f64reinterpreti64(self, opcodeint, immediates):
-        pass
+        val1 = self.machinestate.Stack_Omni.pop()
+        sel.machinestate.Stack_Omni.append(reinterpreti64tof64(val1))
