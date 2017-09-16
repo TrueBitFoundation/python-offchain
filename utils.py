@@ -3,6 +3,23 @@ import numpy as np
 import struct as stc
 
 
+class ParseFlags:
+    def __init__(self, wast_path, wasm_path, as_path, disa_path, out_path, dbg, unval, memdump
+                 , idxspc, run, metric, gas):
+        self.wast_path = wast_path
+        self.wasm_path = wasm_path
+        self.as_path = as_path
+        self.disa_path = disa_path
+        self.out_path = out_path
+        self.dbg = dbg
+        self.unval = unval
+        self.memdump = memdump
+        self.idxspc = idxspc
+        self.run = run
+        self.metric = metric
+        self.gas = gas
+
+
 # pretty print
 class Colors:
     purple = '\033[95m'

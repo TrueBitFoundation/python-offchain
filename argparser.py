@@ -63,6 +63,8 @@ class CLIArgParser(object):
         parser.add_argument("--memdump", type=int, help="dumps the linear memory")
         parser.add_argument("--idxspc", action='store_true', help="print index space data", default=False)
         parser.add_argument("--run", action='store_true', help="runs the start function", default=False)
+        parser.add_argument("--metric", action='store_true', help="print metrics", default=False)
+        parser.add_argument("--gas", action='store_true', help="print gas usage", default=False)
 
         self.args = parser.parse_args()
 
@@ -99,6 +101,17 @@ class CLIArgParser(object):
 
     def getRun(self):
         return self.args.run
+
+    def getMetric(self):
+        return self.args.metric
+
+    def getGas(self):
+        return self.args.gas
+
+    def getParseFlags(self):
+        return(ParseFlags(self.args.wast, self.args.wasm, self.args.asb, self.args.dis,
+                          self.args.o, self.args.dbg, self.args.unval, self.args.memdump,
+                          self.args.idxspc, self.args.run, self.args.metric, self.args.gas))
 
 
 # this class is responsible for reading the wasm text file- the first part of
@@ -1312,6 +1325,7 @@ def main():
             else:
                 print(Colors.red + 'failed validation tests' + Colors.ENDC)
             vm = VM(interpreter.getmodules())
+            vm.setFlags(argparser.getParseFlags())
             ms = vm.getState()
             if argparser.getIDXSPC():
                 DumpIndexSpaces(ms)

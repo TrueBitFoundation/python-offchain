@@ -3,10 +3,12 @@ from utils import Colors, ror, rol
 import numpy as np
 import math
 
+
 class Label():
     def __init__(self, arity, name):
         self.arity = arity
         self.name = name
+
 
 class Frame():
     def __init__(self, arity, local_indices, self_ref):
@@ -21,6 +23,21 @@ class Execute(): # pragma: no cover
         self.machinestate = machinestate
         self.opcodeint = ''
         self.immediates = []
+        self.op_gas = int()
+
+    def getOPGas(self):
+        return self.op_gas
+
+    def chargeGasMem(self, mem_size_page):
+        factor = 64
+        self.op_gas += 64 * mem_size_page
+
+    def chargeGas(self, opcodeint):
+        if opcodeint != 64:
+            self.op_gas += 1
+        else:
+            chargeGasMem()
+            pass
 
     def getInstruction(self, opcodeint, immediates):
         self.opcodeint = opcodeint
@@ -36,6 +53,8 @@ class Execute(): # pragma: no cover
             print(Colors.red + 'bad stack access.' + Colors.ENDC)
 
     def instructionUnwinder(self, opcodeint, immediates, machinestate):
+        self.chargeGas(opcodeint)
+
         if opcodeint == 0:
             return(self.run_unreachable)
         elif opcodeint == 1:
@@ -83,6 +102,7 @@ class Execute(): # pragma: no cover
         elif opcodeint == 63:
             return(self.run_current_memory)
         elif opcodeint == 64:
+            self.chargeGasMem(immediates[0])
             return(self.run_grow_memory)
         elif opcodeint >= 65 and opcodeint <= 68:
             return(self.run_const)
@@ -226,7 +246,6 @@ class Execute(): # pragma: no cover
             return(self.run_f64reinterpreti64)
         else:
             raise Exception(Colors.red + 'unknown opcode' + Colors.ENDC)
-
 
     def run_unreachable(self, opcodeint, immediates):
         # trap

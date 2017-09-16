@@ -1,7 +1,49 @@
-from utils import Colors, init_interpret
+from utils import Colors, init_interpret, ParseFlags
 from OpCodes import WASM_OP_Code
-from section_structs import Code_Section, Func_Body
+from section_structs import Code_Section, Func_Body, WASM_Ins
 from execute import *
+import datetime as dti
+import os
+import sys
+import signal
+
+
+# McCabe cyclomatic complexity metric
+class Metric():
+    def __init__(self, code_section):
+        self.code_section = code_section
+        self.metric = []
+        self.soc = []
+
+    def mccabe(self):
+        soc = 0
+        Edges = 1
+        Nodes = 1
+        for funcs in self.code_section.func_bodies:
+            for ins in funcs.code:
+                soc += 1
+                #print(repr(ins.opcodeint))
+                if ins.opcodeint == 4 or ins.opcodeint == 5 or ins.opcodeint == 12 \
+                    or ins.opcodeint == 13 or ins.opcodeint == 14:
+                    Nodes += 2
+                    Edges += 4
+                elif ins.opcode == 3:
+                    Nodes += 2
+                    Edges += 3
+                else:
+                    pass
+
+            self.metric.append(Edges - Nodes + 1)
+            self.soc.append(soc)
+            soc = 0
+            Edges = 1
+            Nodes = 1
+
+    def getMcCabe(self):
+        return self.metric
+
+    def getSOC(self):
+        return self.soc
 
 
 # handles the debug option --memdump. dumps the contents of linear memories.
@@ -246,7 +288,14 @@ class VM():
         self.init.run()
         self.machinestate = self.init.getInits()
         self.start_function = Func_Body()
+        self.ins_cache = WASM_Ins()
         self.executewasm = Execute(self.machinestate)
+        self.totGas = int()
+        self.metric = Metric(modules[0].code_section)
+        self.parseflags = None
+
+    def setFlags(self, parseflags):
+        self.parseflags = parseflags
 
     def getState(self):
         return(self.machinestate)
@@ -283,7 +332,69 @@ class VM():
             self.executewasm.callExecuteMethod()
             self.getState()
 
+    # pre-execution hook
+    def startHook(self):
+        if self.parseflags.metric:
+            for mem in self.modules[0].memory_section.memory_types:
+                self.executewasm.chargeGasMem(mem.initial)
+
+            self.metric.mccabe()
+            print(Colors.red + "mccabe: " + repr(self.metric.getMcCabe()) + Colors.ENDC)
+            print(Colors.red + "soc: " + repr(self.metric.getSOC()) + Colors.ENDC)
+
+    # post-execution hook
+    def endHook(self):
+        if self.parseflags.gas:
+            self.totGas = self.executewasm.getOPGas()
+            print(Colors.red + "total gas cost: " + repr(self.totGas) + Colors.ENDC)
+
     # a convinience method
     def run(self):
+        self.startHook()
         self.getStartFunctionBody()
         self.execute()
+        self.endHook()
+
+
+# a wrapper class for VM. it timeouts instructions that take too long to
+# execute.
+class Judicator():
+    def __int__(self, op_time_table, module):
+        self.op_time_table = op_time_table
+        self.vm = VM(modules)
+        self.vm.getStartFunctionBody()
+
+    def overseer():
+        # @DEVI- forking introduces a new source of non-determinism
+        pid = os.fork()
+        # child process
+        if pid == 0:
+            sys.stdout = open('./jstdout', 'w')
+            sys.stderr = open('./jstderr', 'w')
+            self.vm.execute()
+            sys.exit()
+        # parent process
+        if pid > 0:
+            cpid, status = os.waitpid(pid, 0)
+            if status == 0:
+                print('overseer child exited successfully.')
+            else:
+                print('overseer child exited with non-zero.')
+        # pid < 0
+        else:
+            raise Exception(Colors.red + 'could not fork judicator overseer.' + Colors.ENDC)
+
+    def setup(self):
+        signal.signal(signal.SIGALRM, self.to_sighandler)
+
+    def set_alarm(t):
+        signal.alaram(t)
+
+    def to_sighandler(signum, frame):
+        print(Colors.red + "execution time out..." + Colors.ENDC)
+        raise Exception(Colors.red + "execution time out" + Colors.ENDC)
+
+    def run(self):
+        self.setup()
+        self.set_alaram(10)
+        self.overseer()
