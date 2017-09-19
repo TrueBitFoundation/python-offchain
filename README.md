@@ -3,6 +3,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/TrueBitFoundation/tb-wasm-machine-poc/badge.svg?branch=master)](https://coveralls.io/github/TrueBitFoundation/tb-wasm-machine-poc?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+DEPRECATED in favor of [ocaml-offchain](https://github.com/TrueBitFoundation/ocaml-offchain)
+
 # tb-wasm-machine-poc
 PoC for process virtual machine to interpret WASM binaries within the context of the TB verification game and it's particular constraints
 
