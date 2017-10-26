@@ -1,6 +1,6 @@
 from utils import Colors, init_interpret, ParseFlags
 from OpCodes import WASM_OP_Code
-from section_structs import Code_Section, Func_Body, WASM_Ins
+from section_structs import Code_Section, Func_Body, WASM_Ins, Resizable_Limits, Memory_Section
 from execute import *
 import datetime as dti
 import os
@@ -188,16 +188,20 @@ class TBInit():
     def InitializeLinearMemory(self):
         # @DEVI-we could try to pack the data in the linear memory ourselve to
         # decrease the machinestate size
-        if self.module.memory_section is not None:
-            for iter in self.module.memory_section.memory_types:
-                self.machinestate.Linear_Memory.append(bytearray(
-                    WASM_OP_Code.PAGE_SIZE))
-            if self.module.data_section is not None:
-                for iter in self.module.data_section.data_segments:
-                    count = int()
-                    for byte in iter.data:
-                        self.machinestate.Linear_Memory[iter.index][init_interpret(iter.offset) + count] = byte
-                        count += 1
+        if self.module.memory_section is None:
+            rsz_limits = Resizable_Limits()
+            self.module.memory_section = Memory_Section()
+            self.module.memory_section.memory_types = [rsz_limits]
+            self.module.memory_section.count = 1
+        for iter in self.module.memory_section.memory_types:
+            self.machinestate.Linear_Memory.append(bytearray(
+                WASM_OP_Code.PAGE_SIZE))
+        if self.module.data_section is not None:
+            for iter in self.module.data_section.data_segments:
+                count = int()
+                for byte in iter.data:
+                    self.machinestate.Linear_Memory[iter.index][init_interpret(iter.offset) + count] = byte
+                    count += 1
 
 
 
