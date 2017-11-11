@@ -43,7 +43,7 @@ class WASM_OP_Code:
     doublet = 8
 
     all_ops = [('i32', '7f', False), ('i64', '7e', False), ('f32', '7d', False),
-                ('f63', '7c', False), ('anyfunc', '7b', False),
+                ('f64', '7c', False), ('anyfunc', '7b', False),
                 ('func', '60', False), ('empty_block_type', '40', False),
                 ('unreachable', '00', False), ('nop', '01', False),
                 ('block', '02', True, ('varuint7')),

@@ -24,6 +24,7 @@ class Execute(): # pragma: no cover
         self.opcodeint = ''
         self.immediates = []
         self.op_gas = int()
+        self.stack_top = []
 
     def getOPGas(self):
         return self.op_gas
@@ -41,7 +42,10 @@ class Execute(): # pragma: no cover
 
     def getInstruction(self, opcodeint, immediates):
         self.opcodeint = opcodeint
-        self.immediates = immediates
+        dummy = list()
+        for i in immediates:
+            dummy.append(int(i))
+        self.immediates = dummy
 
     def callExecuteMethod(self):
         runmethod = self.instructionUnwinder(self.opcodeint, self.immediates, self.machinestate)
@@ -51,6 +55,8 @@ class Execute(): # pragma: no cover
         except IndexError:
             # trap
             print(Colors.red + 'bad stack access.' + Colors.ENDC)
+            val2 = self.machinestate.Stack_Omni.pop()
+
 
     def instructionUnwinder(self, opcodeint, immediates, machinestate):
         self.chargeGas(opcodeint)

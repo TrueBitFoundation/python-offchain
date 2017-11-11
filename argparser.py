@@ -67,6 +67,7 @@ class CLIArgParser(object):
         parser.add_argument("--run", action='store_true', help="runs the start function", default=False)
         parser.add_argument("--metric", action='store_true', help="print metrics", default=False)
         parser.add_argument("--gas", action='store_true', help="print gas usage", default=False)
+        parser.add_argument("--entry", type=str, help="name of the function that will act as the entry point into execution")
 
         self.args = parser.parse_args()
 
@@ -110,10 +111,13 @@ class CLIArgParser(object):
     def getGas(self):
         return self.args.gas
 
+    def getEntry(self):
+        return self.args.entry
+
     def getParseFlags(self):
         return(ParseFlags(self.args.wast, self.args.wasm, self.args.asb, self.args.dis,
                           self.args.o, self.args.dbg, self.args.unval, self.args.memdump,
-                          self.args.idxspc, self.args.run, self.args.metric, self.args.gas))
+                          self.args.idxspc, self.args.run, self.args.metric, self.args.gas, self.args.entry))
 
 
 # this class is responsible for reading the wasm text file- the first part of

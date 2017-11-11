@@ -5,7 +5,7 @@ import struct as stc
 
 class ParseFlags:
     def __init__(self, wast_path, wasm_path, as_path, disa_path, out_path, dbg, unval, memdump
-                 , idxspc, run, metric, gas):
+                 , idxspc, run, metric, gas, entry):
         self.wast_path = wast_path
         self.wasm_path = wasm_path
         self.as_path = as_path
@@ -18,6 +18,7 @@ class ParseFlags:
         self.run = run
         self.metric = metric
         self.gas = gas
+        self.entry = entry
 
 
 # pretty print
@@ -172,8 +173,8 @@ def Read(section_byte, offset, kind):
                 # we have read the lasy byte of the operand
                 break
 
-            return_list = LEB128SignedDecode(operand)
-            operand = []
+        return_list = LEB128SignedDecode(operand)
+        operand = []
 
     return return_list, offset, read_bytes
 

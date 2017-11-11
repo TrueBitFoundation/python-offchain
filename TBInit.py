@@ -203,8 +203,6 @@ class TBInit():
                     self.machinestate.Linear_Memory[iter.index][init_interpret(iter.offset) + count] = byte
                     count += 1
 
-
-
     # returns the machinestate
     def getInits(self):
         return(self.machinestate)
@@ -306,7 +304,10 @@ class VM():
 
     def getStartFunctionIndex(self):
         if self.modules[0].start_section is None:
-            raise Exception(Colors.red + "module does not have a start section. quitting..." + Colors.ENDC)
+            if self.parseflags.entry is None:
+                raise Exception(Colors.red + "module does not have a start section. quitting..." + Colors.ENDC)
+            else:
+                start_index = self.machinestate.Index_Space_Function[int(self.parseflags.entry)]
         else:
             print(Colors.green + "found start section: " + Colors.ENDC, end = '')
             start_index = self.modules[0].start_section.function_section_index
@@ -327,10 +328,8 @@ class VM():
 
     def execute(self):
         print(Colors.blue + 'running module...' + Colors.ENDC)
-        '''
         for ins in self.start_function.code:
             print(ins.opcode + ' ' + ins.operands)
-        '''
         for ins in self.start_function.code:
             self.executewasm.getInstruction(ins.opcodeint, ins.operands)
             self.executewasm.callExecuteMethod()
@@ -351,6 +350,8 @@ class VM():
         if self.parseflags.gas:
             self.totGas = self.executewasm.getOPGas()
             print(Colors.red + "total gas cost: " + repr(self.totGas) + Colors.ENDC)
+        if self.machinestate.Stack_Omni:
+            print(Colors.green + "stack top: " + repr(self.machinestate.Stack_Omni.pop()) + Colors.ENDC)
 
     # a convinience method
     def run(self):
