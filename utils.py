@@ -297,11 +297,18 @@ def dumpprettysections(sections_list, width, section_name):
             print(Colors.green + "is custom section: " + Colors.blue + repr(section[3]) + Colors.ENDC)
             print(Colors.green + "name length: " + Colors.blue + repr(section[4]) + Colors.ENDC)
             print(Colors.green + "name: " + Colors.blue + section[5] + Colors.ENDC)
+            print("\t", end="")
+            for offset in range(0, width):
+                if offset <= 15:
+                    print(Colors.yellow + hex(offset) + "  " + Colors.ENDC, end="")
+                else:
+                    print(Colors.yellow + hex(offset) + " " + Colors.ENDC, end="")
+            print()
             print(Colors.yellow + Colors.BOLD + hex(section_offset) + "\t" + Colors.ENDC, end="")
             for byte in section[6]:
                 if line_counter == width:
                     section_offset += width
-                    print("\t\t", end="")
+                    #print("\t\t", end="")
                     line_counter = 0
                     for char in str_list:
                         if ord(char) < 32: print(" ", end="")
@@ -309,7 +316,10 @@ def dumpprettysections(sections_list, width, section_name):
                     str_list = []
                     print()
                     print(Colors.yellow + Colors.BOLD + hex(section_offset) + "\t" + Colors.ENDC, end="")
-                print(format(byte, '02x') + " ", end="")
+                if width <= 16:
+                    print(format(byte, '02x') + "   ", end="")
+                elif width <= 32:
+                    print(format(byte, '02x') + "   ", end="")
                 str_list.append(chr(byte))
                 line_counter += 1
             str_list = []
