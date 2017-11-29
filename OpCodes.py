@@ -1,5 +1,18 @@
 from enum import Enum
 
+SectionID = {0:"custom", 1:"type", 2:"import", 3:"function", 4:"table", 5:"memory", 6:"global", 7:"export", 8:"start", 9:"element", 10:"code", 11:"data"}
+
+
+class RelocType(Enum):
+    R_WEBASSEMBLY_FUNCTION_INDEX_LEB = 0
+    R_WEBASSEMBLY_TABLE_INDEX_SLEB = 1
+    R_WEBASSEMBLY_TABLE_INDEX_I32 = 2
+    R_WEBASSEMBLY_MEMORY_ADDR_LEB = 3
+    R_WEBASSEMBLY_MEMORY_ADDR_SLEB = 4
+    R_WEBASSEMBLY_MEMORY_ADDR_I32 = 5
+    R_WEBASSEMBLY_TYPE_INDEX_LEB = 6
+    R_WEBASSEMBLY_GLOBAL_INDEX_LEB = 7
+
 
 class TypeType(Enum):
     none = 1

@@ -107,6 +107,8 @@ class TBMachine():
     def __init__(self):
         # bytearray of size PAGE_SIZE
         self.Linear_Memory = []
+        self.Stack_Label = list()
+        self.Stack_Label_Height = int()
         self.Stack_Control_Flow = list()
         self.Stack_Call = list()
         self.Stack_Value = list()

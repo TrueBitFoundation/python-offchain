@@ -262,10 +262,21 @@ class Execute(): # pragma: no cover
         pass
 
     def run_block(self, opcodeint, immediates):
-        pass
+        self.machinestate.Stack_Label.append(self.machinestate.Stack_Label_Height)
+        self.machinestate.Stack_Label_Height += 1
 
     def run_loop(self, opcodeint, immediates):
-        pass
+        # assertion
+        if not self.machinestate.Stack_Omni:
+            print(Colors.red + "entered a loop. stack is empty." + Colors.ENDC)
+            # exit 1
+        self.machinestate.Stack_Label.append(self.machinestate.Stack_Label_Height)
+        self.machinestate.Stack_Label_Height += 1
+        val = self.machinestate.Stack_Omni.pop()
+        if val != 0:
+            pass
+        else:
+            pass
 
     def run_if(self, opcodeint, immediates):
         pass
@@ -274,10 +285,17 @@ class Execute(): # pragma: no cover
         pass
 
     def run_end(self, opcodeint, immediates):
-        pass
+        self.machinestate.Stack_Label.pop()
 
     def run_br(self, opcodeint, immediates):
-        pass
+        if self.machinestate.Stack_Label_Height >= immediates[0] + 1:
+            print(Colors.red + "label stack does not have enough labels." + Colors.ENDC)
+            # exit 1
+        if len(self.machinestate.Stack_Omni) < 1:
+            print(Colors.red + "the value stack does not have enough values." + Colors.ENDC)
+            # exit 1
+        val = self.machinestate.Stack_Omni.pop()
+        label = self.machinestate.Stack_Label.pop()
 
     def run_br_if(self, opcodeint, immediates):
         val = self.machinestate.Stack_Omni.pop()

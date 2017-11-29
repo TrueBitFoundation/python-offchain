@@ -10,6 +10,7 @@ from OpCodes import *
 from copy import deepcopy
 from TBInit import *
 from merklize import *
+from linker import Linker
 
 _DBG_ = True
 
@@ -51,14 +52,10 @@ def Conver2Int(little_endian, size, bytelist):
 class CLIArgParser(object):
     def __init__(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument("--wast", type=str,
-                            help="path to the wasm text file")
-        parser.add_argument("--wasm", type=str, nargs='+',
-                            help="path to the wasm object file")
-        parser.add_argument("--asb", type=str,
-                            help="path to the wast file to assemble")
-        parser.add_argument("--dis", type=str,
-                            help="path to the wasm file to disassemble")
+        parser.add_argument("--wast", type=str, help="path to the wasm text file")
+        parser.add_argument("--wasm", type=str, nargs='+', help="path to the wasm object file")
+        parser.add_argument("--asb", type=str, help="path to the wast file to assemble")
+        parser.add_argument("--dis", type=str, help="path to the wasm file to disassemble")
         parser.add_argument("-o", type=str, help="the path to the output file")
         parser.add_argument("--dbg", action='store_true', help="print debug info", default=False)
         parser.add_argument("--unval", action='store_true', help="skips validation tests", default=False)
@@ -68,6 +65,9 @@ class CLIArgParser(object):
         parser.add_argument("--metric", action='store_true', help="print metrics", default=False)
         parser.add_argument("--gas", action='store_true', help="print gas usage", default=False)
         parser.add_argument("--entry", type=str, help="name of the function that will act as the entry point into execution")
+        parser.add_argument("--link", type=str, nargs="+", help="link the following wasm modules")
+        parser.add_argument("--sectiondump", type=str, help="dumps the section provided")
+        parser.add_argument("--hexdump", type=int, help="dumps all sections")
 
         self.args = parser.parse_args()
 
@@ -113,6 +113,9 @@ class CLIArgParser(object):
 
     def getEntry(self):
         return self.args.entry
+
+    def getLink(self):
+        return self.args.link
 
     def getParseFlags(self):
         return(ParseFlags(self.args.wast, self.args.wasm, self.args.asb, self.args.dis,
@@ -486,14 +489,12 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
     parsedstruct = ParsedStruct()
     # read the magic cookie
     byte = wasm_file.read(WASM_OP_Code.uint32)
-    if byte != WASM_OP_Code.magic_number.to_bytes(
-            WASM_OP_Code.uint32, byteorder=endianness, signed=False):
+    if byte != WASM_OP_Code.magic_number.to_bytes(WASM_OP_Code.uint32, byteorder=endianness, signed=False):
         raise Exception("bad magic cookie")
 
     # read the version number
     byte = wasm_file.read(WASM_OP_Code.uint32)
-    if byte != WASM_OP_Code.version_number.to_bytes(
-            WASM_OP_Code.uint32, byteorder=endianness, signed=False):
+    if byte != WASM_OP_Code.version_number.to_bytes(WASM_OP_Code.uint32, byteorder=endianness, signed=False):
         raise Exception("bad version number")
     else:
         parsedstruct.version_number = byte
@@ -509,7 +510,8 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
     loop = True
     while loop:
         try:
-            section_id, offset, dummy = Read(temp_obj_file, offset, 'varuint7')
+            # section_id, offset, dummy = Read(temp_obj_file, offset, 'varuint7')
+            section_id, offset, dummy = Read(temp_obj_file, offset, 'varuint32')
         except IndexError:
             break
 
@@ -520,6 +522,12 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
             name_len, offset, dummy = Read(temp_obj_file, offset, 'varuint32')
             name = temp_obj_file[offset : offset + name_len]
             offset += name_len
+            if name.find("reloc", 0, 5) == 0:
+                is_reloc_section = True
+                reloc_entry_count = Read(temp_obj_file, offset, 'varuint32')
+                for i in range(0, reloc_entry_count):
+                    reloc_entry, offset, dummy = Read(tmp_obj, offset, 'varuint32')
+                    reloc_entries.append(reloc_entry)
         else:
             is_custom_section = False
             name_len = 0
@@ -538,8 +546,9 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
                                             payload_data])
 
     # prints out the sections in the wasm object
-    # for section in parsedstruct.section_list:
-        # print(section)
+    for section in parsedstruct.section_list:
+        pass
+        #print(section)
     wasm_file.close()
     return(parsedstruct)
 
@@ -1155,6 +1164,7 @@ class ParserV1(object):
 class PythonInterpreter(object):
     def __init__(self):
         self.modules = []
+        self.sections = []
 
     # appends a module to the module list that PythonInterpreter has
     def appendmodule(self, module):
@@ -1164,10 +1174,18 @@ class PythonInterpreter(object):
     def getmodules(self):
         return(self.modules)
 
+    def appendsection(self, section):
+        self.sections.append(section)
+
+    def getsections(self):
+        return self.sections
+
     # convinience method.calls the ObjReader to parse a wasm obj file.
     # returns a module class.
     def parse(self, file_path):
-        parser = ObjReader(ReadWASM(file_path, 'little', False, True))
+        section = ReadWASM(file_path, 'little', False, True)
+        self.appendsection(section)
+        parser = ObjReader(section)
         return(parser.parse())
 
     # dumps the object sections' info to stdout. pretty print.
@@ -1314,19 +1332,15 @@ class PythonInterpreter(object):
 
 def main():
     argparser = CLIArgParser()
+    interpreter = PythonInterpreter()
 
-    # this is essentially how we use our current interpreter. it reads in wasm
-    # obj files and holds keeps the parses modules. Theb we run the validation
-    # tests and initialize the WASM machine
     if argparser.getWASMPath() is not None:
-        interpreter = PythonInterpreter()
         for file_path in argparser.getWASMPath():
             module = interpreter.parse(file_path)
             interpreter.appendmodule(module)
             if argparser.getDBG():
                 interpreter.dump_sections(module)
             if interpreter.runValidations():
-                #run the interpreter
                 pass
             else:
                 print(Colors.red + 'failed validation tests' + Colors.ENDC)
@@ -1341,6 +1355,16 @@ def main():
                 vm.run()
             # merklizer = Merklizer(ms.Linear_Memory[0][0:512], module)
             # treelength, hashtree = merklizer.run()
+
+    if argparser.args.hexdump:
+        dumpprettysections(interpreter.getsections(), argparser.args.hexdump, "")
+
+    if argparser.args.sectiondump is not None:
+        dumpprettysections(interpreter.getsections(), 32, argparser.args.sectiondump)
+
+
+    if argparser.getLink():
+        linker = Linker(interpreter.getmodules())
 
 
     if argparser.getWASTPath() is not None:

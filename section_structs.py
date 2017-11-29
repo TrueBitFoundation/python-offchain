@@ -1,4 +1,17 @@
 # contains the data classes we use to hold the information of a module
+class Reloc_Entry_1():
+    def __init__(self):
+        self.offset = int()
+        self.index = int()
+
+
+class Reloc_Entry_2():
+    def __init__(self):
+        self.offset = int()
+        self.index = int()
+        self.addend = int()
+
+
 class Func_Type():
     def __init__(self):
         self.form = int()
