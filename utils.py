@@ -311,17 +311,21 @@ def dumpprettysections(sections_list, width, section_name):
                     #print("\t\t", end="")
                     line_counter = 0
                     for char in str_list:
+                        print(Colors.green + "|" + Colors.ENDC, end="")
                         if ord(char) < 32: print(" ", end="")
                         else:  print(char, end="")
                     str_list = []
                     print()
                     print(Colors.yellow + Colors.BOLD + hex(section_offset) + "\t" + Colors.ENDC, end="")
-                if width <= 16:
-                    print(format(byte, '02x') + "   ", end="")
-                elif width <= 32:
-                    print(format(byte, '02x') + "   ", end="")
+                print(format(byte, '02x') + "   ", end="")
                 str_list.append(chr(byte))
                 line_counter += 1
+            #print("  ", end="")
+            for i in range(0, width - line_counter): print("     ", end="")
+            for char in str_list:
+                if ord(char) < 32: print(" ", end="")
+                else:  print(char, end="")
+                print(Colors.green + "|" + Colors.ENDC, end="")
             str_list = []
             line_counter = 0
             section_offset = 0

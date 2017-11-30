@@ -68,6 +68,7 @@ class CLIArgParser(object):
         parser.add_argument("--link", type=str, nargs="+", help="link the following wasm modules")
         parser.add_argument("--sectiondump", type=str, help="dumps the section provided")
         parser.add_argument("--hexdump", type=int, help="dumps all sections")
+        parser.add_argument("--dbgsection", type=str, help="dumps the parsed section provided", default="")
 
         self.args = parser.parse_args()
 
@@ -1189,12 +1190,15 @@ class PythonInterpreter(object):
         return(parser.parse())
 
     # dumps the object sections' info to stdout. pretty print.
-    def dump_sections(self, module):
+    def dump_sections(self, module, dbgsection):
+        all = False
+        if dbgsection == "":
+            all = True
         print(Colors.blue + Colors.BOLD +
                 'BEGENNING OF MODULE' + Colors.ENDC)
 
         # type_section
-        if module.type_section is not None:
+        if module.type_section is not None and (dbgsection == "type" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Type Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1207,7 +1211,7 @@ class PythonInterpreter(object):
                 print(Colors.yellow + 'return type: ' + repr(iter.return_type) + Colors.ENDC)
 
         # import_section
-        if module.import_section is not None:
+        if module.import_section is not None and (dbgsection == "import" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Import Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1221,7 +1225,7 @@ class PythonInterpreter(object):
                 print(Colors.grey + 'type: ' + repr(iter.type) + Colors.ENDC)
 
         # function_section
-        if module.function_section is not None:
+        if module.function_section is not None and (dbgsection == "function" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Function Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1230,7 +1234,7 @@ class PythonInterpreter(object):
                 print(Colors.cyan + 'type section index: ' + repr(iter) + Colors.ENDC)
 
         # table_section
-        if module.table_section is not None:
+        if module.table_section is not None and (dbgsection == "table" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Table Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1242,7 +1246,7 @@ class PythonInterpreter(object):
                 print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.limit.maximum) + Colors.ENDC)
 
         # memory_section
-        if module.memory_section is not None:
+        if module.memory_section is not None and (dbgsection == "memory" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Memory Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1253,7 +1257,7 @@ class PythonInterpreter(object):
                 print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.maximum) + Colors.ENDC)
 
         # global_section
-        if module.global_section is not None:
+        if module.global_section is not None and (dbgsection == "global" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Global Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1263,7 +1267,7 @@ class PythonInterpreter(object):
                 print(Colors.red + 'init expr: ' + repr(iter.init_expr) + Colors.ENDC)
 
         # export_section
-        if module.export_section is not None:
+        if module.export_section is not None and (dbgsection == "export" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Export Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1275,14 +1279,14 @@ class PythonInterpreter(object):
                 print(Colors.cyan + 'index: ' + repr(iter.index) + Colors.ENDC)
 
         # start_section
-        if module.start_section is not None:
+        if module.start_section is not None and (dbgsection == "start" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Start Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('start function index: ' + repr(module.start_section.function_section_index))
 
         # element_section
-        if module.element_section is not None:
+        if module.element_section is not None and (dbgsection == "element" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Element Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1294,7 +1298,7 @@ class PythonInterpreter(object):
                 print(Colors.cyan + 'elemes:' + repr(iter.elems) + Colors.ENDC)
 
         # code_section
-        if module.code_section is not None:
+        if module.code_section is not None and (dbgsection == "code" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Code Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1312,7 +1316,7 @@ class PythonInterpreter(object):
                     print(Colors.yellow + instruction + Colors.ENDC)
 
         # data_section
-        if module.data_section is not None:
+        if module.data_section is not None and (dbgsection == "data" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Data Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1338,8 +1342,8 @@ def main():
         for file_path in argparser.getWASMPath():
             module = interpreter.parse(file_path)
             interpreter.appendmodule(module)
-            if argparser.getDBG():
-                interpreter.dump_sections(module)
+            if argparser.getDBG() or argparser.args.dbgsection:
+                interpreter.dump_sections(module, argparser.args.dbgsection)
             if interpreter.runValidations():
                 pass
             else:
@@ -1360,7 +1364,7 @@ def main():
         dumpprettysections(interpreter.getsections(), argparser.args.hexdump, "")
 
     if argparser.args.sectiondump is not None:
-        dumpprettysections(interpreter.getsections(), 32, argparser.args.sectiondump)
+        dumpprettysections(interpreter.getsections(), 24, argparser.args.sectiondump)
 
 
     if argparser.getLink():
