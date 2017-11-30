@@ -11,6 +11,8 @@ from copy import deepcopy
 from TBInit import *
 from merklize import *
 from linker import Linker
+import readline
+import code
 
 _DBG_ = True
 
@@ -69,6 +71,7 @@ class CLIArgParser(object):
         parser.add_argument("--sectiondump", type=str, help="dumps the section provided")
         parser.add_argument("--hexdump", type=int, help="dumps all sections")
         parser.add_argument("--dbgsection", type=str, help="dumps the parsed section provided", default="")
+        parser.add_argument("--interactive", action='store_true', help="open in cli mode", default=False)
 
         self.args = parser.parse_args()
 
@@ -1359,6 +1362,12 @@ def main():
                 vm.run()
             # merklizer = Merklizer(ms.Linear_Memory[0][0:512], module)
             # treelength, hashtree = merklizer.run()
+
+    if argparser.args.interactive:
+        variables = globals().copy()
+        variables.update(locals())
+        shell = code.InteractiveConsole(variables)
+        shell.interact(banner="WASM python REPL")
 
     if argparser.args.hexdump:
         dumpprettysections(interpreter.getsections(), argparser.args.hexdump, "")
