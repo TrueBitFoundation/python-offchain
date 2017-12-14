@@ -14,6 +14,7 @@ from linker import Linker
 import readline
 import code
 
+
 _DBG_ = True
 
 
@@ -355,7 +356,7 @@ class FuncBodyParser(object):
                     continue
                 else:
                     # parentheses_cnt < 0. the wasmt file is malformed
-                    print("goofball")
+                    raise Exception(Colors.red + "parantheses dont match..." + Colors.ENDC)
 
     def ParseBodyV2(self):
         sexpr_pattern = re.compile('\([^(]*?\)')
@@ -572,6 +573,7 @@ class ObjReader(object):
         read_bytes_temp = 0
         read_bytes_temp_iter = 0
         instruction = str()
+        operands = []
         temp_wasm_ins = WASM_Ins()
 
         # @DEVI-FIXME-for v1.0 opcodes. needs to get fixed for extended
@@ -592,34 +594,38 @@ class ObjReader(object):
                 # uniformity. anyways.
                 if op_code[1] == '0e':
                     matched = True
-                    temp, offset, read_bytes_temp_iter = Read(
-                        section_byte[6], offset, op_code[3][0])
+                    temp, offset, read_bytes_temp_iter = Read(section_byte[6], offset, op_code[3][0])
                     instruction += repr(temp) + ' '
+                    operands.append(repr(temp))
                     read_bytes_temp += read_bytes_temp_iter
                     for target_table in range(0, temp):
                         temp, offset, read_bytes_temp_iter = Read(section_byte[6], offset, op_code[3][1])
                         read_bytes_temp += read_bytes_temp_iter
                         instruction += repr(temp) + ' '
-                    temp, offset, read_bytes_temp_iter = Read(
-                        section_byte[6], offset, op_code[3][2])
+                        operands.append(repr(temp))
+                    temp, offset, read_bytes_temp_iter = Read(section_byte[6], offset, op_code[3][2])
                     instruction += repr(temp) + ' '
+                    operands.append(repr(temp))
                     read_bytes_temp += read_bytes_temp_iter
                 elif op_code[2]:
                     if isinstance(op_code[3], tuple):
                         for i in range(0, len(op_code [3])):
-                            temp, offset, read_bytes_temp_iter = Read(
-                                section_byte[6], offset, op_code[3][i])
+                            temp, offset, read_bytes_temp_iter = Read(section_byte[6], offset, op_code[3][i])
                             read_bytes_temp += read_bytes_temp_iter
                             instruction += repr(temp) + ' '
+                            operands.append(repr(temp))
                     else:
-                        temp, offset, read_bytes_temp = Read(
-                            section_byte[6], offset, op_code[3])
+                        temp, offset, read_bytes_temp = Read(section_byte[6], offset, op_code[3])
                         instruction += repr(temp)
+                        operands.append(repr(temp))
+                        print(instruction)
 
                 temp_wasm_ins.opcode = op_code[0]
                 temp_wasm_ins.opcodeint = int(byte, 16)
-                temp_wasm_ins.operands = instruction
+                #temp_wasm_ins.operands = instruction
+                temp_wasm_ins.operands = operands
                 instruction = str()
+                operands = []
                 break
 
         read_bytes += read_bytes_temp
@@ -670,8 +676,7 @@ class ObjReader(object):
 
             read_bytes_so_far = local_count_size
             for i in range(0, function_body_length - local_count_size):
-                offset, matched, read_bytes, temp_wasm_ins = self.Disassemble(
-                    code_section, offset)
+                offset, matched, read_bytes, temp_wasm_ins = self.Disassemble(code_section, offset)
                 temp_func_bodies.code.append(deepcopy(temp_wasm_ins))
 
                 if not matched:
@@ -1156,12 +1161,12 @@ class ParserV1(object):
         header_stack = headerparser.ParseBodyV3(True)
 
         wasm_codeemitter = WASM_CodeEmitter(expr_stack)
-        wasm_codeemitter.Obj_Header_32()
-        wasm_codeemitter.Dump_Obj_STDOUT()
+        #wasm_codeemitter.Obj_Header_32()
+        #wasm_codeemitter.Dump_Obj_STDOUT()
 
-        wasm_codeemitter.SetNewStack(header_stack)
-        wasm_codeemitter.EmitTypeHeader()
-        wasm_codeemitter.PrintTypeHeaderObj()
+        #wasm_codeemitter.SetNewStack(header_stack)
+        #wasm_codeemitter.EmitTypeHeader()
+        #wasm_codeemitter.PrintTypeHeaderObj()
 
 
 # our interpreter class
@@ -1313,9 +1318,10 @@ class PythonInterpreter(object):
                     print(Colors.blue + 'local count: ' + repr(iterer.count) + Colors.ENDC)
                     print(Colors.blue + 'local type: ' + repr(iterer.type) + Colors.ENDC)
                 for iterer in iter.code:
-                    instruction = iterer.opcode + ' ' + iterer.operands
+                    instruction = iterer.opcode + ' ' + repr(iterer.operands)
                     print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
                     print(Colors.grey + 'immediate: ' + repr(iterer.operands) + Colors.ENDC)
+                    print(Colors.UNDERLINE + "num of operands: " + repr(len(iterer.operands)) + Colors.ENDC)
                     print(Colors.yellow + instruction + Colors.ENDC)
 
         # data_section
@@ -1381,7 +1387,7 @@ def main():
 
 
     if argparser.getWASTPath() is not None:
-        print(argparser.getWASTPath())
+        #print(argparser.getWASTPath())
         parser = ParserV1(argparser.getWASTPath())
         parser.run()
 

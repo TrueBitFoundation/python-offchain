@@ -309,12 +309,12 @@ class VM():
             if self.parseflags.entry is None:
                 raise Exception(Colors.red + "module does not have a start section. quitting..." + Colors.ENDC)
             else:
-                start_index = self.machinestate.Index_Space_Function[int(self.parseflags.entry)]
+                start_index = int(self.parseflags.entry)
         else:
             print(Colors.green + "found start section: " + Colors.ENDC, end = '')
             start_index = self.modules[0].start_section.function_section_index
 
-        print(start_index)
+        print(Colors.blue + "running function at index " + repr(start_index) + Colors.ENDC)
         return(start_index)
 
     def getStartFunctionBody(self):
@@ -331,7 +331,7 @@ class VM():
     def execute(self):
         print(Colors.blue + 'running module...' + Colors.ENDC)
         for ins in self.start_function.code:
-            print(ins.opcode + ' ' + ins.operands)
+            print(Colors.purple + repr(ins.opcode) + ' ' + repr(ins.operands) + Colors.ENDC)
         for ins in self.start_function.code:
             self.executewasm.getInstruction(ins.opcodeint, ins.operands)
             self.executewasm.callExecuteMethod()

@@ -41,15 +41,19 @@ class Execute(): # pragma: no cover
             pass
 
     def getInstruction(self, opcodeint, immediates):
+        print(repr(immediates))
         self.opcodeint = opcodeint
-        dummy = list()
+        dummy = []
+        #FIXME-why is it being cast to int?
         for i in immediates:
+            print(i)
             dummy.append(int(i))
         self.immediates = dummy
+        print(dummy)
 
     def callExecuteMethod(self):
         runmethod = self.instructionUnwinder(self.opcodeint, self.immediates, self.machinestate)
-        print (repr(self.opcodeint) + ' ' + repr(self.immediates))
+        #print (repr(hex(self.opcodeint)) + ' ' + repr(self.immediates))
         try:
             runmethod(self.opcodeint, self.immediates)
         except IndexError:
@@ -285,7 +289,8 @@ class Execute(): # pragma: no cover
         pass
 
     def run_end(self, opcodeint, immediates):
-        self.machinestate.Stack_Label.pop()
+        #self.machinestate.Stack_Label.pop()
+        pass
 
     def run_br(self, opcodeint, immediates):
         if self.machinestate.Stack_Label_Height >= immediates[0] + 1:
