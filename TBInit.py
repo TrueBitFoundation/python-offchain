@@ -307,14 +307,16 @@ class VM():
     def getStartFunctionIndex(self):
         if self.modules[0].start_section is None:
             if self.parseflags.entry is None:
-                raise Exception(Colors.red + "module does not have a start section. quitting..." + Colors.ENDC)
+                raise Exception(Colors.red + "module does not have a start section. no function index was provided with the --entry option.quitting..." + Colors.ENDC)
             else:
                 start_index = int(self.parseflags.entry)
         else:
             print(Colors.green + "found start section: " + Colors.ENDC, end = '')
             start_index = self.modules[0].start_section.function_section_index
 
-        print(Colors.blue + "running function at index " + repr(start_index) + Colors.ENDC)
+        print(Colors.blue + Colors.BOLD + "running function at index " + repr(start_index) + Colors.ENDC)
+        if (start_index > len(self.modules[0].code_section.func_bodies) - 1):
+            raise Exception(Colors.red + "invalid function index: the function index does not exist." + Colors.ENDC)
         return(start_index)
 
     def getStartFunctionBody(self):
@@ -329,7 +331,7 @@ class VM():
             raise Exception(Colors.red + "invalid entry for start function index" + Colors.ENDC)
 
     def execute(self):
-        print(Colors.blue + 'running module...' + Colors.ENDC)
+        print(Colors.blue + Colors.BOLD + 'running module with code: ' + Colors.ENDC)
         for ins in self.start_function.code:
             print(Colors.purple + repr(ins.opcode) + ' ' + repr(ins.operands) + Colors.ENDC)
         for ins in self.start_function.code:

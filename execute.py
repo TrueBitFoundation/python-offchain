@@ -41,15 +41,12 @@ class Execute(): # pragma: no cover
             pass
 
     def getInstruction(self, opcodeint, immediates):
-        print(repr(immediates))
         self.opcodeint = opcodeint
         dummy = []
         #FIXME-why is it being cast to int?
         for i in immediates:
-            print(i)
             dummy.append(int(i))
         self.immediates = dummy
-        print(dummy)
 
     def callExecuteMethod(self):
         runmethod = self.instructionUnwinder(self.opcodeint, self.immediates, self.machinestate)

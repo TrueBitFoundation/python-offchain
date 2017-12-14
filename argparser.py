@@ -568,6 +568,7 @@ class ObjReader(object):
     # we use this method to read the operands of instructions. it's only
     # called by ReadCodeSection
     def Disassemble(self, section_byte, offset):
+        # @DEVI-FIXME- not sure why i was using instruction. its a string...
         matched = False
         read_bytes = 0
         read_bytes_temp = 0
@@ -618,7 +619,6 @@ class ObjReader(object):
                         temp, offset, read_bytes_temp = Read(section_byte[6], offset, op_code[3])
                         instruction += repr(temp)
                         operands.append(repr(temp))
-                        print(instruction)
 
                 temp_wasm_ins.opcode = op_code[0]
                 temp_wasm_ins.opcodeint = int(byte, 16)
