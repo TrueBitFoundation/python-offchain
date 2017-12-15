@@ -324,7 +324,9 @@ class Execute(): # pragma: no cover
     def run_select(self, opcodeint, immediates):
         pass
 
+    # @DEVI-FIXME- should read from local var index
     def run_getlocal(self, opcodeint, immediates):
+        #dummy = int(immediates[0])
         self.machinestate.Stack_Omni.append(immediates[0])
 
     def run_setlocal(self, opcodeint, immediates):
