@@ -118,6 +118,7 @@ class TBMachine():
         self.Index_Space_Global = list()
         self.Index_Space_Linear = list()
         self.Index_Space_Table = list()
+        self.Index_Space_Locals = list()
 
 
 # handles the initialization of the WASM machine
@@ -304,6 +305,10 @@ class VM():
     def getState(self):
         return(self.machinestate)
 
+    def initLocalIndexSpace(self, local_count):
+        for i in range(0, local_count):
+            self.machinestate.Index_Space_Locals.append(0)
+
     def getStartFunctionIndex(self):
         if self.modules[0].start_section is None:
             if self.parseflags.entry is None:
@@ -361,6 +366,7 @@ class VM():
     def run(self):
         self.startHook()
         self.getStartFunctionBody()
+        self.initLocalIndexSpace(self.start_function.local_count)
         self.execute()
         self.endHook()
 

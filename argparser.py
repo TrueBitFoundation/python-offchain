@@ -1319,10 +1319,13 @@ class PythonInterpreter(object):
                     print(Colors.blue + 'local type: ' + repr(iterer.type) + Colors.ENDC)
                 for iterer in iter.code:
                     instruction = iterer.opcode + ' ' + repr(iterer.operands)
-                    print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
-                    print(Colors.grey + 'immediate: ' + repr(iterer.operands) + Colors.ENDC)
+                    print(Colors.yellow + instruction + Colors.ENDC, end="")
+                    print("\t", end="")
+                    print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC, end="")
+                    print("\t", end="")
+                    print(Colors.grey + 'immediate: ' + repr(iterer.operands) + Colors.ENDC, end="")
+                    print("\t", end="")
                     print(Colors.UNDERLINE + "num of operands: " + repr(len(iterer.operands)) + Colors.ENDC)
-                    print(Colors.yellow + instruction + Colors.ENDC)
 
         # data_section
         if module.data_section is not None and (dbgsection == "data" or all):
