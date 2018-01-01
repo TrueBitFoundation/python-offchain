@@ -1,7 +1,7 @@
 language: python
 notifications:
-  slack:
-    secure: Lu9xT4dGnwscBS1GWFNiIIy7TTIg2tgbsNoc8oiRgryaJHofDGYp2Mi+SXrxAMKyGgZS6JLk8yDFW90SOLFV3/j5oYOnTrL3c7psk7tZmgxGmefajsUVpfN1NsipD7CfJB+YruktL2sWm0i2z7FFn1lf77kiji035JJS+u+PN4Dl+x16zqSzRaj4oUE6dp8N/D/g6Sm9jraOucbMq9V2ZNI4cDNJT1mdhzrPvAn/7PIUrChNuqnGVvmp91/KE7UERgjR/qHT84IOgXr09vMQ5KQjLqMCN++nCdHoYXRjTIxtD5cl7TmcsTzTfwoLv++hCqu79S4da4oD84/Q05YWCseeIXjAcRL9QAlIxNBlJL5xVEJSuiGPTsItM4BYRKe2vY9kcm1V01Y3920hnPDior/Z+AR0e5FZtz+JEG2LtqdxriHy5wU474cNQwYmn95tolFTeHRb4WZOX8f9iBbDCfJ/9N313U9yU+u0ZM8MNn0/tWNhbG6/eQevaS1IIe/HXVExkFmSnKEoku0yddcAqRlYd4KySMWIDTfo0UUeC4+kL5jeEIQI2Wr9b4DAfjaLm8JgHQZu5hJb1RKG/26TdiB+EsnQDzYvL/HCvzcerimVBUyIQdKeGYq2d77fW+K01aNqi7HkYr+N7CxQG5nNZbkBQKIuJcsQnUeCUH7c4jg=
+  #slack:
+  #secure: Lu9xT4dGnwscBS1GWFNiIIy7TTIg2tgbsNoc8oiRgryaJHofDGYp2Mi+SXrxAMKyGgZS6JLk8yDFW90SOLFV3/j5oYOnTrL3c7psk7tZmgxGmefajsUVpfN1NsipD7CfJB+YruktL2sWm0i2z7FFn1lf77kiji035JJS+u+PN4Dl+x16zqSzRaj4oUE6dp8N/D/g6Sm9jraOucbMq9V2ZNI4cDNJT1mdhzrPvAn/7PIUrChNuqnGVvmp91/KE7UERgjR/qHT84IOgXr09vMQ5KQjLqMCN++nCdHoYXRjTIxtD5cl7TmcsTzTfwoLv++hCqu79S4da4oD84/Q05YWCseeIXjAcRL9QAlIxNBlJL5xVEJSuiGPTsItM4BYRKe2vY9kcm1V01Y3920hnPDior/Z+AR0e5FZtz+JEG2LtqdxriHy5wU474cNQwYmn95tolFTeHRb4WZOX8f9iBbDCfJ/9N313U9yU+u0ZM8MNn0/tWNhbG6/eQevaS1IIe/HXVExkFmSnKEoku0yddcAqRlYd4KySMWIDTfo0UUeC4+kL5jeEIQI2Wr9b4DAfjaLm8JgHQZu5hJb1RKG/26TdiB+EsnQDzYvL/HCvzcerimVBUyIQdKeGYq2d77fW+K01aNqi7HkYr+N7CxQG5nNZbkBQKIuJcsQnUeCUH7c4jg=
 matrix:
   include:
   - os: linux
@@ -13,6 +13,7 @@ matrix:
   - os: linux
     dist: trusty
     python: 3.4
+  exclude:
   - os: osx
     osx_image: xcode7.2
     language: generic

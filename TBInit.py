@@ -119,6 +119,7 @@ class TBMachine():
         self.Index_Space_Linear = list()
         self.Index_Space_Table = list()
         self.Index_Space_Locals = list()
+        self.Index_Space_Label = list()
 
 
 # handles the initialization of the WASM machine
