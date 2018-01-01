@@ -207,6 +207,7 @@ def reinterpreti64tof64(val):
     return (stc.unpack("d", stc.pack("Q", val))[0])
 
 
+# @DEVI-FIXME
 def clz(val, _type):
     cnt = int()
     if _type == 'uint32':
@@ -232,6 +233,7 @@ def clz(val, _type):
     return cnt
 
 
+# @DEVI-FIXME
 def ctz(val, _type):
     cnt = int()
     power = int()
@@ -256,6 +258,7 @@ def ctz(val, _type):
     return cnt
 
 
+# @DEVI-FIXME
 def pop_cnt(val, _type):
     cnt = int()
     power = int()

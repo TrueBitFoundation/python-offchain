@@ -1347,62 +1347,67 @@ class PythonInterpreter(object):
 
 
 def main():
-    argparser = CLIArgParser()
-    interpreter = PythonInterpreter()
+    variables = globals().copy()
+    variables.update(locals())
+    shell = code.InteractiveConsole(variables)
 
-    if argparser.getWASMPath() is not None:
-        for file_path in argparser.getWASMPath():
-            module = interpreter.parse(file_path)
-            interpreter.appendmodule(module)
-            if argparser.getDBG() or argparser.args.dbgsection:
-                interpreter.dump_sections(module, argparser.args.dbgsection)
-            if interpreter.runValidations():
-                pass
-            else:
-                print(Colors.red + 'failed validation tests' + Colors.ENDC)
-            vm = VM(interpreter.getmodules())
-            vm.setFlags(argparser.getParseFlags())
-            ms = vm.getState()
-            if argparser.getIDXSPC():
-                DumpIndexSpaces(ms)
-            if argparser.getMEMDUMP():
-                DumpLinearMems(ms.Linear_Memory, argparser.getMEMDUMP())
-            if argparser.getRun():
-                vm.run()
-            # merklizer = Merklizer(ms.Linear_Memory[0][0:512], module)
-            # treelength, hashtree = merklizer.run()
+    try:
+        argparser = CLIArgParser()
+        interpreter = PythonInterpreter()
 
-    if argparser.args.interactive:
-        variables = globals().copy()
-        variables.update(locals())
-        shell = code.InteractiveConsole(variables)
+        if argparser.getWASMPath() is not None:
+            for file_path in argparser.getWASMPath():
+                module = interpreter.parse(file_path)
+                interpreter.appendmodule(module)
+                if argparser.getDBG() or argparser.args.dbgsection:
+                    interpreter.dump_sections(module, argparser.args.dbgsection)
+                if interpreter.runValidations():
+                    pass
+                else:
+                    print(Colors.red + 'failed validation tests' + Colors.ENDC)
+                vm = VM(interpreter.getmodules())
+                vm.setFlags(argparser.getParseFlags())
+                ms = vm.getState()
+                if argparser.getIDXSPC():
+                    DumpIndexSpaces(ms)
+                if argparser.getMEMDUMP():
+                    DumpLinearMems(ms.Linear_Memory, argparser.getMEMDUMP())
+                if argparser.getRun():
+                    vm.run()
+                # merklizer = Merklizer(ms.Linear_Memory[0][0:512], module)
+                # treelength, hashtree = merklizer.run()
+
+        if argparser.args.interactive:
+            variables = globals().copy()
+            variables.update(locals())
+            shell = code.InteractiveConsole(variables)
+            shell.interact(banner="WASM python REPL")
+
+        if argparser.args.hexdump:
+            dumpprettysections(interpreter.getsections(), argparser.args.hexdump, "")
+
+        if argparser.args.sectiondump is not None:
+            dumpprettysections(interpreter.getsections(), 24, argparser.args.sectiondump)
+
+        if argparser.getLink():
+            linker = Linker(interpreter.getmodules())
+
+        if argparser.getWASTPath() is not None:
+            #print(argparser.getWASTPath())
+            parser = ParserV1(argparser.getWASTPath())
+            parser.run()
+
+        # WIP-the assmebler
+        if argparser.getASPath() is not None:
+            print("not implemented yet")
+            sys.exit(1)
+
+        # WIP-the disassmebler
+        if argparser.getDISASPath() is not None:
+            print("not implemented yet")
+            sys.exit(1)
+    except:
         shell.interact(banner="WASM python REPL")
-
-    if argparser.args.hexdump:
-        dumpprettysections(interpreter.getsections(), argparser.args.hexdump, "")
-
-    if argparser.args.sectiondump is not None:
-        dumpprettysections(interpreter.getsections(), 24, argparser.args.sectiondump)
-
-
-    if argparser.getLink():
-        linker = Linker(interpreter.getmodules())
-
-
-    if argparser.getWASTPath() is not None:
-        #print(argparser.getWASTPath())
-        parser = ParserV1(argparser.getWASTPath())
-        parser.run()
-
-    # WIP-the assmebler
-    if argparser.getASPath() is not None:
-        print("not implemented yet")
-        sys.exit(1)
-
-    # WIP-the disassmebler
-    if argparser.getDISASPath() is not None:
-        print("not implemented yet")
-        sys.exit(1)
 
 
 if __name__ == '__main__':

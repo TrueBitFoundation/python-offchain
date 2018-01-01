@@ -324,7 +324,6 @@ class Execute(): # pragma: no cover
     def run_select(self, opcodeint, immediates):
         pass
 
-    # @DEVI-FIXME- should read from local var index
     def run_getlocal(self, opcodeint, immediates):
         local = self.machinestate.Index_Space_Locals[int(immediates[0])]
         self.machinestate.Stack_Omni.append(local)
@@ -398,6 +397,7 @@ class Execute(): # pragma: no cover
         else:
             raise Exception(Colors.red + 'invalid load instruction.' + Colors.ENDC)
 
+    # currently only one linear memory is allowed so thats the default.
     def run_store(self, opcodeint, immediates):
         if opcodeint == 54:
             val = self.machinestate.Stack_Omni.pop()

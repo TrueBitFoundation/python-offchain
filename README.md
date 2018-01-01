@@ -18,7 +18,7 @@ To clone the repo you should:<br/>
 git clone https://github.com/ronin010011/tb-wasm-machine-poc
 
 ```
-To initialize and clone the submodules:<br/>
+The submodule is the WASM testsuite. If you are not planning on developing python-offchain you can leave this be otherwise run:<br/>
 ```bash
 
 git submodule init
@@ -39,6 +39,10 @@ For binaryen:<br/>
 ```
 
 For instructions on building `TBC`, please look at the respective readme under `TBC`'s directory.<br/>
+
+### A Very Simple Stack Machine Interpreter
+If this is the first time you are hearing about stack machines, you can check out [a very simple stack machine interpreter](https://github.com/bloodstalker/simpleInterpreter).<br/>
+It is a very simple stack machine. You have been warned.<br/>
 
 ### Tools
 Just what the name says:
