@@ -24,6 +24,7 @@ class Execute(): # pragma: no cover
         self.opcodeint = ''
         self.immediates = []
         self.op_gas = int()
+        self.stack_top = []
 
     def getOPGas(self):
         return self.op_gas
@@ -41,16 +42,22 @@ class Execute(): # pragma: no cover
 
     def getInstruction(self, opcodeint, immediates):
         self.opcodeint = opcodeint
-        self.immediates = immediates
+        dummy = []
+        #FIXME-why is it being cast to int?
+        for i in immediates:
+            dummy.append(int(i))
+        self.immediates = dummy
 
     def callExecuteMethod(self):
         runmethod = self.instructionUnwinder(self.opcodeint, self.immediates, self.machinestate)
-        print (repr(self.opcodeint) + ' ' + repr(self.immediates))
+        #print (repr(hex(self.opcodeint)) + ' ' + repr(self.immediates))
         try:
             runmethod(self.opcodeint, self.immediates)
         except IndexError:
             # trap
             print(Colors.red + 'bad stack access.' + Colors.ENDC)
+            val2 = self.machinestate.Stack_Omni.pop()
+
 
     def instructionUnwinder(self, opcodeint, immediates, machinestate):
         self.chargeGas(opcodeint)
@@ -256,10 +263,21 @@ class Execute(): # pragma: no cover
         pass
 
     def run_block(self, opcodeint, immediates):
-        pass
+        self.machinestate.Stack_Label.append(self.machinestate.Stack_Label_Height)
+        self.machinestate.Stack_Label_Height += 1
 
     def run_loop(self, opcodeint, immediates):
-        pass
+        # assertion
+        if not self.machinestate.Stack_Omni:
+            print(Colors.red + "entered a loop. stack is empty." + Colors.ENDC)
+            # exit 1
+        self.machinestate.Stack_Label.append(self.machinestate.Stack_Label_Height)
+        self.machinestate.Stack_Label_Height += 1
+        val = self.machinestate.Stack_Omni.pop()
+        if val != 0:
+            pass
+        else:
+            pass
 
     def run_if(self, opcodeint, immediates):
         pass
@@ -268,10 +286,18 @@ class Execute(): # pragma: no cover
         pass
 
     def run_end(self, opcodeint, immediates):
+        #self.machinestate.Stack_Label.pop()
         pass
 
     def run_br(self, opcodeint, immediates):
-        pass
+        if self.machinestate.Stack_Label_Height >= immediates[0] + 1:
+            print(Colors.red + "label stack does not have enough labels." + Colors.ENDC)
+            # exit 1
+        if len(self.machinestate.Stack_Omni) < 1:
+            print(Colors.red + "the value stack does not have enough values." + Colors.ENDC)
+            # exit 1
+        val = self.machinestate.Stack_Omni.pop()
+        label = self.machinestate.Stack_Label.pop()
 
     def run_br_if(self, opcodeint, immediates):
         val = self.machinestate.Stack_Omni.pop()
@@ -298,17 +324,17 @@ class Execute(): # pragma: no cover
     def run_select(self, opcodeint, immediates):
         pass
 
+    # @DEVI-FIXME- should read from local var index
     def run_getlocal(self, opcodeint, immediates):
-        self.machinestate.Stack_Omni.append(immediates[0])
+        local = self.machinestate.Index_Space_Locals[int(immediates[0])]
+        self.machinestate.Stack_Omni.append(local)
 
     def run_setlocal(self, opcodeint, immediates):
-        return self.machinestate.Stack_Omni.pop()
+        self.machinestate.Index_Space_Locals[int(immediates[0])] = self.machinestate.Stack_Omni.pop()
 
     def run_teelocal(self, dummy, immediates):
-        val = self.machinestate.Stack_Omni.pop()
-        self.machinestate.Stack_Omni.append(val)
-        self.machinestate.Stack_Omni.append(val)
-        self.run_setlocal(dummy, val)
+        # @DEVI-we dont pop and push
+        self.machinestate.Index_Space_Locals[int(immediates[0])] = self.machinestate.Stack_Omni[-1]
 
     def run_getglobal(self, opcodeint, immediates):
         val = self.machinestate.Index_Space_Global[immediates[0]]
@@ -318,57 +344,103 @@ class Execute(): # pragma: no cover
         val = self.machinestate.Stack_Omni.pop()
         self.machinestate.Index_Space_Global = val
 
+    # currently only one linear memory is allowed so thats the default.
     def run_load(self, opcodeint, immediates):
         if opcodeint == 40:
-            pass
+            bytes = self.machinestate.Linear_Memory[0][int(immediates[1]):int(immediates) + 4]
+            self.machinestate.Stack_Omni.append(np.int32(bytes))
         elif opcodeint == 41:
-            pass
+            bytes = self.machinestate.Linear_Memory[0][int(immediates[1]):int(immediates) + 8]
+            self.machinestate.Stack_Omni.append(np.int64(bytes))
         elif opcodeint == 42:
-            pass
+            bytes = self.machinestate.Linear_Memory[0][int(immediates[1]):int(immediates) + 4]
+            self.machinestate.Stack_Omni.append(np.float32(bytes))
         elif opcodeint == 43:
-            pass
+            bytes = self.machinestate.Linear_Memory[0][int(immediates[1]):int(immediates) + 8]
+            self.machinestate.Stack_Omni.append(np.float64(bytes))
         elif opcodeint == 44:
-            pass
+            temp = np.int8(self.machinestate.Linear_Memory[0][int(immediates[1])])
+            temp2 = (temp & 0x0000007f) | ((temp & 0x80) << 24)
+            self.machinestate.append(np.int32(tmep2))
         elif opcodeint == 45:
-            pass
+            temp = np.int8(self.machinestate.Linear_Memory[0][int(immediates[1])])
+            temp2 = temp & 0x000000ff
+            self.machinestate.append(np.uint32(tmep2))
         elif opcodeint == 46:
-            pass
+            temp = np.int8(self.machinestate.Linear_Memory[0][int(immediates[1]):int(immediates[1] + 2)])
+            temp2 = (temp & 0x00007fff) | ((temp & 0x8000) << 16)
+            self.machinestate.append(np.int32(tmep2))
         elif opcodeint == 47:
-            pass
+            temp = np.int8(self.machinestate.Linear_Memory[0][int(immediates[1]):int(immediates[1] + 2)])
+            temp2 = temp & 0x0000ffff
+            self.machinestate.append(np.uint32(tmep2))
         elif opcodeint == 48:
-            pass
+            temp = np.int8(self.machinestate.Linear_Memory[0][int(immediates[1])])
+            temp2 = (temp & 0x000000000000007f) | ((temp & 0x80) << 56)
+            self.machinestate.append(np.int64(tmep2))
         elif opcodeint == 49:
-            pass
+            temp = np.uint8(self.machinestate.Linear_Memory[0][int(immediates[1])])
+            self.machinestate.append(np.uint64(tmep))
         elif opcodeint == 50:
-            pass
+            temp = np.int8(self.machinestate.Linear_Memory[0][int(immediates[1]):int(immediates[1] + 2)])
+            temp2 = (temp & 0x0000000000007fff) | ((temp & 0x8000) << 48)
+            self.machinestate.append(np.int64(tmep2))
         elif opcodeint == 51:
-            pass
+            temp = np.uint8(self.machinestate.Linear_Memory[0][int(immediates[1]):int(immediates[1] + 2)])
+            self.machinestate.append(np.uint64(tmep))
         elif opcodeint == 52:
-            pass
+            temp = np.int8(self.machinestate.Linear_Memory[0][int(immediates[1]):int(immediates[1] + 4)])
+            temp2 = (temp & 0x000000007fffffff) | ((temp & 0x80000000) << 32)
+            self.machinestate.append(np.int64(tmep2))
         elif opcodeint == 53:
-            pass
+            temp = np.uint8(self.machinestate.Linear_Memory[0][int(immediates[1]):int(immediates[1] + 4)])
+            self.machinestate.append(np.uint64(tmep))
         else:
             raise Exception(Colors.red + 'invalid load instruction.' + Colors.ENDC)
 
     def run_store(self, opcodeint, immediates):
         if opcodeint == 54:
-            pass
+            val = self.machinestate.Stack_Omni.pop()
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 0] = val & 0x000000ff
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 1] = val & 0x0000ff00 >> 8
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 2] = val & 0x00ff0000 >> 16
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 3] = val & 0xff000000 >> 24
         elif opcodeint == 55:
-            pass
+            val = self.machinestate.Stack_Omni.pop()
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 0] = val & 0x00000000000000ff
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 1] = val & 0x000000000000ff00 >> 8
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 2] = val & 0x0000000000ff0000 >> 16
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 3] = val & 0x00000000ff000000 >> 24
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 4] = val & 0x000000ff00000000 >> 32
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 5] = val & 0x0000ff0000000000 >> 40
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 6] = val & 0x00ff000000000000 >> 48
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 7] = val & 0xff00000000000000 >> 56
+        # @DEVI-FIXME-needs reinterpret cast
         elif opcodeint == 56:
             pass
+        # @DEVI-FIXME-needs reinterpret cast
         elif opcodeint == 57:
             pass
         elif opcodeint == 58:
-            pass
+            val = self.machinestate.Stack_Omni.pop()
+            self.machinestate.Linear_Memory[0][int(immediates[1])] = np.in8(val & 0x000000ff)
         elif opcodeint == 59:
-            pass
+            val = self.machinestate.Stack_Omni.pop()
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 0] = np.in8(val & 0x000000ff)
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 1] = np.in8(val & 0x0000ff00 >> 8)
         elif opcodeint == 60:
-            pass
+            val = self.machinestate.Stack_Omni.pop()
+            self.machinestate.Linear_Memory[0][int(immediates[1])] = np.in8(val & 0x00000000000000ff)
         elif opcodeint == 61:
-            pass
+            val = self.machinestate.Stack_Omni.pop()
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 0] = np.in8(val & 0x00000000000000ff)
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 1] = np.in8(val & 0x000000000000ff00 >> 8)
         elif opcodeint == 62:
-            pass
+            val = self.machinestate.Stack_Omni.pop()
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 0] = np.in8(val & 0x00000000000000ff)
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 1] = np.in8(val & 0x000000000000ff00 >> 8)
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 2] = np.in8(val & 0x0000000000ff0000 >> 16)
+            self.machinestate.Linear_Memory[0][int(immediates[1]) + 3] = np.in8(val & 0x00000000ff000000 >> 24)
         else:
             raise Exception(Colors.red + 'invalid store instruction' + Colors.ENDC)
 

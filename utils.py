@@ -5,7 +5,7 @@ import struct as stc
 
 class ParseFlags:
     def __init__(self, wast_path, wasm_path, as_path, disa_path, out_path, dbg, unval, memdump
-                 , idxspc, run, metric, gas):
+                 , idxspc, run, metric, gas, entry):
         self.wast_path = wast_path
         self.wasm_path = wasm_path
         self.as_path = as_path
@@ -18,6 +18,7 @@ class ParseFlags:
         self.run = run
         self.metric = metric
         self.gas = gas
+        self.entry = entry
 
 
 # pretty print
@@ -172,8 +173,8 @@ def Read(section_byte, offset, kind):
                 # we have read the lasy byte of the operand
                 break
 
-            return_list = LEB128SignedDecode(operand)
-            operand = []
+        return_list = LEB128SignedDecode(operand)
+        operand = []
 
     return return_list, offset, read_bytes
 
@@ -273,3 +274,63 @@ def pop_cnt(val, _type):
     else:
         raise Exception(Colors.red + "unsupported type passed to pop_cnt." + Colors.ENDC)
     return cnt
+
+def gen_label(label_stack):
+    counter += 1
+    label_stack.append(counter)
+
+def dumpprettysections(sections_list, width, section_name):
+    line_counter = 0
+    str_list = []
+    module_counter = 0
+    section_offset = 0
+    for sections in sections_list:
+        print (Colors.cyan + Colors.BOLD + "module " + repr(module_counter) + Colors.ENDC)
+        for section in sections.section_list:
+            if section_name == "": pass
+            else:
+                if section_name != SectionID[section[0]]:
+                    continue
+            print(Colors.green + Colors.BOLD + SectionID[section[0]] + " section" + Colors.ENDC)
+            #print(Colors.green + "length: " + Colors.blue + section[1] + Colors.ENDC)
+            print(Colors.green + "length: " + Colors.blue + repr(section[2]) + Colors.ENDC)
+            print(Colors.green + "is custom section: " + Colors.blue + repr(section[3]) + Colors.ENDC)
+            print(Colors.green + "name length: " + Colors.blue + repr(section[4]) + Colors.ENDC)
+            print(Colors.green + "name: " + Colors.blue + section[5] + Colors.ENDC)
+            print("\t", end="")
+            for offset in range(0, width):
+                if offset <= 15:
+                    print(Colors.yellow + hex(offset) + "  " + Colors.ENDC, end="")
+                else:
+                    print(Colors.yellow + hex(offset) + " " + Colors.ENDC, end="")
+            print()
+            print(Colors.yellow + Colors.BOLD + hex(section_offset) + "\t" + Colors.ENDC, end="")
+            for byte in section[6]:
+                if line_counter == width:
+                    section_offset += width
+                    #print("\t\t", end="")
+                    line_counter = 0
+                    for char in str_list:
+                        print(Colors.green + "|" + Colors.ENDC, end="")
+                        if ord(char) < 32: print(" ", end="")
+                        else:  print(char, end="")
+                    str_list = []
+                    print()
+                    print(Colors.yellow + Colors.BOLD + hex(section_offset) + "\t" + Colors.ENDC, end="")
+                print(format(byte, '02x') + "   ", end="")
+                str_list.append(chr(byte))
+                line_counter += 1
+            #print("  ", end="")
+            for i in range(0, width - line_counter): print("     ", end="")
+            for char in str_list:
+                if ord(char) < 32: print(" ", end="")
+                else:  print(char, end="")
+                print(Colors.green + "|" + Colors.ENDC, end="")
+            str_list = []
+            line_counter = 0
+            section_offset = 0
+            print()
+        str_list = []
+        line_counter = 0
+        module_counter += 1
+        section_offset = 0

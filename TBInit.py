@@ -1,6 +1,6 @@
 from utils import Colors, init_interpret, ParseFlags
 from OpCodes import WASM_OP_Code
-from section_structs import Code_Section, Func_Body, WASM_Ins
+from section_structs import Code_Section, Func_Body, WASM_Ins, Resizable_Limits, Memory_Section
 from execute import *
 import datetime as dti
 import os
@@ -107,6 +107,8 @@ class TBMachine():
     def __init__(self):
         # bytearray of size PAGE_SIZE
         self.Linear_Memory = []
+        self.Stack_Label = list()
+        self.Stack_Label_Height = int()
         self.Stack_Control_Flow = list()
         self.Stack_Call = list()
         self.Stack_Value = list()
@@ -116,6 +118,7 @@ class TBMachine():
         self.Index_Space_Global = list()
         self.Index_Space_Linear = list()
         self.Index_Space_Table = list()
+        self.Index_Space_Locals = list()
 
 
 # handles the initialization of the WASM machine
@@ -188,18 +191,20 @@ class TBInit():
     def InitializeLinearMemory(self):
         # @DEVI-we could try to pack the data in the linear memory ourselve to
         # decrease the machinestate size
-        if self.module.memory_section is not None:
-            for iter in self.module.memory_section.memory_types:
-                self.machinestate.Linear_Memory.append(bytearray(
-                    WASM_OP_Code.PAGE_SIZE))
-            if self.module.data_section is not None:
-                for iter in self.module.data_section.data_segments:
-                    count = int()
-                    for byte in iter.data:
-                        self.machinestate.Linear_Memory[iter.index][init_interpret(iter.offset) + count] = byte
-                        count += 1
-
-
+        if self.module.memory_section is None:
+            rsz_limits = Resizable_Limits()
+            self.module.memory_section = Memory_Section()
+            self.module.memory_section.memory_types = [rsz_limits]
+            self.module.memory_section.count = 1
+        for iter in self.module.memory_section.memory_types:
+            self.machinestate.Linear_Memory.append(bytearray(
+                WASM_OP_Code.PAGE_SIZE))
+        if self.module.data_section is not None:
+            for iter in self.module.data_section.data_segments:
+                count = int()
+                for byte in iter.data:
+                    self.machinestate.Linear_Memory[iter.index][init_interpret(iter.offset) + count] = byte
+                    count += 1
 
     # returns the machinestate
     def getInits(self):
@@ -300,14 +305,23 @@ class VM():
     def getState(self):
         return(self.machinestate)
 
+    def initLocalIndexSpace(self, local_count):
+        for i in range(0, local_count):
+            self.machinestate.Index_Space_Locals.append(0)
+
     def getStartFunctionIndex(self):
         if self.modules[0].start_section is None:
-            raise Exception(Colors.red + "module does not have a start section. quitting..." + Colors.ENDC)
+            if self.parseflags.entry is None:
+                raise Exception(Colors.red + "module does not have a start section. no function index was provided with the --entry option.quitting..." + Colors.ENDC)
+            else:
+                start_index = int(self.parseflags.entry)
         else:
             print(Colors.green + "found start section: " + Colors.ENDC, end = '')
             start_index = self.modules[0].start_section.function_section_index
 
-        print(start_index)
+        print(Colors.blue + Colors.BOLD + "running function at index " + repr(start_index) + Colors.ENDC)
+        if (start_index > len(self.modules[0].code_section.func_bodies) - 1):
+            raise Exception(Colors.red + "invalid function index: the function index does not exist." + Colors.ENDC)
         return(start_index)
 
     def getStartFunctionBody(self):
@@ -322,11 +336,9 @@ class VM():
             raise Exception(Colors.red + "invalid entry for start function index" + Colors.ENDC)
 
     def execute(self):
-        print(Colors.blue + 'running module...' + Colors.ENDC)
-        '''
+        print(Colors.blue + Colors.BOLD + 'running module with code: ' + Colors.ENDC)
         for ins in self.start_function.code:
-            print(ins.opcode + ' ' + ins.operands)
-        '''
+            print(Colors.purple + repr(ins.opcode) + ' ' + repr(ins.operands) + Colors.ENDC)
         for ins in self.start_function.code:
             self.executewasm.getInstruction(ins.opcodeint, ins.operands)
             self.executewasm.callExecuteMethod()
@@ -347,11 +359,14 @@ class VM():
         if self.parseflags.gas:
             self.totGas = self.executewasm.getOPGas()
             print(Colors.red + "total gas cost: " + repr(self.totGas) + Colors.ENDC)
+        if self.machinestate.Stack_Omni:
+            print(Colors.green + "stack top: " + repr(self.machinestate.Stack_Omni.pop()) + Colors.ENDC)
 
     # a convinience method
     def run(self):
         self.startHook()
         self.getStartFunctionBody()
+        self.initLocalIndexSpace(self.start_function.local_count)
         self.execute()
         self.endHook()
 

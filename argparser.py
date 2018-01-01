@@ -1,3 +1,5 @@
+#!/bin/python3
+
 from __future__ import print_function
 import argparse
 import sys
@@ -8,6 +10,10 @@ from OpCodes import *
 from copy import deepcopy
 from TBInit import *
 from merklize import *
+from linker import Linker
+import readline
+import code
+
 
 _DBG_ = True
 
@@ -49,14 +55,10 @@ def Conver2Int(little_endian, size, bytelist):
 class CLIArgParser(object):
     def __init__(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument("--wast", type=str,
-                            help="path to the wasm text file")
-        parser.add_argument("--wasm", type=str, nargs='+',
-                            help="path to the wasm object file")
-        parser.add_argument("--asb", type=str,
-                            help="path to the wast file to assemble")
-        parser.add_argument("--dis", type=str,
-                            help="path to the wasm file to disassemble")
+        parser.add_argument("--wast", type=str, help="path to the wasm text file")
+        parser.add_argument("--wasm", type=str, nargs='+', help="path to the wasm object file")
+        parser.add_argument("--asb", type=str, help="path to the wast file to assemble")
+        parser.add_argument("--dis", type=str, help="path to the wasm file to disassemble")
         parser.add_argument("-o", type=str, help="the path to the output file")
         parser.add_argument("--dbg", action='store_true', help="print debug info", default=False)
         parser.add_argument("--unval", action='store_true', help="skips validation tests", default=False)
@@ -65,6 +67,12 @@ class CLIArgParser(object):
         parser.add_argument("--run", action='store_true', help="runs the start function", default=False)
         parser.add_argument("--metric", action='store_true', help="print metrics", default=False)
         parser.add_argument("--gas", action='store_true', help="print gas usage", default=False)
+        parser.add_argument("--entry", type=str, help="name of the function that will act as the entry point into execution")
+        parser.add_argument("--link", type=str, nargs="+", help="link the following wasm modules")
+        parser.add_argument("--sectiondump", type=str, help="dumps the section provided")
+        parser.add_argument("--hexdump", type=int, help="dumps all sections")
+        parser.add_argument("--dbgsection", type=str, help="dumps the parsed section provided", default="")
+        parser.add_argument("--interactive", action='store_true', help="open in cli mode", default=False)
 
         self.args = parser.parse_args()
 
@@ -108,10 +116,16 @@ class CLIArgParser(object):
     def getGas(self):
         return self.args.gas
 
+    def getEntry(self):
+        return self.args.entry
+
+    def getLink(self):
+        return self.args.link
+
     def getParseFlags(self):
         return(ParseFlags(self.args.wast, self.args.wasm, self.args.asb, self.args.dis,
                           self.args.o, self.args.dbg, self.args.unval, self.args.memdump,
-                          self.args.idxspc, self.args.run, self.args.metric, self.args.gas))
+                          self.args.idxspc, self.args.run, self.args.metric, self.args.gas, self.args.entry))
 
 
 # this class is responsible for reading the wasm text file- the first part of
@@ -342,7 +356,7 @@ class FuncBodyParser(object):
                     continue
                 else:
                     # parentheses_cnt < 0. the wasmt file is malformed
-                    print("goofball")
+                    raise Exception(Colors.red + "parantheses dont match..." + Colors.ENDC)
 
     def ParseBodyV2(self):
         sexpr_pattern = re.compile('\([^(]*?\)')
@@ -480,14 +494,12 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
     parsedstruct = ParsedStruct()
     # read the magic cookie
     byte = wasm_file.read(WASM_OP_Code.uint32)
-    if byte != WASM_OP_Code.magic_number.to_bytes(
-            WASM_OP_Code.uint32, byteorder=endianness, signed=False):
+    if byte != WASM_OP_Code.magic_number.to_bytes(WASM_OP_Code.uint32, byteorder=endianness, signed=False):
         raise Exception("bad magic cookie")
 
     # read the version number
     byte = wasm_file.read(WASM_OP_Code.uint32)
-    if byte != WASM_OP_Code.version_number.to_bytes(
-            WASM_OP_Code.uint32, byteorder=endianness, signed=False):
+    if byte != WASM_OP_Code.version_number.to_bytes(WASM_OP_Code.uint32, byteorder=endianness, signed=False):
         raise Exception("bad version number")
     else:
         parsedstruct.version_number = byte
@@ -503,7 +515,8 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
     loop = True
     while loop:
         try:
-            section_id, offset, dummy = Read(temp_obj_file, offset, 'varuint7')
+            # section_id, offset, dummy = Read(temp_obj_file, offset, 'varuint7')
+            section_id, offset, dummy = Read(temp_obj_file, offset, 'varuint32')
         except IndexError:
             break
 
@@ -514,6 +527,12 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
             name_len, offset, dummy = Read(temp_obj_file, offset, 'varuint32')
             name = temp_obj_file[offset : offset + name_len]
             offset += name_len
+            if name.find("reloc", 0, 5) == 0:
+                is_reloc_section = True
+                reloc_entry_count = Read(temp_obj_file, offset, 'varuint32')
+                for i in range(0, reloc_entry_count):
+                    reloc_entry, offset, dummy = Read(tmp_obj, offset, 'varuint32')
+                    reloc_entries.append(reloc_entry)
         else:
             is_custom_section = False
             name_len = 0
@@ -532,8 +551,9 @@ def ReadWASM(file_path, endianness, is_extended_isa, dbg):
                                             payload_data])
 
     # prints out the sections in the wasm object
-    # for section in parsedstruct.section_list:
-        # print(section)
+    for section in parsedstruct.section_list:
+        pass
+        #print(section)
     wasm_file.close()
     return(parsedstruct)
 
@@ -548,11 +568,13 @@ class ObjReader(object):
     # we use this method to read the operands of instructions. it's only
     # called by ReadCodeSection
     def Disassemble(self, section_byte, offset):
+        # @DEVI-FIXME- not sure why i was using instruction. its a string...
         matched = False
         read_bytes = 0
         read_bytes_temp = 0
         read_bytes_temp_iter = 0
         instruction = str()
+        operands = []
         temp_wasm_ins = WASM_Ins()
 
         # @DEVI-FIXME-for v1.0 opcodes. needs to get fixed for extended
@@ -573,34 +595,37 @@ class ObjReader(object):
                 # uniformity. anyways.
                 if op_code[1] == '0e':
                     matched = True
-                    temp, offset, read_bytes_temp_iter = Read(
-                        section_byte[6], offset, op_code[3][0])
+                    temp, offset, read_bytes_temp_iter = Read(section_byte[6], offset, op_code[3][0])
                     instruction += repr(temp) + ' '
+                    operands.append(repr(temp))
                     read_bytes_temp += read_bytes_temp_iter
                     for target_table in range(0, temp):
                         temp, offset, read_bytes_temp_iter = Read(section_byte[6], offset, op_code[3][1])
                         read_bytes_temp += read_bytes_temp_iter
                         instruction += repr(temp) + ' '
-                    temp, offset, read_bytes_temp_iter = Read(
-                        section_byte[6], offset, op_code[3][2])
+                        operands.append(repr(temp))
+                    temp, offset, read_bytes_temp_iter = Read(section_byte[6], offset, op_code[3][2])
                     instruction += repr(temp) + ' '
+                    operands.append(repr(temp))
                     read_bytes_temp += read_bytes_temp_iter
                 elif op_code[2]:
                     if isinstance(op_code[3], tuple):
                         for i in range(0, len(op_code [3])):
-                            temp, offset, read_bytes_temp_iter = Read(
-                                section_byte[6], offset, op_code[3][i])
+                            temp, offset, read_bytes_temp_iter = Read(section_byte[6], offset, op_code[3][i])
                             read_bytes_temp += read_bytes_temp_iter
                             instruction += repr(temp) + ' '
+                            operands.append(repr(temp))
                     else:
-                        temp, offset, read_bytes_temp = Read(
-                            section_byte[6], offset, op_code[3])
+                        temp, offset, read_bytes_temp = Read(section_byte[6], offset, op_code[3])
                         instruction += repr(temp)
+                        operands.append(repr(temp))
 
                 temp_wasm_ins.opcode = op_code[0]
                 temp_wasm_ins.opcodeint = int(byte, 16)
-                temp_wasm_ins.operands = instruction
+                #temp_wasm_ins.operands = instruction
+                temp_wasm_ins.operands = operands
                 instruction = str()
+                operands = []
                 break
 
         read_bytes += read_bytes_temp
@@ -651,8 +676,7 @@ class ObjReader(object):
 
             read_bytes_so_far = local_count_size
             for i in range(0, function_body_length - local_count_size):
-                offset, matched, read_bytes, temp_wasm_ins = self.Disassemble(
-                    code_section, offset)
+                offset, matched, read_bytes, temp_wasm_ins = self.Disassemble(code_section, offset)
                 temp_func_bodies.code.append(deepcopy(temp_wasm_ins))
 
                 if not matched:
@@ -1137,18 +1161,19 @@ class ParserV1(object):
         header_stack = headerparser.ParseBodyV3(True)
 
         wasm_codeemitter = WASM_CodeEmitter(expr_stack)
-        wasm_codeemitter.Obj_Header_32()
-        wasm_codeemitter.Dump_Obj_STDOUT()
+        #wasm_codeemitter.Obj_Header_32()
+        #wasm_codeemitter.Dump_Obj_STDOUT()
 
-        wasm_codeemitter.SetNewStack(header_stack)
-        wasm_codeemitter.EmitTypeHeader()
-        wasm_codeemitter.PrintTypeHeaderObj()
+        #wasm_codeemitter.SetNewStack(header_stack)
+        #wasm_codeemitter.EmitTypeHeader()
+        #wasm_codeemitter.PrintTypeHeaderObj()
 
 
 # our interpreter class
 class PythonInterpreter(object):
     def __init__(self):
         self.modules = []
+        self.sections = []
 
     # appends a module to the module list that PythonInterpreter has
     def appendmodule(self, module):
@@ -1158,19 +1183,30 @@ class PythonInterpreter(object):
     def getmodules(self):
         return(self.modules)
 
+    def appendsection(self, section):
+        self.sections.append(section)
+
+    def getsections(self):
+        return self.sections
+
     # convinience method.calls the ObjReader to parse a wasm obj file.
     # returns a module class.
     def parse(self, file_path):
-        parser = ObjReader(ReadWASM(file_path, 'little', False, True))
+        section = ReadWASM(file_path, 'little', False, True)
+        self.appendsection(section)
+        parser = ObjReader(section)
         return(parser.parse())
 
     # dumps the object sections' info to stdout. pretty print.
-    def dump_sections(self, module):
+    def dump_sections(self, module, dbgsection):
+        all = False
+        if dbgsection == "":
+            all = True
         print(Colors.blue + Colors.BOLD +
                 'BEGENNING OF MODULE' + Colors.ENDC)
 
         # type_section
-        if module.type_section is not None:
+        if module.type_section is not None and (dbgsection == "type" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Type Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1183,7 +1219,7 @@ class PythonInterpreter(object):
                 print(Colors.yellow + 'return type: ' + repr(iter.return_type) + Colors.ENDC)
 
         # import_section
-        if module.import_section is not None:
+        if module.import_section is not None and (dbgsection == "import" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Import Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1197,7 +1233,7 @@ class PythonInterpreter(object):
                 print(Colors.grey + 'type: ' + repr(iter.type) + Colors.ENDC)
 
         # function_section
-        if module.function_section is not None:
+        if module.function_section is not None and (dbgsection == "function" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Function Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1206,7 +1242,7 @@ class PythonInterpreter(object):
                 print(Colors.cyan + 'type section index: ' + repr(iter) + Colors.ENDC)
 
         # table_section
-        if module.table_section is not None:
+        if module.table_section is not None and (dbgsection == "table" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Table Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1218,7 +1254,7 @@ class PythonInterpreter(object):
                 print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.limit.maximum) + Colors.ENDC)
 
         # memory_section
-        if module.memory_section is not None:
+        if module.memory_section is not None and (dbgsection == "memory" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Memory Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1229,7 +1265,7 @@ class PythonInterpreter(object):
                 print(Colors.purple + 'Resizable_Limits:maximum: ' + repr(iter.maximum) + Colors.ENDC)
 
         # global_section
-        if module.global_section is not None:
+        if module.global_section is not None and (dbgsection == "global" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Global Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1239,7 +1275,7 @@ class PythonInterpreter(object):
                 print(Colors.red + 'init expr: ' + repr(iter.init_expr) + Colors.ENDC)
 
         # export_section
-        if module.export_section is not None:
+        if module.export_section is not None and (dbgsection == "export" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Export Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1251,14 +1287,14 @@ class PythonInterpreter(object):
                 print(Colors.cyan + 'index: ' + repr(iter.index) + Colors.ENDC)
 
         # start_section
-        if module.start_section is not None:
+        if module.start_section is not None and (dbgsection == "start" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Start Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print('start function index: ' + repr(module.start_section.function_section_index))
 
         # element_section
-        if module.element_section is not None:
+        if module.element_section is not None and (dbgsection == "element" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Element Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1270,7 +1306,7 @@ class PythonInterpreter(object):
                 print(Colors.cyan + 'elemes:' + repr(iter.elems) + Colors.ENDC)
 
         # code_section
-        if module.code_section is not None:
+        if module.code_section is not None and (dbgsection == "code" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Code Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1282,13 +1318,17 @@ class PythonInterpreter(object):
                     print(Colors.blue + 'local count: ' + repr(iterer.count) + Colors.ENDC)
                     print(Colors.blue + 'local type: ' + repr(iterer.type) + Colors.ENDC)
                 for iterer in iter.code:
-                    instruction = iterer.opcode + ' ' + iterer.operands
-                    print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC)
-                    print(Colors.grey + 'immediate: ' + repr(iterer.operands) + Colors.ENDC)
-                    print(Colors.yellow + instruction + Colors.ENDC)
+                    instruction = iterer.opcode + ' ' + repr(iterer.operands)
+                    print(Colors.yellow + instruction + Colors.ENDC, end="")
+                    print("\t", end="")
+                    print(Colors.cyan + 'opcode: ' + repr(iterer.opcode) + Colors.ENDC, end="")
+                    print("\t", end="")
+                    print(Colors.grey + 'immediate: ' + repr(iterer.operands) + Colors.ENDC, end="")
+                    print("\t", end="")
+                    print(Colors.UNDERLINE + "num of operands: " + repr(len(iterer.operands)) + Colors.ENDC)
 
         # data_section
-        if module.data_section is not None:
+        if module.data_section is not None and (dbgsection == "data" or all):
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
             print(Colors.blue + Colors.BOLD + 'Data Section:' + Colors.ENDC)
             print(Colors.blue + '------------------------------------------------------' + Colors.ENDC)
@@ -1308,19 +1348,15 @@ class PythonInterpreter(object):
 
 def main():
     argparser = CLIArgParser()
+    interpreter = PythonInterpreter()
 
-    # this is essentially how we use our current interpreter. it reads in wasm
-    # obj files and holds keeps the parses modules. Theb we run the validation
-    # tests and initialize the WASM machine
     if argparser.getWASMPath() is not None:
-        interpreter = PythonInterpreter()
         for file_path in argparser.getWASMPath():
             module = interpreter.parse(file_path)
             interpreter.appendmodule(module)
-            if argparser.getDBG():
-                interpreter.dump_sections(module)
+            if argparser.getDBG() or argparser.args.dbgsection:
+                interpreter.dump_sections(module, argparser.args.dbgsection)
             if interpreter.runValidations():
-                #run the interpreter
                 pass
             else:
                 print(Colors.red + 'failed validation tests' + Colors.ENDC)
@@ -1336,9 +1372,25 @@ def main():
             # merklizer = Merklizer(ms.Linear_Memory[0][0:512], module)
             # treelength, hashtree = merklizer.run()
 
+    if argparser.args.interactive:
+        variables = globals().copy()
+        variables.update(locals())
+        shell = code.InteractiveConsole(variables)
+        shell.interact(banner="WASM python REPL")
+
+    if argparser.args.hexdump:
+        dumpprettysections(interpreter.getsections(), argparser.args.hexdump, "")
+
+    if argparser.args.sectiondump is not None:
+        dumpprettysections(interpreter.getsections(), 24, argparser.args.sectiondump)
+
+
+    if argparser.getLink():
+        linker = Linker(interpreter.getmodules())
+
 
     if argparser.getWASTPath() is not None:
-        print(argparser.getWASTPath())
+        #print(argparser.getWASTPath())
         parser = ParserV1(argparser.getWASTPath())
         parser.run()
 
