@@ -1,4 +1,15 @@
 # contains the data classes we use to hold the information of a module
+class WASM_SECTION(object):
+    def __init__(self):
+        self.section_id = int()
+        self.string = str()
+        self.payload_length = int()
+        self.is_custom_section = bool()
+        self.name_len = int()
+        self.name = str()
+        self.payload_data = bytes()
+
+
 class Reloc_Entry_1():
     def __init__(self):
         self.offset = int()
@@ -10,6 +21,15 @@ class Reloc_Entry_2():
         self.offset = int()
         self.index = int()
         self.addend = int()
+
+
+class Relocation_Section():
+    def __int__(self):
+        self.section_id = int()
+        self.name_length = int()
+        self.name = str()
+        self.count = int()
+        self.entries = int()
 
 
 class Func_Type():

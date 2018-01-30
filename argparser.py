@@ -13,10 +13,13 @@ from merklize import *
 from linker import Linker
 import readline
 import code
+import signal
 
 
 _DBG_ = True
 
+def SigHandler_SIGINT(signum, frame):
+    sys.exit(0)
 
 # we first read the object file and put all the sections in this class
 class ParsedStruct:
@@ -1111,13 +1114,38 @@ class ObjReader(object):
             if whatever[0] == 8:
                 start_section = whatever.copy()
                 section_exists = True
-
         if not section_exists:
             return None
 
         function_index, offset, dummy = Read(start_section[6], offset, 'varuint32')
         SS.function_section_index = function_index
         return(SS)
+
+    def ReadRelocationSection(self):
+        offset = 0
+        section_exists = False
+        RS = Relocation_Section()
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 0 and whatever[1] == "reloc":
+                reloc_section = whatever.copy()
+                section_exists = True
+        if not section_exists:
+            return None
+
+        return(RS)
+
+    def ReadNameSection(self):
+        offset = 0
+        section_exists = False
+        NS = Name_Section()
+        for whatever in self.parsedstruct.section_list:
+            if whatever[0] == 0 and whatever[1] == "name":
+                name_section = whatever.copy()
+                section_exists = True
+        if not section_exists:
+            return None
+
+        return(NS)
 
     # unused-returns the cursor location in the object file
     def getCursorLocation(self):
@@ -1347,10 +1375,6 @@ class PythonInterpreter(object):
 
 
 def main():
-    variables = globals().copy()
-    variables.update(locals())
-    shell = code.InteractiveConsole(variables)
-
     try:
         argparser = CLIArgParser()
         interpreter = PythonInterpreter()
@@ -1407,6 +1431,10 @@ def main():
             print("not implemented yet")
             sys.exit(1)
     except:
+        signal.signal(signal.SIGINT, SigHandler_SIGINT)
+        variables = globals().copy()
+        variables.update(locals())
+        shell = code.InteractiveConsole(variables)
         shell.interact(banner="WASM python REPL")
 
 
