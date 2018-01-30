@@ -53,8 +53,7 @@ def DumpLinearMems(linear_memories, threshold):
     linmem_cnt = int()
     for lin_mem in linear_memories:
         print('-----------------------------------------')
-        print(Colors.blue + Colors.BOLD +
-                'Linear Memory '+ repr(linmem_cnt)+ ' :' + Colors.ENDC)
+        print(Colors.blue + Colors.BOLD + 'Linear Memory '+ repr(linmem_cnt)+ ' :' + Colors.ENDC)
         for byte in lin_mem:
             if count >= threshold:
                 break

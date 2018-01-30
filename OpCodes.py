@@ -1,6 +1,6 @@
 from enum import Enum
 
-SectionID = {0:"custom", 1:"type", 2:"import", 3:"function", 4:"table", 5:"memory", 6:"global", 7:"export", 8:"start", 9:"element", 10:"code", 11:"data"}
+SectionID = {0:"custom", 1:"type", 2:"import", 3:"function", 4:"table", 5:"memory", 6:"global", 7:"export", 8:"start", 9:"element", 10:"code", 11:"data", 63:"unknown"}
 
 
 class RelocType(Enum):
