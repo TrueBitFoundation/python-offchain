@@ -3,15 +3,20 @@
 [![Coverage Status](https://coveralls.io/repos/github/TrueBitFoundation/tb-wasm-machine-poc/badge.svg?branch=master)](https://coveralls.io/github/TrueBitFoundation/tb-wasm-machine-poc?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-DEPRECATED in favor of [ocaml-offchain](https://github.com/TrueBitFoundation/ocaml-offchain)
 
-# tb-wasm-machine-poc
-PoC for process virtual machine to interpret WASM binaries within the context of the TB verification game and it's particular constraints
+# PyOffchain
+PyOffcahin is a Truebit custom WASM interpreter/tool. It has been written to be fairly modular and flexible(at the cost of being slower but speed is not a concern) so it can be used as a wasm python library as well.<br/>
 
-For a list of currently available tasks or questions/challenges we are facing, please take a look at `QuestionsnTasks.md`.<br/>
-For a description of the files and directories along with requirements on having your pull-request reviewed, please look at `Contributions.md`.<br/>
+## Status
+Right now PyOffchain can:<br/>
+run very simple wasm files.<br/>
+pretty dump info on the wasm file.<br/>
 
-### Building
+In the future:<br/>
+have a linker.<br/>
+have an assembler and a disassembler.<br/>
+
+### Getting PyOffcahin
 To clone the repo you should:<br/>
 ```bash
 
@@ -38,27 +43,16 @@ For binaryen:<br/>
 ./testsuiteobjectify.sh wasm-as
 ```
 
-For instructions on building `TBC`, please look at the respective readme under `TBC`'s directory.<br/>
+### WASM Pretty Dumps
+There are a total of four options that give you pretty dumps of a wasm file:<br/>
+* `--sectiondump`: dumps the hex of a section given by its name.<br/>
+* `--hexdump`: dumps the whole wasm file in hex format. Expects an integer for the number of bytes to show in each line.<br/>
+* `--dbgsection`: dumps a section given by name in a human friendly format.<br/>
+* `--dbg`: dumps the whole wasm file in a human friendly format.<br/>
+* `--memdump`: dumps the linear memory starting from offset zero til the given address.<br/>
+* `--idxspc`: dumps the index space a human friendly format.<br/>
 
 ### A Very Simple Stack Machine Interpreter
 If this is the first time you are hearing about stack machines, you can check out [a very simple stack machine interpreter](https://github.com/bloodstalker/simpleInterpreter).<br/>
 It is a very simple stack machine. You have been warned.<br/>
 
-### Tools
-Just what the name says:
-* [binaryen](https://github.com/WebAssembly/binaryen)<br/>
-* [wabt](https://github.com/WebAssembly/wabt)<br/>
-* [wasmfiddle](https://wasdk.github.io/WasmFiddle/)<br/>
-
-### Running the Sample
-To be able to run the code as it is right now, you need to get the binary. I'm using [binaryen](https://github.com/WebAssembly/binaryen).<br/>
-Our implementation will not run on python2.x.<br/>
-
-To run the interpreter you should call:<br/>
-```bash
-
-python3 argparser.py --wasm ./injected.wasm
-
-```
-
-To see the other options available run help.<br/>
